@@ -2,8 +2,8 @@
     "crons": [
         {
             "args": ["smallweb", "fetch_github_release", "theryangeary/www.ryangeary.dev"],
-            "schedule": "0 * * * *",
-            "description": "fetch current contents of www subdomain every hour",
+            "schedule": "0 0 * * *",
+            "description": "fetch current contents of www subdomain every day",
         }
     ],
     "root": "./dist"

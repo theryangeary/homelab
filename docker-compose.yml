@@ -2,6 +2,9 @@ version: '3'
 services:
   smallweb:
     image: ghcr.io/pomdtr/smallweb:latest
+    build:
+      context: .
+      dockerfile: smallweb/Dockerfile
     restart: unless-stopped
     command: up
     volumes:

@@ -1,9 +1,26 @@
 #!/bin/sh
+set -x
 
 if [ -z "$1" ]; then
     echo "Usage: smallweb fetch_github_release <github_username>/<github_repo>"
     exit 1
 fi
 
-mkdir -p dist && wget -qO- https://github.com/theryangeary/www.ryangeary.dev/releases/latest/download/dist.tar.gz | gunzip | tar xvf - -C dist
+subdomain="$(echo $1 | cut -f 2- -d '/' | cut -f -1 -d .)"
+outdir=$SMALLWEB_DIR/$subdomain/dist
+
+# backup existing deployment
+if [ -d "$outdir" ]; then
+    mv $outdir $outdir.bak
+fi
+
+# attempt to replace deployment
+mkdir -p $outdir && wget -qO- https://github.com/$1/releases/latest/download/dist.tar.gz | gunzip | tar xvf - -C $outdir
+
+# restore or cleanup previous deployment
+if [ $? -eq 0 ]; then
+    rm -rf $outdir.bak
+else
+    mv $outdir.bak $outdir
+fi
 

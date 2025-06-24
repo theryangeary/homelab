@@ -1,3 +1,4 @@
 todo
 .env
 CLAUDE.md
+smallweb/**/dist/
