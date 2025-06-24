@@ -1,0 +1,45 @@
+version: '3'
+services:
+  smallweb:
+    image: ghcr.io/pomdtr/smallweb:latest
+    restart: unless-stopped
+    command: up
+    volumes:
+      - ./smallweb:/smallweb
+      - deno_cache:/home/ryan/.cache/deno
+      - certmagic_cache:/home/ryan/.cache/certmagic
+    networks:
+      services:
+
+  helloworld:
+    image: strm/helloworld-http
+    restart: unless-stopped
+    networks:
+      services:
+
+  nginx:
+    image: nginx
+    restart: unless-stopped
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      cloudflared:
+      services:
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${CF_TOKEN}
+    restart: unless-stopped
+    networks:
+      cloudflared:
+
+networks:
+  services:
+  cloudflared:
+    name: cloudflared
+
+volumes:
+  deno_cache:
+  certmagic_cache:
