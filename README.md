@@ -13,7 +13,10 @@ This is my homelab, aka personal infrastructure I run at home. It is very WIP.
 
 ## Deploy
 
-0. set up a host with docker
+1. set up a host with docker. do not use docker rootless!
 1. clone this repo
-2. set CF_TOKEN in .env
-4. docker compose up -d
+1. get a GitHub personal access token (classic) with `read:packages` from https://github.com/settings/tokens/new?scopes=write:packages
+1. `export CR_PAT=YOUR_TOKEN && echo $CR_PAT | docker login ghcr.io -u USERNAME --password-stdin`
+1. set TUNNEL_TOKEN in .env
+1. `docker swarm init` to add the host as a manager (all that is needed for a one-node swarm)
+1. `docker stack config -c docker-compose.yml | docker stack deploy -c - homelab`

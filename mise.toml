@@ -17,11 +17,14 @@ run = "docker compose build -- nginx"
 [tasks.build_gl_container]
 run = "docker compose build -- gl"
 
+[tasks.build_smallweb_container]
+run = "docker compose build -- smallweb"
+
 [tasks.build_gl]
 depends = ['build_gl_container', 'build_nginx_container', 'build_gl_site']
 
 [tasks.build_containers]
-depends = ['build_nginx_container', 'build_gl_container']
+depends = ['build_nginx_container', 'build_gl_container', 'build_smallweb_container']
 
 [tasks.build]
 depends = ['build_containers']
