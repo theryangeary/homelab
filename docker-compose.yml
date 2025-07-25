@@ -14,11 +14,12 @@ services:
       services:
 
   nginx:
-    image: nginx
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
     restart: unless-stopped
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
-      - ./static:/usr/share/nginx/html/
     networks:
       cloudflared:
       services:
