@@ -1,6 +1,7 @@
 version: '3'
 services:
   smallweb:
+    image: ghcr.io/theryangeary/smallweb
     build:
       context: .
       dockerfile: smallweb/Dockerfile
