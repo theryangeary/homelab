@@ -3,3 +3,4 @@ todo
 CLAUDE.md
 smallweb/**/dist/
 static/*
+!static/sites_manifest
