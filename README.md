@@ -6,27 +6,14 @@ This is my homelab, aka personal infrastructure I run at home. It is very WIP.
 
 1. cloudflare tunnel to connect a docker network to the public internet.
 1. nginx docker container on the same docker network to receive and route connections.
+    - this contains static site resources
 1. nginx is also on an additional network, where services run.
-1. smallweb is on this additional network and handles subdomains not handled by
-   specific nginx configurations.
-1. all docker containers are intended to be run on a Raspberry Pi (WIP).
-
-### Smallweb
-
-[Smallweb](https://www.smallweb.run) is a newer project that allows deploying
-some minimal websites fairly easily.
-
-#### Smallweb external repo sites
-
-I've added some sugar on top of smallweb to pull in external repos I want to
-deploy through smallweb. See the `www` subdomain for an example. This requires:
-1. an external repo which publishes a `dist.tar.gz` as a GitHub release.
-2. a `smallweb.json` which specifies a `"root": "./dist"` and a `cron` to call
-   `fetch_github_release` on some cadence.
+1. right now there are no other services on the service networ. Nginx simply serves static sites.
+1. all docker containers are running on a Raspberry Pi 3.
 
 ## Deploy
 
+0. set up a host with docker
 1. clone this repo
 2. set CF_TOKEN in .env
-3. bin/fetch_static_sites.sh static/sites_manifest
 4. docker compose up -d
