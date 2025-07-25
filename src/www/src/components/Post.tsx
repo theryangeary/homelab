@@ -1,4 +1,5 @@
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import type { Post as PostType } from '../types/content';
 
 interface PostProps {
@@ -34,7 +35,7 @@ function Post({ post }: PostProps) {
       </header>
 
       <div className="prose prose-lg dark:prose-invert max-w-none">
-        <ReactMarkdown>{post.content}</ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content}</ReactMarkdown>
       </div>
     </article>
   );
