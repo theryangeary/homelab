@@ -1,6 +1,7 @@
 version: '3'
 services:
   gl:
+    image: ghcr.io/theryangeary/gl
     build:
       context: .
       dockerfile: gl/Dockerfile
@@ -17,6 +18,7 @@ services:
         condition: service_started
 
   nginx:
+    image: ghcr.io/theryangeary/nginx
     build:
       context: .
       dockerfile: nginx/Dockerfile
