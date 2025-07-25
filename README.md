@@ -23,3 +23,10 @@ deploy through smallweb. See the `www` subdomain for an example. This requires:
 1. an external repo which publishes a `dist.tar.gz` as a GitHub release.
 2. a `smallweb.json` which specifies a `"root": "./dist"` and a `cron` to call
    `fetch_github_release` on some cadence.
+
+## Deploy
+
+1. clone this repo
+2. set CF_TOKEN in .env
+3. bin/fetch_static_sites.sh static/sites_manifest
+4. docker compose up -d
