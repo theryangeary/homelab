@@ -2,7 +2,7 @@
 STATIC_DIR="{{config_root}}/static"
 
 [tasks.build_www_site]
-run = "cd src/www && npm run build && mkdir -p $STATIC_DIR/www && rm -r $STATIC_DIR/www/* && mv dist/* $STATIC_DIR/www"
+run = "cd www && npm run build && mkdir -p $STATIC_DIR/www && rm -r $STATIC_DIR/www/* && mv dist/* $STATIC_DIR/www"
 
 [tasks.build_gl_site]
 run = "cd gl/ts && npm run build && mkdir -p $STATIC_DIR/gl && rm -rf $STATIC_DIR/gl/* && mv dist/* $STATIC_DIR/gl"
