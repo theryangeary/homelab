@@ -2,12 +2,12 @@
 set -x
 
 if [ -z "$1" ]; then
-    echo "Usage: smallweb fetch_github_release <github_username>/<github_repo>"
+    echo "Usage: $0 <github_username>/<github_repo>"
     exit 1
 fi
 
 subdomain="$(echo $1 | cut -f 2- -d '/' | cut -f -1 -d .)"
-outdir=$SMALLWEB_DIR/$subdomain/dist
+outdir=$(git rev-parse --show-toplevel)/static/$subdomain
 
 # backup existing deployment
 if [ -d "$outdir" ]; then
