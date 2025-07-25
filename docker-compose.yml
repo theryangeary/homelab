@@ -13,9 +13,6 @@ services:
       - gl_data:/data
     networks:
       services:
-    depends_on:
-      nginx:
-        condition: service_started
 
   nginx:
     image: ghcr.io/theryangeary/nginx
