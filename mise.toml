@@ -1,0 +1,18 @@
+[env]
+STATIC_DIR="{{config_root}}/static"
+
+[tasks.build_www]
+run = "cd src/www && npm run build && mkdir -p $STATIC_DIR/www && rm -r $STATIC_DIR/www/* && mv dist/* $STATIC_DIR/www"
+
+[tasks.build_sites]
+depends = ['build_www']
+
+[tasks.build_nginx]
+depends = ['build_sites']
+run = "docker compose build -- nginx"
+
+[tasks.build_containers]
+depends = ['build_nginx']
+
+[tasks.build]
+depends = ['build_containers']
