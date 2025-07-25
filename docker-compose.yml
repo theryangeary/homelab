@@ -14,17 +14,12 @@ services:
     networks:
       services:
 
-  helloworld:
-    image: strm/helloworld-http
-    restart: unless-stopped
-    networks:
-      services:
-
   nginx:
     image: nginx
     restart: unless-stopped
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./smallweb/www/dist:/usr/share/nginx/html/www
     networks:
       cloudflared:
       services:
