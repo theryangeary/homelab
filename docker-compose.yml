@@ -13,6 +13,22 @@ services:
     networks:
       services:
 
+  gl:
+    build:
+      context: .
+      dockerfile: gl/Dockerfile
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=sqlite:/data/grocery.db
+      - PORT=3001
+    volumes:
+      - gl_data:/data
+    networks:
+      services:
+    depends_on:
+      nginx:
+        condition: service_started
+
   nginx:
     build:
       context: .
@@ -41,3 +57,4 @@ networks:
 volumes:
   deno_cache:
   certmagic_cache:
+  gl_data:
