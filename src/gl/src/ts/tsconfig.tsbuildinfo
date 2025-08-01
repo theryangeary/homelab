@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/components/groceryitem.tsx","./src/components/grocerylist.tsx","./src/hooks/usegrocerylist.ts","./src/types/grocery.ts"],"version":"5.8.3"}
