@@ -1,5 +1,18 @@
 version: '3'
 services:
+  smallweb:
+    build:
+      context: .
+      dockerfile: smallweb/Dockerfile
+    restart: unless-stopped
+    command: up
+    volumes:
+      - ./smallweb:/smallweb
+      - deno_cache:/home/ryan/.cache/deno
+      - certmagic_cache:/home/ryan/.cache/certmagic
+    networks:
+      services:
+
   gl:
     image: ghcr.io/theryangeary/gl
     build:
@@ -41,4 +54,6 @@ networks:
     name: cloudflared
 
 volumes:
+  deno_cache:
+  certmagic_cache:
   gl_data:
