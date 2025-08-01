@@ -5,19 +5,19 @@ WORKDIR /app
 # generate chef plan
 FROM chef AS planner
 
-COPY src/rust/Cargo.toml src/rust/Cargo.lock ./
-COPY src/rust/src ./src
+COPY gl/rust/Cargo.toml gl/rust/Cargo.lock ./
+COPY gl/rust/src ./src
 
 RUN cargo chef prepare --recipe-path recipe.json
 
 # build rust bins
-FROM chef AS builder 
+FROM chef AS builder
 COPY --from=planner /app/recipe.json recipe.json
 
 RUN cargo chef cook --release --recipe-path recipe.json
 
-COPY src/rust/Cargo.toml src/rust/Cargo.lock ./
-COPY src/rust/src ./src
+COPY gl/rust/Cargo.toml gl/rust/Cargo.lock ./
+COPY gl/rust/src ./src
 
 RUN cargo build --release
 
