@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
-import type { GroceryListEntry as GroceryItemType } from '../types/grocery'
+import type { GroceryListEntry } from '../types/grocery'
 
 interface GroceryItemProps {
-  item: GroceryItemType
-  onUpdate: (id: number, updates: Partial<GroceryItemType>) => void
+  item: GroceryListEntry
+  onUpdate: (id: number, updates: Partial<GroceryListEntry>) => void
   onDelete: (id: number) => void
-  onCreateBelow: (text: string, position: number) => Promise<GroceryItemType | undefined>
+  onCreateBelow: (text: string, position: number) => Promise<GroceryListEntry | undefined>
   onFocus?: () => void
   autoFocus?: boolean
   dragHandleProps?: any

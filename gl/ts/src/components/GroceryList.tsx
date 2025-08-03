@@ -20,19 +20,19 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import GroceryItem from './GroceryItem'
 import { useGroceryList } from '../hooks/useGroceryList'
-import type { GroceryListEntry as GroceryItemType } from '../types/grocery'
+import type { GroceryListEntry } from '../types/grocery'
 
 function SortableGroceryItem({
-  item,
+  entry,
   onUpdate,
   onDelete,
   onCreateBelow,
   autoFocus,
 }: {
-  item: GroceryItemType
-  onUpdate: (id: number, updates: Partial<GroceryItemType>) => void
+  entry: GroceryListEntry
+  onUpdate: (id: number, updates: Partial<GroceryListEntry>) => void
   onDelete: (id: number) => void
-  onCreateBelow: (text: string, position: number) => Promise<GroceryItemType | undefined>
+  onCreateBelow: (text: string, position: number) => Promise<GroceryListEntry | undefined>
   autoFocus?: boolean
 }) {
   const {
@@ -41,7 +41,7 @@ function SortableGroceryItem({
     setNodeRef,
     transform,
     transition,
-  } = useSortable({ id: item.id })
+  } = useSortable({ id: entry.id })
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -51,7 +51,7 @@ function SortableGroceryItem({
   return (
     <div ref={setNodeRef} style={style} {...attributes}>
       <GroceryItem
-        item={item}
+        item={entry}
         onUpdate={onUpdate}
         onDelete={onDelete}
         onCreateBelow={onCreateBelow}
@@ -63,7 +63,7 @@ function SortableGroceryItem({
 }
 
 export default function GroceryList() {
-  const { items, loading, createItem, updateItem, deleteItem, reorderItems } = useGroceryList()
+  const { entries, loading, createEntry, updateEntry, deleteEntry, reorderEntries } = useGroceryList()
   const [lastCreatedId, setLastCreatedId] = useState<number | null>(null)
 
   const sensors = useSensors(
@@ -74,36 +74,36 @@ export default function GroceryList() {
   )
 
   useEffect(() => {
-    if (items.length === 0 && !loading) {
-      createItem('', 0).then((newItem) => {
-        if (newItem) {
-          setLastCreatedId(newItem.id)
+    if (entries.length === 0 && !loading) {
+      createEntry('', 0).then((newEntry) => {
+        if (newEntry) {
+          setLastCreatedId(newEntry.id)
         }
       })
     }
-  }, [items.length, loading, createItem])
+  }, [entries.length, loading, createEntry])
 
   const handleCreateBelow = async (description: string, position: number) => {
-    //const itemsToUpdate = items
-      //.filter(item => item.position >= position)
-      //.map(item => ({ ...item, position: item.position + 1 }))
+    //const entriesToUpdate = entries
+      //.filter(entry => entry.position >= position)
+      //.map(entry => ({ ...entry, position: entry.position + 1 }))
 
-    const newItem = await createItem(description, position)
-    if (newItem) {
-      setLastCreatedId(newItem.id)
+    const newEntry = await createEntry(description, position)
+    if (newEntry) {
+      setLastCreatedId(newEntry.id)
     }
-    return newItem
+    return newEntry
   }
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
 
     if (over && active.id !== over.id) {
-      const oldIndex = items.findIndex((item) => item.id === active.id)
-      const newIndex = items.findIndex((item) => item.id === over.id)
+      const oldIndex = entries.findIndex((entry) => entry.id === active.id)
+      const newIndex = entries.findIndex((entry) => entry.id === over.id)
 
-      const reorderedItems = arrayMove(items, oldIndex, newIndex)
-      reorderItems(reorderedItems)
+      const reorderedEntries = arrayMove(entries, oldIndex, newIndex)
+      reorderEntries(reorderedEntries)
     }
   }
 
@@ -117,16 +117,16 @@ export default function GroceryList() {
       collisionDetection={closestCenter}
       onDragEnd={handleDragEnd}
     >
-      <SortableContext items={items.map(item => item.id)} strategy={verticalListSortingStrategy}>
+      <SortableContext items={entries.map(entry => entry.id)} strategy={verticalListSortingStrategy}>
         <div className="space-y-2">
-          {items.map((item) => (
+          {entries.map((entry) => (
             <SortableGroceryItem
-              key={item.id}
-              item={item}
-              onUpdate={updateItem}
-              onDelete={deleteItem}
+              key={entry.id}
+              entry={entry}
+              onUpdate={updateEntry}
+              onDelete={deleteEntry}
               onCreateBelow={handleCreateBelow}
-              autoFocus={item.id === lastCreatedId}
+              autoFocus={entry.id === lastCreatedId}
             />
           ))}
         </div>

@@ -1,2 +1,2 @@
-pub mod grocery_item;
-pub use grocery_item::*;
+pub mod grocery_entry;
+pub use grocery_entry::*;

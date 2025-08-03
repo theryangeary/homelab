@@ -4,28 +4,28 @@ import type { GroceryListEntry } from '../types/grocery'
 const API_BASE = '/api'
 
 export function useGroceryList() {
-  const [items, setItems] = useState<GroceryListEntry[]>([])
+  const [entries, setEntries] = useState<GroceryListEntry[]>([])
   const [loading, setLoading] = useState(true)
 
-  const fetchItems = useCallback(async () => {
+  const fetchEntries = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE}/entries`)
       if (response.ok) {
         const data = await response.json()
-        setItems(data)
+        setEntries(data)
       } else {
         console.error('API request failed:', response.status, response.statusText)
         const text = await response.text()
         console.error('Response body:', text)
       }
     } catch (error) {
-      console.error('Failed to fetch items:', error)
+      console.error('Failed to fetch entries:', error)
     } finally {
       setLoading(false)
     }
   }, [])
 
-  const createItem = useCallback(async (description: string, position: number, quantity?: string, notes?: string) => {
+  const createEntry = useCallback(async (description: string, position: number, quantity?: string, notes?: string) => {
     try {
       const response = await fetch(`${API_BASE}/entries`, {
         method: 'POST',
@@ -33,16 +33,16 @@ export function useGroceryList() {
         body: JSON.stringify({ description, position, quantity, notes })
       })
       if (response.ok) {
-        const newItem = await response.json()
-        setItems(prev => [...prev, newItem].sort((a, b) => a.position - b.position))
-        return newItem
+        const newEntry = await response.json()
+        setEntries(prev => [...prev, newEntry].sort((a, b) => a.position - b.position))
+        return newEntry
       }
     } catch (error) {
-      console.error('Failed to create item:', error)
+      console.error('Failed to create entry:', error)
     }
   }, [])
 
-  const updateItem = useCallback(async (id: number, updates: Partial<GroceryListEntry>) => {
+  const updateEntry = useCallback(async (id: number, updates: Partial<GroceryListEntry>) => {
     try {
       const response = await fetch(`${API_BASE}/entries/${id}`, {
         method: 'PUT',
@@ -50,57 +50,57 @@ export function useGroceryList() {
         body: JSON.stringify(updates)
       })
       if (response.ok) {
-        const updatedItem = await response.json()
-        setItems(prev => prev.map(item => item.id === id ? updatedItem : item))
+        const updatedEntry = await response.json()
+        setEntries(prev => prev.map(entry => entry.id === id ? updatedEntry : entry))
       }
     } catch (error) {
-      console.error('Failed to update item:', error)
+      console.error('Failed to update entry:', error)
     }
   }, [])
 
-  const deleteItem = useCallback(async (id: number) => {
+  const deleteEntry = useCallback(async (id: number) => {
     try {
       const response = await fetch(`${API_BASE}/entries/${id}`, {
         method: 'DELETE'
       })
       if (response.ok) {
-        setItems(prev => prev.filter(item => item.id !== id))
+        setEntries(prev => prev.filter(entry => entry.id !== id))
       }
     } catch (error) {
-      console.error('Failed to delete item:', error)
+      console.error('Failed to delete entry:', error)
     }
   }, [])
 
-  const reorderItems = useCallback(async (reorderedItems: GroceryListEntry[]) => {
-    const itemsWithNewPositions = reorderedItems.map((item, index) => ({
-      ...item,
+  const reorderEntries = useCallback(async (reorderedEntries: GroceryListEntry[]) => {
+    const entriesWithNewPositions = reorderedEntries.map((entry, index) => ({
+      ...entry,
       position: index
     }))
 
-    setItems(itemsWithNewPositions)
+    setEntries(entriesWithNewPositions)
 
     try {
       await fetch(`${API_BASE}/entries/reorder`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(itemsWithNewPositions.map(item => ({ id: item.id, position: item.position })))
+        body: JSON.stringify(entriesWithNewPositions.map(entry => ({ id: entry.id, position: entry.position })))
       })
     } catch (error) {
-      console.error('Failed to reorder items:', error)
-      fetchItems()
+      console.error('Failed to reorder entries:', error)
+      fetchEntries()
     }
-  }, [fetchItems])
+  }, [fetchEntries])
 
   useEffect(() => {
-    fetchItems()
-  }, [fetchItems])
+    fetchEntries()
+  }, [fetchEntries])
 
   return {
-    items,
+    entries,
     loading,
-    createItem,
-    updateItem,
-    deleteItem,
-    reorderItems
+    createEntry,
+    updateEntry,
+    deleteEntry,
+    reorderEntries
   }
 }

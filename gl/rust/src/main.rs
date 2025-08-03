@@ -11,7 +11,7 @@ use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use database::Database;
-use handlers::grocery::{create_item, delete_item, get_items, reorder_items, update_item};
+use handlers::grocery::{create_entry, delete_entry, get_entries, reorder_entries, update_entry};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -33,11 +33,11 @@ async fn main() -> anyhow::Result<()> {
     let db = Arc::new(Database::new(&database_url).await?);
 
     let app = Router::new()
-        .route("/api/entries", get(get_items))
-        .route("/api/entries", post(create_item))
-        .route("/api/entries/:id", put(update_item))
-        .route("/api/entries/:id", delete(delete_item))
-        .route("/api/entries/reorder", put(reorder_items))
+        .route("/api/entries", get(get_entries))
+        .route("/api/entries", post(create_entry))
+        .route("/api/entries/:id", put(update_entry))
+        .route("/api/entries/:id", delete(delete_entry))
+        .route("/api/entries/reorder", put(reorder_entries))
         .layer(TraceLayer::new_for_http())
         .layer(CorsLayer::permissive())
         .with_state(db);

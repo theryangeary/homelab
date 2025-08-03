@@ -1,6 +1,6 @@
 use sqlx::{sqlite::SqlitePool, migrate::MigrateDatabase, Sqlite, Row};
 use anyhow::Result;
-use crate::models::grocery_item::{GroceryListEntry, CreateGroceryListEntry, UpdateGroceryListEntry, ReorderItem};
+use crate::models::grocery_entry::{GroceryListEntry, CreateGroceryListEntry, UpdateGroceryListEntry, ReorderEntry};
 
 pub struct Database {
     pool: SqlitePool,
@@ -40,25 +40,25 @@ impl Database {
         Ok(())
     }
 
-    pub async fn get_all_items(&self) -> Result<Vec<GroceryListEntry>> {
-        let items = sqlx::query_as::<_, GroceryListEntry>(
+    pub async fn get_all_entries(&self) -> Result<Vec<GroceryListEntry>> {
+        let entries = sqlx::query_as::<_, GroceryListEntry>(
             "SELECT id, description, completed, position, quantity, notes, updated_at FROM grocery_list_entries ORDER BY position"
         )
         .fetch_all(&self.pool)
         .await?;
 
-        Ok(items)
+        Ok(entries)
     }
 
-    pub async fn create_item(&self, item: CreateGroceryListEntry) -> Result<GroceryListEntry> {
-        let quantity = item.quantity.unwrap_or_default();
-        let notes = item.notes.unwrap_or_default();
+    pub async fn create_entry(&self, entry: CreateGroceryListEntry) -> Result<GroceryListEntry> {
+        let quantity = entry.quantity.unwrap_or_default();
+        let notes = entry.notes.unwrap_or_default();
         
         let row = sqlx::query(
             "INSERT INTO grocery_list_entries (description, position, quantity, notes) VALUES (?, ?, ?, ?) RETURNING id, description, completed, position, quantity, notes, updated_at"
         )
-        .bind(&item.description)
-        .bind(item.position)
+        .bind(&entry.description)
+        .bind(entry.position)
         .bind(&quantity)
         .bind(&notes)
         .fetch_one(&self.pool)
@@ -75,20 +75,20 @@ impl Database {
         })
     }
 
-    pub async fn update_item(&self, id: i64, item: UpdateGroceryListEntry) -> Result<Option<GroceryListEntry>> {
+    pub async fn update_entry(&self, id: i64, entry: UpdateGroceryListEntry) -> Result<Option<GroceryListEntry>> {
         let mut query_builder = sqlx::QueryBuilder::new("UPDATE grocery_list_entries SET ");
         let mut separated = query_builder.separated(", ");
         
-        if let Some(description) = &item.description {
+        if let Some(description) = &entry.description {
             separated.push("description = ").push_bind_unseparated(description);
         }
-        if let Some(completed) = item.completed {
+        if let Some(completed) = entry.completed {
             separated.push("completed = ").push_bind_unseparated(completed);
         }
-        if let Some(quantity) = &item.quantity {
+        if let Some(quantity) = &entry.quantity {
             separated.push("quantity = ").push_bind_unseparated(quantity);
         }
-        if let Some(notes) = &item.notes {
+        if let Some(notes) = &entry.notes {
             separated.push("notes = ").push_bind_unseparated(notes);
         }
         
@@ -114,7 +114,7 @@ impl Database {
         }
     }
 
-    pub async fn delete_item(&self, id: i64) -> Result<bool> {
+    pub async fn delete_entry(&self, id: i64) -> Result<bool> {
         let result = sqlx::query("DELETE FROM grocery_list_entries WHERE id = ?")
             .bind(id)
             .execute(&self.pool)
@@ -123,13 +123,13 @@ impl Database {
         Ok(result.rows_affected() > 0)
     }
 
-    pub async fn reorder_items(&self, items: Vec<ReorderItem>) -> Result<()> {
+    pub async fn reorder_entries(&self, entries: Vec<ReorderEntry>) -> Result<()> {
         let mut tx = self.pool.begin().await?;
 
-        for item in items {
+        for entry in entries {
             sqlx::query("UPDATE grocery_list_entries SET position = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
-                .bind(item.position)
-                .bind(item.id)
+                .bind(entry.position)
+                .bind(entry.id)
                 .execute(&mut *tx)
                 .await?;
         }
