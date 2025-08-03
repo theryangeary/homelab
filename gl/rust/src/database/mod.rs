@@ -72,14 +72,16 @@ impl Database {
     pub async fn create_entry(&self, entry: CreateGroceryListEntry) -> Result<GroceryListEntry> {
         let quantity = entry.quantity.unwrap_or_default();
         let notes = entry.notes.unwrap_or_default();
+        let category_id = entry.category_id.unwrap_or(1);
 
         let row = sqlx::query(
-            "INSERT INTO grocery_list_entries (description, position, quantity, notes) VALUES (?, ?, ?, ?) RETURNING id, description, completed, position, quantity, notes, updated_at"
+            "INSERT INTO grocery_list_entries (description, position, quantity, notes, category_id) VALUES (?, ?, ?, ?, ?) RETURNING id, description, completed, position, quantity, notes, category_id, updated_at"
         )
         .bind(&entry.description)
         .bind(entry.position)
         .bind(&quantity)
         .bind(&notes)
+        .bind(category_id)
         .fetch_one(&self.pool)
         .await?;
 
@@ -90,6 +92,7 @@ impl Database {
             position: row.get("position"),
             quantity: row.get("quantity"),
             notes: row.get("notes"),
+            category_id: row.get("category_id"),
             updated_at: row.get("updated_at"),
         })
     }
@@ -120,12 +123,17 @@ impl Database {
         if let Some(notes) = &entry.notes {
             separated.push("notes = ").push_bind_unseparated(notes);
         }
+        if let Some(category_id) = &entry.category_id {
+            separated
+                .push("category_id = ")
+                .push_bind_unseparated(category_id);
+        }
 
         separated.push("updated_at = CURRENT_TIMESTAMP");
 
         query_builder.push(" WHERE id = ").push_bind(id);
         query_builder
-            .push(" RETURNING id, description, completed, position, quantity, notes, updated_at");
+            .push(" RETURNING id, description, completed, position, quantity, notes, category_id, updated_at");
 
         let row = query_builder.build().fetch_optional(&self.pool).await?;
 
@@ -137,6 +145,7 @@ impl Database {
                 position: row.get("position"),
                 quantity: row.get("quantity"),
                 notes: row.get("notes"),
+                category_id: row.get("category_id"),
                 updated_at: row.get("updated_at"),
             }))
         } else {

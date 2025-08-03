@@ -96,6 +96,7 @@ pub async fn create_entry(
         position: payload.position,
         quantity,
         notes,
+        category_id: payload.category_id,
     };
 
     match db.create_entry(parsed_payload).await {
@@ -124,6 +125,7 @@ pub async fn update_entry(
                 completed: payload.completed,
                 quantity: if parsed_quantity.is_empty() { None } else { Some(parsed_quantity) },
                 notes: if parsed_notes.is_empty() { None } else { Some(parsed_notes) },
+                category_id: payload.category_id,
             }
         } else {
             payload

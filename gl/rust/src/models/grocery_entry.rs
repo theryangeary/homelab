@@ -10,6 +10,7 @@ pub struct GroceryListEntry {
     pub position: i64,
     pub quantity: String,
     pub notes: String,
+    pub category_id: i64,
     pub description: String,
 }
 
@@ -19,8 +20,8 @@ pub struct CreateGroceryListEntry {
     pub position: i64,
     pub quantity: Option<String>,
     pub notes: Option<String>,
+    pub category_id: Option<i64>,
 }
-
 
 #[derive(Debug, Deserialize)]
 pub struct UpdateGroceryListEntry {
@@ -28,6 +29,7 @@ pub struct UpdateGroceryListEntry {
     pub completed: Option<bool>,
     pub quantity: Option<String>,
     pub notes: Option<String>,
+    pub category_id: Option<i64>,
 }
 
 #[derive(Debug, Deserialize)]
