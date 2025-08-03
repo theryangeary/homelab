@@ -32,8 +32,22 @@ impl Database {
                 position INTEGER NOT NULL,
                 quantity TEXT NOT NULL DEFAULT '',
                 notes TEXT NOT NULL DEFAULT '',
+                category_id INTEGER NOT NULL DEFAULT 0,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(category_id) REFERENCES categories(id)
+            );
+
+            CREATE TABLE IF NOT EXISTS categories (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                is_default_category BOOLEAN NOT NULL DEFAULT FALSE,
+                position INTEGER NOT NULL,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
+            );
+
+            INSERT INTO categories (name, is_default_category, position)
+            SELECT "Uncategorized", TRUE, 0
+            WHERE NOT EXISTS (SELECT 1 FROM categories WHERE id = 1);
             "#,
         )
         .execute(&self.pool)
@@ -162,7 +176,7 @@ impl Database {
             true => {
                 let mut words = query.split_whitespace();
                 (words.next().unwrap().to_string(), words.collect())
-            },
+            }
             false => ("".to_string(), query.to_string()),
         };
 
@@ -173,6 +187,9 @@ impl Database {
         .fetch_all(&self.pool)
         .await?;
 
-        Ok(suggestions.into_iter().map(|s| format!("{} {}", quantity, s)).collect())
+        Ok(suggestions
+            .into_iter()
+            .map(|s| format!("{} {}", quantity, s))
+            .collect())
     }
 }
