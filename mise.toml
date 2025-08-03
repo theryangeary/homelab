@@ -28,3 +28,12 @@ depends = ['build_nginx_container', 'build_gl_container', 'build_smallweb_contai
 
 [tasks.build]
 depends = ['build_containers']
+
+[tasks.push_gl]
+run = "docker push ghcr.io/theryangeary/gl"
+[tasks.push_nginx]
+run = "docker push ghcr.io/theryangeary/nginx"
+[tasks.push_smallweb]
+run = "docker push ghcr.io/theryangeary/smallweb"
+[tasks.push]
+depends = ['push_gl', 'push_nginx', 'push_smallweb']
