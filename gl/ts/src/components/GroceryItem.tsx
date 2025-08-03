@@ -8,6 +8,7 @@ interface GroceryItemProps {
   onCreateBelow: (text: string, position: number) => Promise<GroceryItemType | undefined>
   onFocus?: () => void
   autoFocus?: boolean
+  dragHandleProps?: any
 }
 
 export default function GroceryItem({
@@ -16,7 +17,8 @@ export default function GroceryItem({
   onDelete,
   onCreateBelow,
   onFocus,
-  autoFocus = false
+  autoFocus = false,
+  dragHandleProps
 }: GroceryItemProps) {
   const [text, setText] = useState(item.text)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -49,6 +51,13 @@ export default function GroceryItem({
 
   return (
     <div className="flex items-center gap-2 p-2 border border-gray-200 rounded">
+      <div
+        {...dragHandleProps}
+        className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 px-1"
+        title="Drag to reorder"
+      >
+        ⋮⋮
+      </div>
       <input
         type="checkbox"
         checked={item.completed}

@@ -49,13 +49,14 @@ function SortableGroceryItem({
   }
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <div ref={setNodeRef} style={style} {...attributes}>
       <GroceryItem
         item={item}
         onUpdate={onUpdate}
         onDelete={onDelete}
         onCreateBelow={onCreateBelow}
         autoFocus={autoFocus}
+        dragHandleProps={listeners}
       />
     </div>
   )
