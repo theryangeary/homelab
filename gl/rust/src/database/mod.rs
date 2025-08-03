@@ -238,7 +238,7 @@ impl Database {
     }
 
     /// TODO this is not a good reordering strategy, instead adjust every row between the old position and the new position by 1
-    pub async fn reorder_categories(&self, entries: Vec<ReorderEntry>) -> Result<()> {
+    pub async fn reorder_categories(&self, entries: Vec<ReorderCategory>) -> Result<()> {
         let mut tx = self.pool.begin().await?;
 
         for entry in entries {
