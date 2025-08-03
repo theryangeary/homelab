@@ -21,6 +21,7 @@ pub struct CreateGroceryListEntry {
     pub notes: Option<String>,
 }
 
+
 #[derive(Debug, Deserialize)]
 pub struct UpdateGroceryListEntry {
     pub description: Option<String>,

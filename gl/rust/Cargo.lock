@@ -533,6 +533,7 @@ dependencies = [
  "anyhow",
  "axum",
  "chrono",
+ "regex",
  "serde",
  "serde_json",
  "sqlx",
