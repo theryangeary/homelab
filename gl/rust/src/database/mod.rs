@@ -140,7 +140,7 @@ impl Database {
 
     pub async fn get_suggestions(&self, query: &str) -> Result<Vec<String>> {
         let suggestions = sqlx::query_scalar::<_, String>(
-            "SELECT DISTINCT description FROM grocery_list_entries WHERE description LIKE ? ORDER BY description LIMIT 10"
+            "SELECT DISTINCT description FROM grocery_list_entries WHERE description LIKE ? AND description != '' ORDER BY description LIMIT 10"
         )
         .bind(format!("{}%", query))
         .fetch_all(&self.pool)
