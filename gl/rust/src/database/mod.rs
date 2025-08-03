@@ -1,5 +1,8 @@
-use crate::models::grocery_entry::{
-    CreateGroceryListEntry, GroceryListEntry, ReorderEntry, UpdateGroceryListEntry,
+use crate::models::{
+    category::{Category, CreateCategory, ReorderCategory, UpdateCategory},
+    grocery_entry::{
+        CreateGroceryListEntry, GroceryListEntry, ReorderEntry, UpdateGroceryListEntry,
+    },
 };
 use anyhow::Result;
 use sqlx::{migrate::MigrateDatabase, sqlite::SqlitePool, Row, Sqlite};
@@ -150,6 +153,7 @@ impl Database {
         Ok(result.rows_affected() > 0)
     }
 
+    /// TODO this is not a good reordering strategy, instead adjust every row between the old position and the new position by 1
     pub async fn reorder_entries(&self, entries: Vec<ReorderEntry>) -> Result<()> {
         let mut tx = self.pool.begin().await?;
 
@@ -159,6 +163,92 @@ impl Database {
                 .bind(entry.id)
                 .execute(&mut *tx)
                 .await?;
+        }
+
+        tx.commit().await?;
+        Ok(())
+    }
+
+    pub async fn get_all_categories(&self) -> Result<Vec<Category>> {
+        let categories = sqlx::query_as::<_, Category>(
+            "SELECT id, name, is_default_category, position, updated_at FROM categories ORDER BY position"
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(categories)
+    }
+
+    pub async fn create_category(&self, category: CreateCategory) -> Result<Category> {
+        let row = sqlx::query(
+            "INSERT INTO categories (name) VALUES (?, ?, ?, ?) RETURNING id, name, is_default_category, position, updated_at"
+        )
+        .bind(&category.name)
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(Category {
+            id: row.get("id"),
+            name: row.get("name"),
+            position: row.get("position"),
+            is_default_category: row.get("is_default_category"),
+            updated_at: row.get("updated_at"),
+        })
+    }
+
+    pub async fn update_category(
+        &self,
+        id: i64,
+        category: UpdateCategory,
+    ) -> Result<Option<Category>> {
+        let mut query_builder = sqlx::QueryBuilder::new("UPDATE categories SET ");
+        let mut separated = query_builder.separated(", ");
+
+        if let Some(name) = &category.name {
+            separated.push("name = ").push_bind_unseparated(name);
+        }
+
+        separated.push("updated_at = CURRENT_TIMESTAMP");
+
+        query_builder.push(" WHERE id = ").push_bind(id);
+        query_builder.push(" RETURNING id, name, is_default_category, position, updated_at");
+
+        let row = query_builder.build().fetch_optional(&self.pool).await?;
+
+        if let Some(row) = row {
+            Ok(Some(Category {
+                id: row.get("id"),
+                name: row.get("name"),
+                position: row.get("position"),
+                is_default_category: row.get("is_default_category"),
+                updated_at: row.get("updated_at"),
+            }))
+        } else {
+            Ok(None)
+        }
+    }
+
+    pub async fn delete_category(&self, id: i64) -> Result<bool> {
+        let result = sqlx::query("DELETE FROM categories WHERE id = ?")
+            .bind(id)
+            .execute(&self.pool)
+            .await?;
+
+        Ok(result.rows_affected() > 0)
+    }
+
+    /// TODO this is not a good reordering strategy, instead adjust every row between the old position and the new position by 1
+    pub async fn reorder_categories(&self, entries: Vec<ReorderEntry>) -> Result<()> {
+        let mut tx = self.pool.begin().await?;
+
+        for entry in entries {
+            sqlx::query(
+                "UPDATE categories SET position = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            )
+            .bind(entry.position)
+            .bind(entry.id)
+            .execute(&mut *tx)
+            .await?;
         }
 
         tx.commit().await?;
