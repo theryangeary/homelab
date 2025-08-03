@@ -28,12 +28,14 @@ function SortableGroceryItem({
   onDelete,
   onCreateBelow,
   autoFocus,
+  onFetchSuggestions,
 }: {
   entry: GroceryListEntry
   onUpdate: (id: number, updates: Partial<GroceryListEntry>) => void
   onDelete: (id: number) => void
   onCreateBelow: (text: string, position: number) => Promise<GroceryListEntry | undefined>
   autoFocus?: boolean
+  onFetchSuggestions: (query: string) => Promise<string[]>
 }) {
   const {
     attributes,
@@ -57,13 +59,22 @@ function SortableGroceryItem({
         onCreateBelow={onCreateBelow}
         autoFocus={autoFocus}
         dragHandleProps={listeners}
+        onFetchSuggestions={onFetchSuggestions}
       />
     </div>
   )
 }
 
 export default function GroceryList() {
-  const { entries, loading, createEntry, updateEntry, deleteEntry, reorderEntries } = useGroceryList()
+  const { 
+    entries, 
+    loading, 
+    createEntry, 
+    updateEntry, 
+    deleteEntry, 
+    reorderEntries,
+    fetchSuggestions
+  } = useGroceryList()
   const [lastCreatedId, setLastCreatedId] = useState<number | null>(null)
 
   const sensors = useSensors(
@@ -127,6 +138,7 @@ export default function GroceryList() {
               onDelete={deleteEntry}
               onCreateBelow={handleCreateBelow}
               autoFocus={entry.id === lastCreatedId}
+              onFetchSuggestions={fetchSuggestions}
             />
           ))}
         </div>

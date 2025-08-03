@@ -91,6 +91,26 @@ export function useGroceryList() {
     }
   }, [fetchEntries])
 
+  const fetchSuggestions = useCallback(async (query: string): Promise<string[]> => {
+    if (query.length === 0) {
+      return []
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/entries/suggestions?query=${encodeURIComponent(query)}`)
+      if (response.ok) {
+        const data = await response.json()
+        return data
+      } else {
+        console.error('Failed to fetch suggestions:', response.status, response.statusText)
+        return []
+      }
+    } catch (error) {
+      console.error('Failed to fetch suggestions:', error)
+      return []
+    }
+  }, [])
+
   useEffect(() => {
     fetchEntries()
   }, [fetchEntries])
@@ -101,6 +121,7 @@ export function useGroceryList() {
     createEntry,
     updateEntry,
     deleteEntry,
-    reorderEntries
+    reorderEntries,
+    fetchSuggestions
   }
 }
