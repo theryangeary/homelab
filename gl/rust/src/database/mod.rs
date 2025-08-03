@@ -75,7 +75,9 @@ impl Database {
         let category_id = entry.category_id.unwrap_or(1);
 
         let row = sqlx::query(
-            "INSERT INTO grocery_list_entries (description, position, quantity, notes, category_id) VALUES (?, ?, ?, ?, ?) RETURNING id, description, completed, position, quantity, notes, category_id, updated_at"
+            "INSERT INTO grocery_list_entries (description, position, quantity, notes, category_id)
+             VALUES (?, ?, ?, ?, ?) 
+             RETURNING id, description, completed, position, quantity, notes, category_id, updated_at"
         )
         .bind(&entry.description)
         .bind(entry.position)
