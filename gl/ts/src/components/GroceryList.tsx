@@ -20,7 +20,7 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import GroceryItem from './GroceryItem'
 import { useGroceryList } from '../hooks/useGroceryList'
-import type { GroceryItem as GroceryItemType } from '../types/grocery'
+import type { GroceryListEntry as GroceryItemType } from '../types/grocery'
 
 function SortableGroceryItem({
   item,
@@ -83,12 +83,12 @@ export default function GroceryList() {
     }
   }, [items.length, loading, createItem])
 
-  const handleCreateBelow = async (text: string, position: number) => {
+  const handleCreateBelow = async (description: string, position: number) => {
     //const itemsToUpdate = items
       //.filter(item => item.position >= position)
       //.map(item => ({ ...item, position: item.position + 1 }))
 
-    const newItem = await createItem(text, position)
+    const newItem = await createItem(description, position)
     if (newItem) {
       setLastCreatedId(newItem.id)
     }

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import type { GroceryItem as GroceryItemType } from '../types/grocery'
+import type { GroceryListEntry as GroceryItemType } from '../types/grocery'
 
 interface GroceryItemProps {
   item: GroceryItemType
@@ -20,7 +20,7 @@ export default function GroceryItem({
   autoFocus = false,
   dragHandleProps
 }: GroceryItemProps) {
-  const [text, setText] = useState(item.text)
+  const [description, setDescription] = useState(item.description)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -29,9 +29,9 @@ export default function GroceryItem({
     }
   }, [autoFocus])
 
-  const handleTextChange = (newText: string) => {
-    setText(newText)
-    onUpdate(item.id, { text: newText })
+  const handleDescriptionChange = (newDescription: string) => {
+    setDescription(newDescription)
+    onUpdate(item.id, { description: newDescription })
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -67,14 +67,14 @@ export default function GroceryItem({
       <input
         ref={inputRef}
         type="text"
-        value={text}
-        onChange={(e) => handleTextChange(e.target.value)}
+        value={description}
+        onChange={(e) => handleDescriptionChange(e.target.value)}
         onKeyDown={handleKeyDown}
         onFocus={onFocus}
         placeholder="Enter grocery item..."
         className="flex-1 px-2 py-1 border-none outline-none"
       />
-      {text === '' && (
+      {description === '' && (
         <button
           onClick={handleDelete}
           className="text-gray-400 hover:text-red-500 text-lg leading-none"

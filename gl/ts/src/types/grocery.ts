@@ -1,7 +1,14 @@
 export interface GroceryItem {
   id: number;
-  text: string;
+  description: string;
+}
+
+export interface GroceryListEntry {
+  id: number;
   completed: boolean;
-  position: number;
   updated_at: string;
+  position: number;
+  quantity: string;
+  notes: string;
+  description: string;
 }

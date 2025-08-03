@@ -1,15 +1,15 @@
 import { useState, useEffect, useCallback } from 'react'
-import type { GroceryItem } from '../types/grocery'
+import type { GroceryListEntry } from '../types/grocery'
 
 const API_BASE = '/api'
 
 export function useGroceryList() {
-  const [items, setItems] = useState<GroceryItem[]>([])
+  const [items, setItems] = useState<GroceryListEntry[]>([])
   const [loading, setLoading] = useState(true)
 
   const fetchItems = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE}/items`)
+      const response = await fetch(`${API_BASE}/entries`)
       if (response.ok) {
         const data = await response.json()
         setItems(data)
@@ -25,12 +25,12 @@ export function useGroceryList() {
     }
   }, [])
 
-  const createItem = useCallback(async (text: string, position: number) => {
+  const createItem = useCallback(async (description: string, position: number, quantity?: string, notes?: string) => {
     try {
-      const response = await fetch(`${API_BASE}/items`, {
+      const response = await fetch(`${API_BASE}/entries`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, position })
+        body: JSON.stringify({ description, position, quantity, notes })
       })
       if (response.ok) {
         const newItem = await response.json()
@@ -42,9 +42,9 @@ export function useGroceryList() {
     }
   }, [])
 
-  const updateItem = useCallback(async (id: number, updates: Partial<GroceryItem>) => {
+  const updateItem = useCallback(async (id: number, updates: Partial<GroceryListEntry>) => {
     try {
-      const response = await fetch(`${API_BASE}/items/${id}`, {
+      const response = await fetch(`${API_BASE}/entries/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
@@ -60,7 +60,7 @@ export function useGroceryList() {
 
   const deleteItem = useCallback(async (id: number) => {
     try {
-      const response = await fetch(`${API_BASE}/items/${id}`, {
+      const response = await fetch(`${API_BASE}/entries/${id}`, {
         method: 'DELETE'
       })
       if (response.ok) {
@@ -71,7 +71,7 @@ export function useGroceryList() {
     }
   }, [])
 
-  const reorderItems = useCallback(async (reorderedItems: GroceryItem[]) => {
+  const reorderItems = useCallback(async (reorderedItems: GroceryListEntry[]) => {
     const itemsWithNewPositions = reorderedItems.map((item, index) => ({
       ...item,
       position: index
@@ -80,7 +80,7 @@ export function useGroceryList() {
     setItems(itemsWithNewPositions)
 
     try {
-      await fetch(`${API_BASE}/items/reorder`, {
+      await fetch(`${API_BASE}/entries/reorder`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(itemsWithNewPositions.map(item => ({ id: item.id, position: item.position })))

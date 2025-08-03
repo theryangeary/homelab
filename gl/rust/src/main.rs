@@ -33,11 +33,11 @@ async fn main() -> anyhow::Result<()> {
     let db = Arc::new(Database::new(&database_url).await?);
 
     let app = Router::new()
-        .route("/api/items", get(get_items))
-        .route("/api/items", post(create_item))
-        .route("/api/items/:id", put(update_item))
-        .route("/api/items/:id", delete(delete_item))
-        .route("/api/items/reorder", put(reorder_items))
+        .route("/api/entries", get(get_items))
+        .route("/api/entries", post(create_item))
+        .route("/api/entries/:id", put(update_item))
+        .route("/api/entries/:id", delete(delete_item))
+        .route("/api/entries/reorder", put(reorder_items))
         .layer(TraceLayer::new_for_http())
         .layer(CorsLayer::permissive())
         .with_state(db);
