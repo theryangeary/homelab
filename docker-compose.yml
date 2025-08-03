@@ -1,7 +1,7 @@
 version: '3'
 services:
   smallweb:
-    image: ghcr.io/theryangeary/smallweb
+    image: ghcr.io/theryangeary/smallweb:latest
     build:
       context: .
       dockerfile: smallweb/Dockerfile
@@ -15,7 +15,7 @@ services:
       services:
 
   gl:
-    image: ghcr.io/theryangeary/gl
+    image: ghcr.io/theryangeary/gl:latest
     build:
       context: .
       dockerfile: gl/Dockerfile
@@ -29,7 +29,7 @@ services:
       services:
 
   nginx:
-    image: ghcr.io/theryangeary/nginx
+    image: ghcr.io/theryangeary/nginx:latest
     build:
       context: .
       dockerfile: nginx/Dockerfile
