@@ -13,7 +13,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { GroceryListRepository } from '../hooks/useGroceryList'
 import SortableGroceryItem from './SortableGroceryItem'
 
@@ -32,16 +32,6 @@ export default function GroceryList({
       coordinateGetter: sortableKeyboardCoordinates,
     })
   )
-
-  useEffect(() => {
-    if (groceryListRepository.entries.length === 0 && !groceryListRepository.loading) {
-      groceryListRepository.createEntry('', 0).then((newEntry) => {
-        if (newEntry) {
-          setLastCreatedId(newEntry.id)
-        }
-      })
-    }
-  }, [groceryListRepository.entries.length, groceryListRepository.loading, groceryListRepository.createEntry])
 
   const handleCreateBelow = async (description: string, position: number) => {
     //const entriesToUpdate = entries
