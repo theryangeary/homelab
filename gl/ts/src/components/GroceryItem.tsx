@@ -8,7 +8,6 @@ interface GroceryItemProps {
   onDelete: (id: number) => void
   onCreateBelow: (text: string, position: number) => Promise<GroceryListEntry | undefined>
   fetchSuggestions: (query: string) => Promise<string[]>
-  onFocus?: () => void
   autoFocus?: boolean
   dragHandleProps?: any
 }
@@ -19,7 +18,6 @@ export default function GroceryItem({
   onDelete,
   onCreateBelow,
   fetchSuggestions,
-  onFocus,
   autoFocus = false,
   dragHandleProps
 }: GroceryItemProps) {
