@@ -59,19 +59,19 @@ function SortableGroceryItem({
         onCreateBelow={onCreateBelow}
         autoFocus={autoFocus}
         dragHandleProps={listeners}
-        onFetchSuggestions={onFetchSuggestions}
+        fetchSuggestions={onFetchSuggestions}
       />
     </div>
   )
 }
 
 export default function GroceryList() {
-  const { 
-    entries, 
-    loading, 
-    createEntry, 
-    updateEntry, 
-    deleteEntry, 
+  const {
+    entries,
+    loading,
+    createEntry,
+    updateEntry,
+    deleteEntry,
     reorderEntries,
     fetchSuggestions
   } = useGroceryList()

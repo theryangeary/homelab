@@ -1,11 +1,13 @@
-import { useState, useRef, useEffect } from 'react'
-import type { GroceryListEntry } from '../types/grocery'
+import AsyncCreatableSelect from 'react-select/async-creatable';
+
+import type { GroceryListEntry } from '../types/grocery';
 
 interface GroceryItemProps {
   item: GroceryListEntry
   onUpdate: (id: number, updates: Partial<GroceryListEntry>) => void
   onDelete: (id: number) => void
   onCreateBelow: (text: string, position: number) => Promise<GroceryListEntry | undefined>
+  fetchSuggestions: (query: string) => Promise<string[]>
   onFocus?: () => void
   autoFocus?: boolean
   dragHandleProps?: any
@@ -16,29 +18,15 @@ export default function GroceryItem({
   onUpdate,
   onDelete,
   onCreateBelow,
+  fetchSuggestions,
   onFocus,
   autoFocus = false,
   dragHandleProps
 }: GroceryItemProps) {
-  const [description, setDescription] = useState(item.description)
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    if (autoFocus && inputRef.current) {
-      inputRef.current.focus()
-    }
-  }, [autoFocus])
+  const fullLabel = `${item.quantity} ${item.description} ${item.notes}`;
 
   const handleDescriptionChange = (newDescription: string) => {
-    setDescription(newDescription)
     onUpdate(item.id, { description: newDescription })
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      onCreateBelow('', item.position + 1)
-    }
   }
 
   const handleCheckboxChange = (completed: boolean) => {
@@ -64,25 +52,38 @@ export default function GroceryItem({
         onChange={(e) => handleCheckboxChange(e.target.checked)}
         className="w-4 h-4"
       />
-      <input
-        ref={inputRef}
-        type="text"
-        value={description}
-        onChange={(e) => handleDescriptionChange(e.target.value)}
-        onKeyDown={handleKeyDown}
-        onFocus={onFocus}
-        placeholder="Enter grocery item..."
-        className="flex-1 px-2 py-1 border-none outline-none"
-      />
-      {description === '' && (
-        <button
-          onClick={handleDelete}
-          className="text-gray-400 hover:text-red-500 text-lg leading-none"
-          aria-label="Delete item"
-        >
-          ×
-        </button>
-      )}
+      <div className="flex-1">
+        <AsyncCreatableSelect
+          value={{ label: fullLabel, value: fullLabel }}
+          loadOptions={async (inputValue: string) => {
+            const suggestions = await fetchSuggestions(inputValue)
+            return suggestions.map(s => ({ label: s, value: s }))
+          }}
+          onChange={(option) => {
+            console.log(option)
+            if (option) {
+              const newDescription = option.value
+              handleDescriptionChange(newDescription)
+              onCreateBelow('', item.position + 1)
+            }
+          }}
+          onCreateOption={(inputValue: string) => {
+            console.log(inputValue)
+            handleDescriptionChange(inputValue)
+            onCreateBelow('', item.position + 1)
+          }}
+          placeholder="Add item..."
+          isClearable={false}
+          autoFocus={autoFocus}
+        />
+      </div>
+      <button
+         onClick={handleDelete}
+         className="text-gray-400 hover:text-red-500 text-lg leading-none"
+         aria-label="Delete item"
+      >
+        ×
+      </button>
     </div>
   )
 }
