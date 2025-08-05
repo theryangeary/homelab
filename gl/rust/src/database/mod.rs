@@ -1,6 +1,8 @@
-use sqlx::{sqlite::SqlitePool, migrate::MigrateDatabase, Sqlite, Row};
+use crate::models::grocery_entry::{
+    CreateGroceryListEntry, GroceryListEntry, ReorderEntry, UpdateGroceryListEntry,
+};
 use anyhow::Result;
-use crate::models::grocery_entry::{GroceryListEntry, CreateGroceryListEntry, UpdateGroceryListEntry, ReorderEntry};
+use sqlx::{migrate::MigrateDatabase, sqlite::SqlitePool, Row, Sqlite};
 
 pub struct Database {
     pool: SqlitePool,
@@ -13,10 +15,10 @@ impl Database {
         }
 
         let pool = SqlitePool::connect(database_url).await?;
-        
+
         let db = Database { pool };
         db.migrate().await?;
-        
+
         Ok(db)
     }
 
@@ -53,7 +55,7 @@ impl Database {
     pub async fn create_entry(&self, entry: CreateGroceryListEntry) -> Result<GroceryListEntry> {
         let quantity = entry.quantity.unwrap_or_default();
         let notes = entry.notes.unwrap_or_default();
-        
+
         let row = sqlx::query(
             "INSERT INTO grocery_list_entries (description, position, quantity, notes) VALUES (?, ?, ?, ?) RETURNING id, description, completed, position, quantity, notes, updated_at"
         )
@@ -75,30 +77,41 @@ impl Database {
         })
     }
 
-    pub async fn update_entry(&self, id: i64, entry: UpdateGroceryListEntry) -> Result<Option<GroceryListEntry>> {
+    pub async fn update_entry(
+        &self,
+        id: i64,
+        entry: UpdateGroceryListEntry,
+    ) -> Result<Option<GroceryListEntry>> {
         let mut query_builder = sqlx::QueryBuilder::new("UPDATE grocery_list_entries SET ");
         let mut separated = query_builder.separated(", ");
-        
+
         if let Some(description) = &entry.description {
-            separated.push("description = ").push_bind_unseparated(description);
+            separated
+                .push("description = ")
+                .push_bind_unseparated(description);
         }
         if let Some(completed) = entry.completed {
-            separated.push("completed = ").push_bind_unseparated(completed);
+            separated
+                .push("completed = ")
+                .push_bind_unseparated(completed);
         }
         if let Some(quantity) = &entry.quantity {
-            separated.push("quantity = ").push_bind_unseparated(quantity);
+            separated
+                .push("quantity = ")
+                .push_bind_unseparated(quantity);
         }
         if let Some(notes) = &entry.notes {
             separated.push("notes = ").push_bind_unseparated(notes);
         }
-        
+
         separated.push("updated_at = CURRENT_TIMESTAMP");
-        
+
         query_builder.push(" WHERE id = ").push_bind(id);
-        query_builder.push(" RETURNING id, description, completed, position, quantity, notes, updated_at");
-        
+        query_builder
+            .push(" RETURNING id, description, completed, position, quantity, notes, updated_at");
+
         let row = query_builder.build().fetch_optional(&self.pool).await?;
-        
+
         if let Some(row) = row {
             Ok(Some(GroceryListEntry {
                 id: row.get("id"),
@@ -139,13 +152,27 @@ impl Database {
     }
 
     pub async fn get_suggestions(&self, query: &str) -> Result<Vec<String>> {
+        let has_quantity = if let Some(first_word) = query.split_whitespace().next() {
+            first_word.chars().next().unwrap_or('a').is_numeric()
+        } else {
+            false
+        };
+
+        let (quantity, match_query) = match has_quantity {
+            true => {
+                let mut words = query.split_whitespace();
+                (words.next().unwrap().to_string(), words.collect())
+            },
+            false => ("".to_string(), query.to_string()),
+        };
+
         let suggestions = sqlx::query_scalar::<_, String>(
             "SELECT DISTINCT description FROM grocery_list_entries WHERE description LIKE ? AND description != '' ORDER BY description LIMIT 10"
         )
-        .bind(format!("{}%", query))
+        .bind(format!("{}%", match_query))
         .fetch_all(&self.pool)
         .await?;
 
-        Ok(suggestions)
+        Ok(suggestions.into_iter().map(|s| format!("{} {}", quantity, s)).collect())
     }
 }

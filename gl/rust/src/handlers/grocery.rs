@@ -16,11 +16,11 @@ pub struct SuggestionsQuery {
 
 fn parse_entry_input(input: &str) -> (String, String, String) {
     let quantity_regex = regex::Regex::new(r"^(\d+[a-z]*)\s+(.+)$").unwrap();
-    
+
     if let Some(captures) = quantity_regex.captures(input.trim()) {
         let quantity = captures.get(1).unwrap().as_str().to_string();
         let rest = captures.get(2).unwrap().as_str();
-        
+
         // Check for notes in parentheses or after dash
         if let Some(dash_pos) = rest.find(" - ") {
             let description = rest[..dash_pos].trim().to_string();
@@ -78,7 +78,7 @@ pub async fn create_entry(
     Json(payload): Json<CreateGroceryListEntry>,
 ) -> Result<Json<GroceryListEntry>, StatusCode> {
     tracing::info!("POST /api/entries called with description: '{}', position: {}", payload.description, payload.position);
-    
+
     // Parse the raw input if no quantity/notes are provided
     let (quantity, description, notes) = if payload.quantity.is_none() && payload.notes.is_none() {
         let (parsed_quantity, parsed_description, parsed_notes) = parse_entry_input(&payload.description);
@@ -90,14 +90,14 @@ pub async fn create_entry(
     } else {
         (payload.quantity, payload.description, payload.notes)
     };
-    
+
     let parsed_payload = CreateGroceryListEntry {
         description,
         position: payload.position,
         quantity,
         notes,
     };
-    
+
     match db.create_entry(parsed_payload).await {
         Ok(entry) => {
             tracing::info!("Successfully created entry with id: {}", entry.id);
@@ -131,7 +131,7 @@ pub async fn update_entry(
     } else {
         payload
     };
-    
+
     match db.update_entry(id, parsed_payload).await {
         Ok(Some(entry)) => Ok(Json(entry)),
         Ok(None) => Err(StatusCode::NOT_FOUND),
