@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import Autosuggest from 'react-autosuggest';
 import { GroceryListRepository } from '../hooks/useGroceryList';
 
-const getSuggestionValue = suggestion => suggestion;
+const getSuggestionValue = suggestion => suggestion.trim();
 
 const renderSuggestion = (suggestion, { query, isHighlighted }) => {
     if (isHighlighted) {
@@ -29,7 +29,7 @@ export default function Console({
 }: ConsoleProps) {
     const [value, setValue] = useState('');
     const [suggestions, setSuggestions] = useState<string[]>([]);
-    const inputRef = useRef(null);
+    const inputRef = useRef(HTMLInputElement);
     const autosuggestRef = useRef(null);
 
     const onSuggestionsFetchRequested = async ({ value }) => {
