@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Autosuggest from 'react-autosuggest';
+import { GroceryListRepository } from '../hooks/useGroceryList';
 
 const getSuggestionValue = suggestion => suggestion;
 
@@ -20,10 +21,15 @@ const renderSuggestion = (suggestion, { query, isHighlighted }) => {
     )
 };
 
-export default function Console(
-) {
+interface ConsoleProps {
+    groceryListRepository: GroceryListRepository
+}
+
+export default function Console({
+groceryListRepository,
+}: ConsoleProps) {
     const [value, setValue] = useState('');
-    const [suggestions, setSuggestions] = useState([]);
+    const [suggestions, setSuggestions] = useState<string[]>([]);
 
     const inputProps = {
         placeholder: "Add grocery item or type / for commands...",
@@ -34,14 +40,20 @@ export default function Console(
         onBlur: () => setSuggestions([]),
     };
 
-    const onSuggestionsFetchRequested = ({ value }) => {
+    const onSuggestionsFetchRequested = async ({ value }) => {
+        if (value.length === 0) {
+            setSuggestions([]);
+        } else if (value[0] != '/') {
+            const suggestions = await groceryListRepository.fetchSuggestions(value);
+            setSuggestions(suggestions);
+        } else {
         setSuggestions([
-            '/test',
+            '/help',
             '/category add',
             '/category rename',
             '/category remove',
-            'black beans',
         ])
+    }
     }
 
     return (

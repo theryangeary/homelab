@@ -1,9 +1,19 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { GroceryListEntry } from '../types/grocery'
 
 const API_BASE = '/api'
 
-export function useGroceryList() {
+export type GroceryListRepository = {
+  entries: GroceryListEntry[],
+  loading: boolean,
+  createEntry: (description: string, position: number, quantity?: string, notes?: string) => Promise<any>,
+  updateEntry: (id: number, updates: Partial<GroceryListEntry>) => Promise<any>,
+  deleteEntry: (id: number) => Promise<any>,
+  reorderEntries: (reorderedEntries: GroceryListEntry[]) => Promise<any>,
+  fetchSuggestions: (query: string) => Promise<string[]>,
+}
+
+export function useGroceryList(): GroceryListRepository {
   const [entries, setEntries] = useState<GroceryListEntry[]>([])
   const [loading, setLoading] = useState(true)
 

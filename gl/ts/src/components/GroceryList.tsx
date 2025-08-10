@@ -14,20 +14,16 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { useEffect, useState } from 'react'
-import { useGroceryList } from '../hooks/useGroceryList'
+import { GroceryListRepository } from '../hooks/useGroceryList'
 import SortableGroceryItem from './SortableGroceryItem'
 
+interface GroceryListProps {
+  groceryListRepository: GroceryListRepository
+}
 
-export default function GroceryList() {
-  const {
-    entries,
-    loading,
-    createEntry,
-    updateEntry,
-    deleteEntry,
-    reorderEntries,
-    fetchSuggestions
-  } = useGroceryList()
+export default function GroceryList({
+  groceryListRepository,
+}: GroceryListProps) {
   const [lastCreatedId, setLastCreatedId] = useState<number | null>(null)
 
   const sensors = useSensors(
@@ -38,21 +34,21 @@ export default function GroceryList() {
   )
 
   useEffect(() => {
-    if (entries.length === 0 && !loading) {
-      createEntry('', 0).then((newEntry) => {
+    if (groceryListRepository.entries.length === 0 && !groceryListRepository.loading) {
+      groceryListRepository.createEntry('', 0).then((newEntry) => {
         if (newEntry) {
           setLastCreatedId(newEntry.id)
         }
       })
     }
-  }, [entries.length, loading, createEntry])
+  }, [groceryListRepository.entries.length, groceryListRepository.loading, groceryListRepository.createEntry])
 
   const handleCreateBelow = async (description: string, position: number) => {
     //const entriesToUpdate = entries
-      //.filter(entry => entry.position >= position)
-      //.map(entry => ({ ...entry, position: entry.position + 1 }))
+    //.filter(entry => entry.position >= position)
+    //.map(entry => ({ ...entry, position: entry.position + 1 }))
 
-    const newEntry = await createEntry(description, position)
+    const newEntry = await groceryListRepository.createEntry(description, position)
     if (newEntry) {
       setLastCreatedId(newEntry.id)
     }
@@ -63,15 +59,15 @@ export default function GroceryList() {
     const { active, over } = event
 
     if (over && active.id !== over.id) {
-      const oldIndex = entries.findIndex((entry) => entry.id === active.id)
-      const newIndex = entries.findIndex((entry) => entry.id === over.id)
+      const oldIndex = groceryListRepository.entries.findIndex((entry) => entry.id === active.id)
+      const newIndex = groceryListRepository.entries.findIndex((entry) => entry.id === over.id)
 
-      const reorderedEntries = arrayMove(entries, oldIndex, newIndex)
-      reorderEntries(reorderedEntries)
+      const reorderedEntries = arrayMove(groceryListRepository.entries, oldIndex, newIndex)
+      groceryListRepository.reorderEntries(reorderedEntries)
     }
   }
 
-  if (loading) {
+  if (groceryListRepository.loading) {
     return <div className="text-center">Loading...</div>
   }
 
@@ -81,17 +77,17 @@ export default function GroceryList() {
       collisionDetection={closestCenter}
       onDragEnd={handleDragEnd}
     >
-      <SortableContext items={entries.map(entry => entry.id)} strategy={verticalListSortingStrategy}>
+      <SortableContext items={groceryListRepository.entries.map(entry => entry.id)} strategy={verticalListSortingStrategy}>
         <div className="space-y-2">
-          {entries.map((entry) => (
+          {groceryListRepository.entries.map((entry) => (
             <SortableGroceryItem
               key={entry.id}
               entry={entry}
-              onUpdate={updateEntry}
-              onDelete={deleteEntry}
+              onUpdate={groceryListRepository.updateEntry}
+              onDelete={groceryListRepository.deleteEntry}
               onCreateBelow={handleCreateBelow}
               autoFocus={entry.id === lastCreatedId}
-              onFetchSuggestions={fetchSuggestions}
+              onFetchSuggestions={groceryListRepository.fetchSuggestions}
             />
           ))}
         </div>
