@@ -87,7 +87,36 @@ export default function Console({
     };
 
     const onKeyDown = (event) => {
-        if (event.key === 'Enter') {
+        if (event.ctrlKey && event.key === 'n') {
+            // Prevent the default browser behavior (like opening a new window)
+            event.preventDefault();
+            const downArrowEvent = new KeyboardEvent('keydown', {
+                key: 'ArrowDown',
+                code: 'ArrowDown',
+                keyCode: 40,
+                which: 40,
+                bubbles: true,
+                cancelable: true
+            });
+
+            // Dispatch the event to the input element
+            inputRef.current?.dispatchEvent(downArrowEvent);
+        } else if (event.ctrlKey && event.key === 'p') {
+            // Prevent the default browser behavior (like opening a new window)
+            event.preventDefault();
+            const upArrowEvent = new KeyboardEvent('keydown', {
+                key: 'ArrowUp',
+                code: 'ArrowUp',
+                keyCode: 38,
+                which: 38,
+                bubbles: true,
+                cancelable: true
+            });
+
+            // Dispatch the event to the input element
+            inputRef.current?.dispatchEvent(upArrowEvent);
+        }
+        else if (event.key === 'Enter') {
             event.preventDefault();
             handleSubmit();
         } else if (event.key === 'Escape') {
