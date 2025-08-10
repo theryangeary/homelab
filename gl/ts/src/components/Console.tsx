@@ -30,6 +30,7 @@ export default function Console({
     const [value, setValue] = useState('');
     const [suggestions, setSuggestions] = useState<string[]>([]);
     const inputRef = useRef(null);
+    const autosuggestRef = useRef(null);
 
     const onSuggestionsFetchRequested = async ({ value }) => {
         if (value.length === 0) {
@@ -108,6 +109,7 @@ export default function Console({
     return (
         <div className="relative">
             <Autosuggest
+                ref={autosuggestRef}
                 suggestions={suggestions}
                 onSuggestionsFetchRequested={onSuggestionsFetchRequested}
                 alwaysRenderSuggestions={true}
