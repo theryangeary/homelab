@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react'
 import {
-  DndContext,
   closestCenter,
+  DndContext,
   KeyboardSensor,
   PointerSensor,
   useSensor,
@@ -14,56 +13,10 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
-import {
-  useSortable,
-} from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
-import GroceryItem from './GroceryItem'
+import { useEffect, useState } from 'react'
 import { useGroceryList } from '../hooks/useGroceryList'
-import type { GroceryListEntry } from '../types/grocery'
+import SortableGroceryItem from './SortableGroceryItem'
 
-function SortableGroceryItem({
-  entry,
-  onUpdate,
-  onDelete,
-  onCreateBelow,
-  autoFocus,
-  onFetchSuggestions,
-}: {
-  entry: GroceryListEntry
-  onUpdate: (id: number, updates: Partial<GroceryListEntry>) => void
-  onDelete: (id: number) => void
-  onCreateBelow: (text: string, position: number) => Promise<GroceryListEntry | undefined>
-  autoFocus?: boolean
-  onFetchSuggestions: (query: string) => Promise<string[]>
-}) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({ id: entry.id })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  }
-
-  return (
-    <div ref={setNodeRef} style={style} {...attributes}>
-      <GroceryItem
-        item={entry}
-        onUpdate={onUpdate}
-        onDelete={onDelete}
-        onCreateBelow={onCreateBelow}
-        autoFocus={autoFocus}
-        dragHandleProps={listeners}
-        fetchSuggestions={onFetchSuggestions}
-      />
-    </div>
-  )
-}
 
 export default function GroceryList() {
   const {
