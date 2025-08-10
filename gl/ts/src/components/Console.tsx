@@ -31,6 +31,7 @@ export default function Console(
         onChange: (event, { newValue }) => setValue(newValue),
         // onKeyDown,
         // ref: inputRef,
+        onBlur: () => setSuggestions([]),
     };
 
     const onSuggestionsFetchRequested = ({ value }) => {
