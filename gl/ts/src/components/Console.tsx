@@ -3,11 +3,22 @@ import Autosuggest from 'react-autosuggest';
 
 const getSuggestionValue = suggestion => suggestion;
 
-const renderSuggestion = suggestion => (
-    <div>
-        {suggestion}
-    </div>
-);
+const renderSuggestion = (suggestion, { query, isHighlighted }) => {
+    if (isHighlighted) {
+        return (
+            <div style={{ background: 'red' }}>
+                {suggestion}
+            </div>
+        )
+    }
+
+    return (
+
+        <div>
+            {suggestion}
+        </div>
+    )
+};
 
 export default function Console(
 ) {
