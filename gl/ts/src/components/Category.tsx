@@ -1,8 +1,7 @@
 import { useDroppable } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { GroceryListRepository } from '../hooks/useGroceryList';
 import { Category as CategoryModel } from '../types/category';
-import SortableGroceryItem from './SortableGroceryItem';
+import GroceryItem from './GroceryItem';
 
 interface CategoryProps {
     category: CategoryModel,
@@ -15,24 +14,27 @@ export default function Category({
 }: CategoryProps) {
     const { setNodeRef } = useDroppable({
         id: `category-${category.id}`,
+        data: {
+            category: category,
+        }
     });
+
+    const items = groceryListRepository.entries.filter(entry => entry.category_id === category.id);
 
     return (
         <div ref={setNodeRef}>
             <div className="bg-sky-500"><p>{category.name}</p></div>
-            <SortableContext items={groceryListRepository.entries.filter(entry => entry.category_id === category.id).map(entry => entry.id)} strategy={verticalListSortingStrategy}>
                 <div className="space-y-2">
-                    {groceryListRepository.entries.map((entry) => (
-                        <SortableGroceryItem
+                    {items.map((entry) => (
+                        <GroceryItem
                             key={entry.id}
-                            entry={entry}
+                            item={entry}
                             onUpdate={groceryListRepository.updateEntry}
                             onDelete={groceryListRepository.deleteEntry}
-                            onFetchSuggestions={groceryListRepository.fetchSuggestions}
+                            fetchSuggestions={groceryListRepository.fetchSuggestions}
                         />
                     ))}
                 </div>
-            </SortableContext>
         </div>
     );
 }

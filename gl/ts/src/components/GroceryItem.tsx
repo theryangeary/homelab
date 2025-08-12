@@ -1,5 +1,7 @@
 import AsyncCreatableSelect from 'react-select/async-creatable';
 
+import { useDraggable } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
 import type { GroceryListEntry } from '../types/grocery';
 
 interface GroceryItemProps {
@@ -19,6 +21,16 @@ export default function GroceryItem({
   autoFocus = false,
   dragHandleProps
 }: GroceryItemProps) {
+  const {attributes, listeners, setNodeRef, transform} = useDraggable({
+    id: `entry-${item.id}`,
+    data: {
+      entry: item,
+    }
+  });
+  const style = {
+    transform: CSS.Translate.toString(transform),
+  };
+
   const fullLabel = `${item.quantity} ${item.description} ${item.notes}`;
 
   const handleDescriptionChange = (newDescription: string) => {
@@ -34,9 +46,9 @@ export default function GroceryItem({
   }
 
   return (
-    <div className="flex items-center gap-2 p-2 border border-gray-200 rounded">
+    <div ref={setNodeRef} style={style} {...listeners} {...attributes} className="flex items-center gap-2 p-2 border border-gray-200 rounded" >
       <div
-        {...dragHandleProps}
+        // {...dragHandleProps}
         className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 px-1"
         title="Drag to reorder"
       >
