@@ -1,8 +1,8 @@
-import { AnimateLayoutChanges, defaultAnimateLayoutChanges, useSortable } from '@dnd-kit/sortable';
+import { AnimateLayoutChanges, defaultAnimateLayoutChanges, SortableContext, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GroceryListRepository } from '../hooks/useGroceryList';
 import { Category as CategoryModel } from '../types/category';
-import GroceryItem from './GroceryItem';
+import SortableGroceryItem from './SortableGroceryItem';
 
 const animateLayoutChanges: AnimateLayoutChanges = (args) =>
     defaultAnimateLayoutChanges({ ...args, wasDragging: true });
@@ -51,23 +51,25 @@ export default function Category({
             {...attributes} {...listeners}
         >
             <div className="bg-sky-500">      <div
-{...listeners} {...attributes}
+                {...listeners} {...attributes}
                 className="cursor-grab active:cursor-grabbing text-white-1000 hover:text-gray-600 px-1"
                 title="Drag to reorder"
             >
                 ⋮⋮
             </div><p>{category.name}</p></div>
-            <div className="space-y-2">
-                {items.map((entry) => (
-                    <GroceryItem
-                        key={entry.id}
-                        item={entry}
-                        onUpdate={groceryListRepository.updateEntry}
-                        onDelete={groceryListRepository.deleteEntry}
-                        fetchSuggestions={groceryListRepository.fetchSuggestions}
-                    />
-                ))}
-            </div>
+            <SortableContext items={items}>
+                <div className="space-y-2">
+                    {items.map((entry) => (
+                        <SortableGroceryItem
+                            key={entry.id}
+                            entry={entry}
+                            onUpdate={groceryListRepository.updateEntry}
+                            onDelete={groceryListRepository.deleteEntry}
+                            onFetchSuggestions={groceryListRepository.fetchSuggestions}
+                        />
+                    ))}
+                </div>
+            </SortableContext>
         </div>
     );
 }
