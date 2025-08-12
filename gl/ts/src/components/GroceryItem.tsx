@@ -44,8 +44,9 @@ export default function GroceryItem({
   }
 
   return (
-    <div ref={setNodeRef} style={style} {...listeners} {...attributes} className="flex items-center gap-2 p-2 border border-gray-200 rounded" >
+    <div ref={setNodeRef}  className="flex items-center gap-2 p-2 border border-gray-200 rounded" >
       <div
+      style={style} {...listeners} {...attributes}
         // {...dragHandleProps}
         className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 px-1"
         title="Drag to reorder"
