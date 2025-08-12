@@ -69,10 +69,30 @@ impl Database {
         Ok(entries)
     }
 
+    pub async fn get_last_category_for_description(
+        &self,
+        description: &str,
+    ) -> Result<Option<i64>> {
+        Ok(sqlx::query(
+            "SELECT category_id FROM grocery_list_entries WHERE description = ? ORDER BY updated_at DESC LIMIT 1",
+        )
+        .bind(description)
+        .fetch_optional(&self.pool)
+        .await?
+        .map(|r|r.get("category_id"))
+    )
+    }
+
     pub async fn create_entry(&self, entry: CreateGroceryListEntry) -> Result<GroceryListEntry> {
         let quantity = entry.quantity.unwrap_or_default();
         let notes = entry.notes.unwrap_or_default();
-        let category_id = entry.category_id.unwrap_or(1);
+        let category_id = match entry.category_id {
+            Some(c) => c,
+            None => self
+                .get_last_category_for_description(&entry.description)
+                .await?
+                .unwrap_or(1),
+        };
 
         let row = sqlx::query(
             "INSERT INTO grocery_list_entries (description, position, quantity, notes, category_id)
