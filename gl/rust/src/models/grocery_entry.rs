@@ -35,5 +35,5 @@ pub struct UpdateGroceryListEntry {
 #[derive(Debug, Deserialize)]
 pub struct ReorderEntry {
     pub id: i64,
-    pub position: i64,
+    pub new_position: i64,
 }

@@ -154,11 +154,11 @@ pub async fn delete_entry(
 
 pub async fn reorder_entries(
     State(db): State<Arc<Database>>,
-    Json(payload): Json<Vec<ReorderEntry>>,
+    Json(payload): Json<ReorderEntry>,
 ) -> Result<StatusCode, StatusCode> {
     match db.reorder_entries(payload).await {
         Ok(()) => Ok(StatusCode::NO_CONTENT),
-        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
+        Err(e) => {tracing::error!("Failed to reorder: {}", e); Err(StatusCode::INTERNAL_SERVER_ERROR)},
     }
 }
 
