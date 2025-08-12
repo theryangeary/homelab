@@ -1,7 +1,11 @@
-import { useDroppable } from '@dnd-kit/core';
+import { AnimateLayoutChanges, defaultAnimateLayoutChanges, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { GroceryListRepository } from '../hooks/useGroceryList';
 import { Category as CategoryModel } from '../types/category';
 import GroceryItem from './GroceryItem';
+
+const animateLayoutChanges: AnimateLayoutChanges = (args) =>
+    defaultAnimateLayoutChanges({ ...args, wasDragging: true });
 
 interface CategoryProps {
     category: CategoryModel,
@@ -12,29 +16,58 @@ export default function Category({
     category,
     groceryListRepository,
 }: CategoryProps) {
-    const { setNodeRef } = useDroppable({
-        id: `category-${category.id}`,
+    const items = groceryListRepository.entries.filter(entry => entry.category_id === category.id);
+    const id = `category-${category.id}`;
+
+    const {
+        attributes,
+        isDragging,
+        listeners,
+        setNodeRef,
+        transition,
+        transform,
+    } = useSortable({
+        id,
         data: {
+            type: 'container',
+            children: items,
             category: category,
-        }
+        },
+        animateLayoutChanges
     });
 
-    const items = groceryListRepository.entries.filter(entry => entry.category_id === category.id);
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+    };
 
     return (
-        <div ref={setNodeRef}>
-            <div className="bg-sky-500"><p>{category.name}</p></div>
-                <div className="space-y-2">
-                    {items.map((entry) => (
-                        <GroceryItem
-                            key={entry.id}
-                            item={entry}
-                            onUpdate={groceryListRepository.updateEntry}
-                            onDelete={groceryListRepository.deleteEntry}
-                            fetchSuggestions={groceryListRepository.fetchSuggestions}
-                        />
-                    ))}
-                </div>
+        <div ref={setNodeRef} style={{
+            ...style,
+            transition,
+            transform: CSS.Translate.toString(transform),
+            opacity: isDragging ? 0.5 : undefined,
+        }}
+            {...attributes} {...listeners}
+        >
+            <div className="bg-sky-500">      <div
+{...listeners} {...attributes}
+                className="cursor-grab active:cursor-grabbing text-white-1000 hover:text-gray-600 px-1"
+                title="Drag to reorder"
+            >
+                ⋮⋮
+            </div><p>{category.name}</p></div>
+            <div className="space-y-2">
+                {items.map((entry) => (
+                    <GroceryItem
+                        key={entry.id}
+                        item={entry}
+                        onUpdate={groceryListRepository.updateEntry}
+                        onDelete={groceryListRepository.deleteEntry}
+                        fetchSuggestions={groceryListRepository.fetchSuggestions}
+                    />
+                ))}
+            </div>
         </div>
     );
 }

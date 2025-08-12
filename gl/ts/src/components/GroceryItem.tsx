@@ -1,6 +1,6 @@
 import AsyncCreatableSelect from 'react-select/async-creatable';
 
-import { useDraggable } from '@dnd-kit/core';
+import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { GroceryListEntry } from '../types/grocery';
 
@@ -19,14 +19,17 @@ export default function GroceryItem({
   fetchSuggestions,
   autoFocus = false,
 }: GroceryItemProps) {
-  const {attributes, listeners, setNodeRef, transform} = useDraggable({
+  const {attributes, listeners, setNodeRef, transform, transition} = useSortable({
     id: `entry-${item.id}`,
     data: {
+      type: 'entry',
       entry: item,
     }
   });
+
   const style = {
     transform: CSS.Translate.toString(transform),
+    transition,
   };
 
   const fullLabel = `${item.quantity} ${item.description} ${item.notes}`;
