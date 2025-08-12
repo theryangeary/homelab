@@ -58,7 +58,6 @@ export default function GroceryItem({
             return suggestions.map(s => ({ label: s, value: s }))
           }}
           onChange={(option) => {
-            console.log(option)
             if (option) {
               const newDescription = option.value
               handleDescriptionChange(newDescription)
@@ -66,7 +65,6 @@ export default function GroceryItem({
             }
           }}
           onCreateOption={(inputValue: string) => {
-            console.log(inputValue)
             handleDescriptionChange(inputValue)
             onCreateBelow('', item.position + 1)
           }}

@@ -3,7 +3,7 @@ import type { Category } from '../types/category'
 
 const API_BASE = '/api'
 
-export type GroceryListRepository = {
+export type CategoryRepository = {
   categories: Category[],
   loading: boolean,
   createCategory: (name: string) => Promise<any>,
@@ -14,7 +14,7 @@ export type GroceryListRepository = {
 }
 
 
-export function useCategories(): GroceryListRepository {
+export function useCategories(): CategoryRepository {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
 

@@ -1,6 +1,9 @@
 import { useRef, useState } from 'react';
 import Autosuggest from 'react-autosuggest';
+import { CategoryRepository } from '../hooks/useCategories';
 import { GroceryListRepository } from '../hooks/useGroceryList';
+import Executor from '../utils/cmd/exec';
+import { parseInput } from '../utils/cmd/parser';
 
 const getSuggestionValue = suggestion => suggestion.trim();
 
@@ -21,16 +24,21 @@ const renderSuggestion = (suggestion, { query, isHighlighted }) => {
 };
 
 interface ConsoleProps {
-    groceryListRepository: GroceryListRepository
+    groceryListRepository: GroceryListRepository,
+    categoryRepository: CategoryRepository,
+    onExecuteError: (e: Error) => void,
 }
 
 export default function Console({
     groceryListRepository,
+    categoryRepository,
+    onExecuteError,
 }: ConsoleProps) {
     const [value, setValue] = useState('');
     const [suggestions, setSuggestions] = useState<string[]>([]);
     const inputRef = useRef(HTMLInputElement);
     const autosuggestRef = useRef(null);
+    const executor = new Executor(groceryListRepository, categoryRepository)
 
     const onSuggestionsFetchRequested = async ({ value }) => {
         if (value.length === 0) {
@@ -48,45 +56,21 @@ export default function Console({
         }
     }
 
-    const parseInput = (inputValue) => {
-        if (!inputValue.startsWith('/')) {
-            return { type: 'item', value: inputValue };
-        }
-
-        const parts = inputValue.split(' ');
-        const commandPart = parts[0];
-
-        if (inputValue.endsWith(' ') || parts.length > 1) {
-            // Command is complete, now in parameter mode
-            if (commandPart === '/category' && parts[1] === 'add') {
-                return {
-                    type: 'category-name',
-                    value: parts.slice(2).join(' '),
-                    command: '/category add'
-                };
-            }
-        }
-
-        return {
-            type: 'command',
-            value: inputValue
-        };
-    };
-
-    const handleSubmit = (inputValue = value) => {
+    const handleSubmit = async (inputValue = value) => {
         if (!inputValue.trim()) return;
 
-        const context = parseInput(inputValue);
+        const parseResult = parseInput(inputValue);
 
-        if (context.type === 'item') {
-            groceryListRepository.createEntry(context.value, 0);
+        const error = await executor.execute(parseResult);
+        if (error === undefined) {
+            setValue('');
+            setSuggestions([]);
+        } else {
+            onExecuteError(error);
         }
-
-        setValue('');
-        setSuggestions([]);
     };
 
-    const onKeyDown = (event) => {
+    const onKeyDown = (event: KeyboardEvent) => {
         if (event.ctrlKey && event.key === 'n') {
             // Prevent the default browser behavior (like opening a new window)
             event.preventDefault();
