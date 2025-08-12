@@ -67,12 +67,13 @@ export default function GroceryItem({
           }}
           onChange={(option) => {
             if (option) {
-              const newDescription = option.value
+              const newDescription = option.value.toLowerCase()
+              console.log(newDescription)
               handleDescriptionChange(newDescription)
             }
           }}
           onCreateOption={(inputValue: string) => {
-            handleDescriptionChange(inputValue)
+            handleDescriptionChange(inputValue.toLowerCase())
           }}
           placeholder="Add item..."
           isClearable={false}
