@@ -44,7 +44,7 @@ impl Database {
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
                 is_default_category BOOLEAN NOT NULL DEFAULT FALSE,
-                position INTEGER NOT NULL,
+                position INTEGER NOT NULL DEFAULT 1,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
 
@@ -192,7 +192,7 @@ impl Database {
 
     pub async fn create_category(&self, category: CreateCategory) -> Result<Category> {
         let row = sqlx::query(
-            "INSERT INTO categories (name) VALUES (?, ?, ?, ?) RETURNING id, name, is_default_category, position, updated_at"
+            "INSERT INTO categories (name) VALUES (?) RETURNING id, name, is_default_category, position, updated_at"
         )
         .bind(&category.name)
         .fetch_one(&self.pool)
