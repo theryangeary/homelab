@@ -57,8 +57,7 @@ export default function GroceryList({
       onDragEnd={handleDragEnd}
     >
       {categoryRepository.categories.map((category) =>
-        <Category category={category} groceryListRepository={groceryListRepository}
-        />
+        <Category key={category.id} category={category} groceryListRepository={groceryListRepository} />
       )}
     </DndContext>
   )
