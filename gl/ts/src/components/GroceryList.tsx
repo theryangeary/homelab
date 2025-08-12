@@ -9,20 +9,21 @@ import {
 } from '@dnd-kit/core'
 import {
   arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
+  sortableKeyboardCoordinates
 } from '@dnd-kit/sortable'
 import { useState } from 'react'
+import { CategoryRepository } from '../hooks/useCategories'
 import { GroceryListRepository } from '../hooks/useGroceryList'
-import SortableGroceryItem from './SortableGroceryItem'
+import Category from './Category'
 
 interface GroceryListProps {
   groceryListRepository: GroceryListRepository
+  categoryRepository: CategoryRepository
 }
 
 export default function GroceryList({
   groceryListRepository,
+  categoryRepository,
 }: GroceryListProps) {
   const [lastCreatedId, setLastCreatedId] = useState<number | null>(null)
 
@@ -32,18 +33,6 @@ export default function GroceryList({
       coordinateGetter: sortableKeyboardCoordinates,
     })
   )
-
-  const handleCreateBelow = async (description: string, position: number) => {
-    //const entriesToUpdate = entries
-    //.filter(entry => entry.position >= position)
-    //.map(entry => ({ ...entry, position: entry.position + 1 }))
-
-    const newEntry = await groceryListRepository.createEntry(description, position)
-    if (newEntry) {
-      setLastCreatedId(newEntry.id)
-    }
-    return newEntry
-  }
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
@@ -67,21 +56,10 @@ export default function GroceryList({
       collisionDetection={closestCenter}
       onDragEnd={handleDragEnd}
     >
-      <SortableContext items={groceryListRepository.entries.map(entry => entry.id)} strategy={verticalListSortingStrategy}>
-        <div className="space-y-2">
-          {groceryListRepository.entries.map((entry) => (
-            <SortableGroceryItem
-              key={entry.id}
-              entry={entry}
-              onUpdate={groceryListRepository.updateEntry}
-              onDelete={groceryListRepository.deleteEntry}
-              onCreateBelow={handleCreateBelow}
-              autoFocus={entry.id === lastCreatedId}
-              onFetchSuggestions={groceryListRepository.fetchSuggestions}
-            />
-          ))}
-        </div>
-      </SortableContext>
+      {categoryRepository.categories.map((category) =>
+        <Category category={category} groceryListRepository={groceryListRepository}
+        />
+      )}
     </DndContext>
   )
 }

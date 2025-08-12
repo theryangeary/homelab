@@ -45,6 +45,7 @@ function App() {
         />
         <GroceryList
           groceryListRepository={groceryListRepository}
+          categoryRepository={categoryRepository}
         />
       </div>
     </div>

@@ -9,14 +9,12 @@ export default function SortableGroceryItem({
   entry,
   onUpdate,
   onDelete,
-  onCreateBelow,
   autoFocus,
   onFetchSuggestions,
 }: {
   entry: GroceryListEntry
   onUpdate: (id: number, updates: Partial<GroceryListEntry>) => void
   onDelete: (id: number) => void
-  onCreateBelow: (text: string, position: number) => Promise<GroceryListEntry | undefined>
   autoFocus?: boolean
   onFetchSuggestions: (query: string) => Promise<string[]>
 }) {
@@ -39,7 +37,6 @@ export default function SortableGroceryItem({
         item={entry}
         onUpdate={onUpdate}
         onDelete={onDelete}
-        onCreateBelow={onCreateBelow}
         autoFocus={autoFocus}
         dragHandleProps={listeners}
         fetchSuggestions={onFetchSuggestions}

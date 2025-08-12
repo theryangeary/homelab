@@ -6,4 +6,5 @@ export interface GroceryListEntry {
   quantity: string;
   notes: string;
   description: string;
+  category_id: number;
 }

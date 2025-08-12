@@ -6,7 +6,6 @@ interface GroceryItemProps {
   item: GroceryListEntry
   onUpdate: (id: number, updates: Partial<GroceryListEntry>) => void
   onDelete: (id: number) => void
-  onCreateBelow: (text: string, position: number) => Promise<GroceryListEntry | undefined>
   fetchSuggestions: (query: string) => Promise<string[]>
   autoFocus?: boolean
   dragHandleProps?: any
@@ -16,7 +15,6 @@ export default function GroceryItem({
   item,
   onUpdate,
   onDelete,
-  onCreateBelow,
   fetchSuggestions,
   autoFocus = false,
   dragHandleProps
@@ -61,12 +59,10 @@ export default function GroceryItem({
             if (option) {
               const newDescription = option.value
               handleDescriptionChange(newDescription)
-              onCreateBelow('', item.position + 1)
             }
           }}
           onCreateOption={(inputValue: string) => {
             handleDescriptionChange(inputValue)
-            onCreateBelow('', item.position + 1)
           }}
           placeholder="Add item..."
           isClearable={false}
