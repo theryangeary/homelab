@@ -29,6 +29,9 @@ export default class Executor {
                 if (!category) {
                     return new Error(`Category "${pr.oldName}" not found`);
                 }
+                if (category.id === 1) {
+                    return new Error(`Cannot rename default category`);
+                }
                 await this.cr.updateCategory(category.id, { name: pr.newName });
                 break;
 

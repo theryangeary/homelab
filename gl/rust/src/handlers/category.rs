@@ -53,6 +53,11 @@ pub async fn update_category(
     Path(id): Path<i64>,
     Json(payload): Json<UpdateCategory>,
 ) -> Result<Json<Category>, StatusCode> {
+    // don't allow rename default category
+    if id == 1 {
+        return Err(StatusCode::METHOD_NOT_ALLOWED)
+    }
+    
     match db.update_category(id, payload).await {
         Ok(Some(category)) => Ok(Json(category)),
         Ok(None) => Err(StatusCode::NOT_FOUND),
