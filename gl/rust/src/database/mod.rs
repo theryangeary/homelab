@@ -61,7 +61,7 @@ impl Database {
 
     pub async fn get_all_entries(&self) -> Result<Vec<GroceryListEntry>> {
         let entries = sqlx::query_as::<_, GroceryListEntry>(
-            "SELECT id, description, completed, position, quantity, notes, updated_at FROM grocery_list_entries ORDER BY position"
+            "SELECT id, description, completed, position, quantity, notes, category_id, updated_at FROM grocery_list_entries ORDER BY position"
         )
         .fetch_all(&self.pool)
         .await?;
