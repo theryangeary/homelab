@@ -25,7 +25,7 @@ export default function SortableGroceryItem({
         transform,
         transition,
     } = useSortable({
-        id: `entry-{entry.id}`,
+        id: `entry-${entry.id}`,
         data: {
             type: 'entry',
             entry: entry

@@ -15,10 +15,11 @@ export default function Category({
     dragHandleProps,
 }: CategoryProps) {
     const items = groceryListRepository.entries.filter(entry => entry.category_id === category.id);
+    const itemIds = items.map((entry) => `entry-${entry.id}`);
 
     return (
         <div>
-            <div className="bg-sky-500">     
+            <div className="flex bg-sky-500">     
                 <div
                 {...dragHandleProps}
                 className="cursor-grab active:cursor-grabbing text-white-1000 hover:text-gray-600 px-1"
@@ -26,7 +27,7 @@ export default function Category({
             >
                 ⋮⋮
             </div><p>{category.name}</p></div>
-            <SortableContext items={items}>
+            <SortableContext items={itemIds}>
                 <div className="space-y-2">
                     {items.map((entry) => (
                         <SortableGroceryItem

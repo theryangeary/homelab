@@ -15,7 +15,7 @@ export default function GroceryItem({
   item,
   onUpdate,
   onDelete,
-  onFetchSuggestions: fetchSuggestions,
+  onFetchSuggestions,
   autoFocus = false,
   dragHandleProps,
 }: GroceryItemProps) {
@@ -52,7 +52,7 @@ export default function GroceryItem({
         <AsyncCreatableSelect
           value={{ label: fullLabel, value: fullLabel }}
           loadOptions={async (inputValue: string) => {
-            const suggestions = await fetchSuggestions(inputValue)
+            const suggestions = await onFetchSuggestions(inputValue)
             return suggestions.map(s => ({ label: s, value: s }))
           }}
           onChange={(option) => {

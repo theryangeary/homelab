@@ -1,12 +1,14 @@
 import {
   closestCenter,
+  DataRef,
   DndContext,
   DragOverlay,
+  DragStartEvent,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
-  type DragEndEvent,
+  type DragEndEvent
 } from '@dnd-kit/core'
 import {
   SortableContext,
@@ -16,6 +18,8 @@ import { useState } from 'react'
 import { CategoryRepository } from '../hooks/useCategories'
 import { GroceryListRepository } from '../hooks/useGroceryList'
 import Category from './Category'
+import GroceryItem from './GroceryItem'
+import SortableCategory from './SortableCategory'
 
 interface GroceryListProps {
   groceryListRepository: GroceryListRepository
@@ -26,7 +30,7 @@ export default function GroceryList({
   groceryListRepository,
   categoryRepository,
 }: GroceryListProps) {
-  const [activeCategoryId, setActiveCategoryId] = useState(null);
+  const [active, setActive] = useState<DataRef | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -36,17 +40,14 @@ export default function GroceryList({
   )
 
   const sortedCategories = categoryRepository.categories.sort((a, b) => a.position - b.position);
+  const sortedCategoryIds = sortedCategories.map((category) => `category-${category.id}`);
 
-  function handleDragStart(event) {
-    if (event.active.data.current?.type === 'event') {
-      setActiveCategoryId(event.active.data.current?.entry.category_id);
-    } else if (event.active.data.current?.type === 'category') {
-      setActiveCategoryId(event.active.data.current?.category.id);
-    }
+  function handleDragStart(event: DragStartEvent) {
+    setActive(event.active.data);
   }
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    setActiveCategoryId(null);
+  const handleDragEnd = (_event: DragEndEvent) => {
+    setActive(null);
   }
 
   if (groceryListRepository.loading) {
@@ -60,15 +61,23 @@ export default function GroceryList({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <SortableContext items={categoryRepository.categories}>
+      <SortableContext items={sortedCategoryIds}>
         {categoryRepository.categories.map((category) =>
-          <Category key={category.id} category={category} groceryListRepository={groceryListRepository} />
+          <SortableCategory key={category.id} category={category} groceryListRepository={groceryListRepository} />
         )}
       </SortableContext>
 
       <DragOverlay>
-        {activeCategoryId ? (
-          <Category key={activeCategoryId} category={categoryRepository.categories.filter((cat) => cat.id === activeCategoryId)[0]} groceryListRepository={groceryListRepository} />
+        {active && active.current?.type === 'category' ? (
+          <Category category={categoryRepository.categories.filter((cat) => cat.id === active.current?.category.id)[0]} groceryListRepository={groceryListRepository} />
+        ) : null}
+        {active && active.current?.type === 'entry' ? (
+          <GroceryItem
+            item={groceryListRepository.entries.filter((entry) => entry.id === active.current?.entry.id)[0]}
+            onDelete={groceryListRepository.deleteEntry}
+            onFetchSuggestions={groceryListRepository.fetchSuggestions}
+            onUpdate={groceryListRepository.updateEntry} 
+            dragHandleProps={undefined}            />
         ) : null}
       </DragOverlay>
     </DndContext>

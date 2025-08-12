@@ -20,7 +20,7 @@ export default function SortableCategory({
     transform,
     transition,
   } = useSortable({ 
-    id: `category-{category.id}`,
+    id: `category-${category.id}`,
     data: {
       type: 'category',
       category: category,
