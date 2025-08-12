@@ -35,7 +35,7 @@ impl Database {
                 position INTEGER NOT NULL,
                 quantity TEXT NOT NULL DEFAULT '',
                 notes TEXT NOT NULL DEFAULT '',
-                category_id INTEGER NOT NULL DEFAULT 0,
+                category_id INTEGER NOT NULL DEFAULT 1,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY(category_id) REFERENCES categories(id)
             );
