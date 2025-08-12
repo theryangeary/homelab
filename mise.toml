@@ -37,3 +37,7 @@ run = "docker push ghcr.io/theryangeary/nginx"
 run = "docker push ghcr.io/theryangeary/smallweb"
 [tasks.push]
 depends = ['push_gl', 'push_nginx', 'push_smallweb']
+
+[tasks.deploy]
+run = "docker stack config -c docker-compose.yml | ssh raspberrypi1.local 'cd homelab && docker stack deploy --with-registry-auth -c - homelab'"
+
