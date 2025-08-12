@@ -121,7 +121,7 @@ export default function Console({
     const inputProps = {
         placeholder: "Add grocery item or type / for commands...",
         value,
-        onChange: (_event: FormEvent, { newValue }: any) => setValue(newValue),
+        onChange: (_event: FormEvent, { newValue }: any) => setValue(newValue.toLowerCase()),
         onBlur: () => setSuggestions([]),
         onKeyDown: onKeyDown,
         ref: inputRef
