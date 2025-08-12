@@ -9,7 +9,7 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core'
 import {
-  arrayMove,
+  SortableContext,
   sortableKeyboardCoordinates
 } from '@dnd-kit/sortable'
 import { useState } from 'react'
@@ -26,7 +26,7 @@ export default function GroceryList({
   groceryListRepository,
   categoryRepository,
 }: GroceryListProps) {
-  const [activeId, setActiveId] = useState(null);
+  const [activeCategoryId, setActiveCategoryId] = useState(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -38,46 +38,15 @@ export default function GroceryList({
   const sortedCategories = categoryRepository.categories.sort((a, b) => a.position - b.position);
 
   function handleDragStart(event) {
-    setActiveId(event.active.id);
+    if (event.active.data.current?.type === 'event') {
+      setActiveCategoryId(event.active.data.current?.entry.category_id);
+    } else if (event.active.data.current?.type === 'category') {
+      setActiveCategoryId(event.active.data.current?.category.id);
+    }
   }
 
   const handleDragEnd = (event: DragEndEvent) => {
-    setActiveId(null);
-
-    const { active, over } = event
-
-    if (over === null) {
-      return;
-    }
-
-    const drop_category = over.data.current?.category
-
-    if (active.data.current?.type === 'entry') {
-      const entry = active.data.current?.entry
-
-      if (entry.category_id != drop_category.id) {
-        groceryListRepository.updateEntry(entry.id, { category_id: drop_category.id })
-      }
-    } else if (active.data.current?.type === 'category') {
-      const category = active.data.current?.category
-
-      const oldIndex = categoryRepository.categories.findIndex((entry) => entry.id === category.id)
-      const newIndex = categoryRepository.categories.findIndex((entry) => entry.id === over.id)
-
-      const reorderedEntries = arrayMove(categoryRepository.categories, oldIndex, newIndex)
-      categoryRepository.reorderCategories(reorderedEntries)
-      console.log("should reorder categories");
-    }
-
-    // TODO ordering things within category is broken; probably need to implement Droppable for GroceryItem
-    if (over && active.id !== over.id) {
-      const oldIndex = groceryListRepository.entries.findIndex((entry) => entry.id === active.id)
-      const newIndex = groceryListRepository.entries.findIndex((entry) => entry.id === over.id)
-
-      const reorderedEntries = arrayMove(groceryListRepository.entries, oldIndex, newIndex)
-      groceryListRepository.reorderEntries(reorderedEntries)
-      console.log("should reorder items");
-    }
+    setActiveCategoryId(null);
   }
 
   if (groceryListRepository.loading) {
@@ -88,15 +57,18 @@ export default function GroceryList({
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
+      <SortableContext items={categoryRepository.categories}>
         {categoryRepository.categories.map((category) =>
           <Category key={category.id} category={category} groceryListRepository={groceryListRepository} />
         )}
+      </SortableContext>
 
       <DragOverlay>
-        {activeId ? (
-          <Category key={activeId} category={categoryRepository.categories.filter((cat) => cat.id === activeId)[0]} groceryListRepository={groceryListRepository} />
+        {activeCategoryId ? (
+          <Category key={activeCategoryId} category={categoryRepository.categories.filter((cat) => cat.id === activeCategoryId)[0]} groceryListRepository={groceryListRepository} />
         ) : null}
       </DragOverlay>
     </DndContext>
