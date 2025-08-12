@@ -1,1 +1,1 @@
-{"root":["./src/app.tsx","./src/main.tsx","./src/components/groceryitem.tsx","./src/components/grocerylist.tsx","./src/hooks/usegrocerylist.ts","./src/types/grocery.ts"],"version":"5.8.3"}
+{"root":["./src/app.tsx","./src/main.tsx","./src/components/category.tsx","./src/components/console.tsx","./src/components/groceryitem.tsx","./src/components/grocerylist.tsx","./src/hooks/usecategories.ts","./src/hooks/usegrocerylist.ts","./src/types/category.ts","./src/types/grocery.ts","./src/utils/cmd/exec.ts","./src/utils/cmd/parser.ts"],"version":"5.8.3"}

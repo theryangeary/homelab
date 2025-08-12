@@ -10,7 +10,6 @@ interface GroceryItemProps {
   onDelete: (id: number) => void
   fetchSuggestions: (query: string) => Promise<string[]>
   autoFocus?: boolean
-  dragHandleProps?: any
 }
 
 export default function GroceryItem({
@@ -19,7 +18,6 @@ export default function GroceryItem({
   onDelete,
   fetchSuggestions,
   autoFocus = false,
-  dragHandleProps
 }: GroceryItemProps) {
   const {attributes, listeners, setNodeRef, transform} = useDraggable({
     id: `entry-${item.id}`,

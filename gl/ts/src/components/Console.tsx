@@ -1,13 +1,16 @@
-import { useRef, useState } from 'react';
-import Autosuggest from 'react-autosuggest';
+import { FormEvent, useRef, useState } from 'react';
+import Autosuggest, { RenderSuggestionParams } from 'react-autosuggest';
 import { CategoryRepository } from '../hooks/useCategories';
 import { GroceryListRepository } from '../hooks/useGroceryList';
 import Executor from '../utils/cmd/exec';
 import { parseInput } from '../utils/cmd/parser';
 
-const getSuggestionValue = suggestion => suggestion.trim();
+const getSuggestionValue = (suggestion: string) => suggestion.trim();
 
-const renderSuggestion = (suggestion, { query, isHighlighted }) => {
+const renderSuggestion = (
+    suggestion: string,
+    { isHighlighted }: RenderSuggestionParams,
+) => {
     if (isHighlighted) {
         return (
             <div style={{ background: 'red' }}>
@@ -36,11 +39,13 @@ export default function Console({
 }: ConsoleProps) {
     const [value, setValue] = useState('');
     const [suggestions, setSuggestions] = useState<string[]>([]);
-    const inputRef = useRef(HTMLInputElement);
+    const inputRef = useRef(null);
     const autosuggestRef = useRef(null);
     const executor = new Executor(groceryListRepository, categoryRepository)
 
-    const onSuggestionsFetchRequested = async ({ value }) => {
+    const onSuggestionsFetchRequested = async (
+        { value }: { value: string },
+    ) => {
         if (value.length === 0) {
             setSuggestions([]);
         } else if (value[0] != '/') {
@@ -52,7 +57,7 @@ export default function Console({
                 '/category add',
                 '/category rename',
                 '/category remove',
-            ])
+            ].filter((suggestion) => suggestion.startsWith(value)))
         }
     }
 
@@ -84,6 +89,7 @@ export default function Console({
             });
 
             // Dispatch the event to the input element
+            // @ts-ignore
             inputRef.current?.dispatchEvent(downArrowEvent);
         } else if (event.ctrlKey && event.key === 'p') {
             // Prevent the default browser behavior (like opening a new window)
@@ -98,6 +104,7 @@ export default function Console({
             });
 
             // Dispatch the event to the input element
+            // @ts-ignore
             inputRef.current?.dispatchEvent(upArrowEvent);
         }
         else if (event.key === 'Enter') {
@@ -106,6 +113,7 @@ export default function Console({
         } else if (event.key === 'Escape') {
             setValue('');
             setSuggestions([]);
+            // @ts-ignore
             inputRef.current?.blur();
         }
     };
@@ -113,7 +121,7 @@ export default function Console({
     const inputProps = {
         placeholder: "Add grocery item or type / for commands...",
         value,
-        onChange: (event, { newValue }) => setValue(newValue),
+        onChange: (_event: FormEvent, { newValue }: any) => setValue(newValue),
         onBlur: () => setSuggestions([]),
         onKeyDown: onKeyDown,
         ref: inputRef
@@ -129,6 +137,7 @@ export default function Console({
                 shouldRenderSuggestions={() => true}
                 getSuggestionValue={getSuggestionValue}
                 renderSuggestion={renderSuggestion}
+                // @ts-ignore
                 inputProps={inputProps}
             />
         </div>
