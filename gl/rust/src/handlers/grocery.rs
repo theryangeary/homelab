@@ -180,7 +180,10 @@ pub async fn update_entry(
     match db.update_entry(id, parsed_payload).await {
         Ok(Some(entry)) => Ok(Json(entry)),
         Ok(None) => Err(StatusCode::NOT_FOUND),
-        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
+        Err(e) => {
+            tracing::error!("failed to update entry {}: {}", id, e);
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
     }
 }
 

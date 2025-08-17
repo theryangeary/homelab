@@ -10,12 +10,13 @@ use sqlx::{migrate::MigrateDatabase, sqlite::SqlitePool, Row, Sqlite};
 /// DEFAULT_CATEGORY_ID is the category of the default category, which must exist and must be the first category order by id
 pub const DEFAULT_CATEGORY_ID: i64 = 1;
 pub const ORDERABLE_LIST_REORDER_TEMPORARY_POSITION: i64 = 0;
-pub const ORDERABLE_LIST_MINIMUM_PERMANENT_POSITION: i64 = ORDERABLE_LIST_REORDER_TEMPORARY_POSITION + 1;
+pub const ORDERABLE_LIST_MINIMUM_PERMANENT_POSITION: i64 =
+    ORDERABLE_LIST_REORDER_TEMPORARY_POSITION + 1;
 
 // must bind (existing_position, new)
-const ENTRIES_REORDER_UP: &str = "UPDATE grocery_list_entries SET position = position + 1, updated_at = CURRENT_TIMESTAMP WHERE position < ? AND position >= ?";
+const ENTRIES_REORDER_UP: &str = "UPDATE grocery_list_entries SET position = position + 1, updated_at = CURRENT_TIMESTAMP WHERE position < ? AND position >= ? AND category_id = ?";
 // must bind (existing_position, new)
-const ENTRIES_REORDER_DOWN: &str = "UPDATE grocery_list_entries SET position = position - 1, updated_at = CURRENT_TIMESTAMP WHERE position > ? AND position <= ?";
+const ENTRIES_REORDER_DOWN: &str = "UPDATE grocery_list_entries SET position = position - 1, updated_at = CURRENT_TIMESTAMP WHERE position > ? AND position <= ? AND category_id = ?";
 
 pub struct Database {
     pool: SqlitePool,
@@ -69,6 +70,17 @@ impl Database {
         .await?;
 
         Ok(())
+    }
+
+    pub async fn get_entry(&self, id: i64) -> Result<GroceryListEntry> {
+        let entries = sqlx::query_as::<_, GroceryListEntry>(
+            "SELECT id, description, completed_at, position, quantity, notes, category_id, updated_at FROM grocery_list_entries WHERE id = ? LIMIT 1"
+        )
+        .bind(id)
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(entries)
     }
 
     pub async fn get_all_entries(&self) -> Result<Vec<GroceryListEntry>> {
@@ -150,6 +162,7 @@ impl Database {
     ) -> Result<Option<GroceryListEntry>> {
         let mut query_builder = sqlx::QueryBuilder::new("UPDATE grocery_list_entries SET ");
         let mut separated = query_builder.separated(", ");
+        let mut must_reorder = false;
 
         if let Some(description) = &entry.description {
             separated
@@ -175,6 +188,10 @@ impl Database {
             separated
                 .push("category_id = ")
                 .push_bind_unseparated(category_id);
+            separated
+                .push("position = ")
+                .push_bind_unseparated(ORDERABLE_LIST_REORDER_TEMPORARY_POSITION);
+            must_reorder = true;
         }
 
         separated.push("updated_at = CURRENT_TIMESTAMP");
@@ -183,22 +200,42 @@ impl Database {
         query_builder
             .push(" RETURNING id, description, completed_at, position, quantity, notes, category_id, updated_at");
 
-        let row = query_builder.build().fetch_optional(&self.pool).await?;
+        let mut tx = self.pool.begin().await?;
 
-        if let Some(row) = row {
-            Ok(Some(GroceryListEntry {
-                id: row.get("id"),
-                description: row.get("description"),
-                completed_at: row.get("completed_at"),
-                position: row.get("position"),
-                quantity: row.get("quantity"),
-                notes: row.get("notes"),
-                category_id: row.get("category_id"),
-                updated_at: row.get("updated_at"),
-            }))
-        } else {
-            Ok(None)
+        // update fields of this entry
+        query_builder.build().execute(&mut *tx).await?;
+
+        // then update other entries in the new category (if applicable) to make room for this item's position
+        if must_reorder {
+            tracing::info!(
+                "reorder call {} {} {} {}",
+                id,
+                ORDERABLE_LIST_REORDER_TEMPORARY_POSITION,
+                ORDERABLE_LIST_MINIMUM_PERMANENT_POSITION,
+                entry.category_id.unwrap()
+            );
+            self.reorder_entries_with_transaction(
+                id,
+                ORDERABLE_LIST_REORDER_TEMPORARY_POSITION,
+                ORDERABLE_LIST_MINIMUM_PERMANENT_POSITION,
+                entry
+                    .category_id
+                    .expect("must_reorder should only be true when category_id is updated"),
+                &mut tx,
+            )
+            .await?;
+
+            // and finally, update the position
+            sqlx::query("UPDATE grocery_list_entries SET position = ? WHERE id = ?")
+                .bind(ORDERABLE_LIST_MINIMUM_PERMANENT_POSITION)
+                .bind(id)
+                .execute(&mut *tx)
+                .await?;
         }
+
+        tx.commit().await?;
+
+        Ok(Some(self.get_entry(id).await?))
     }
 
     pub async fn delete_entry(&self, id: i64) -> Result<bool> {
@@ -210,24 +247,55 @@ impl Database {
         Ok(result.rows_affected() > 0)
     }
 
-    pub async fn reorder_entries(&self, entry: ReorderEntry) -> Result<()> {
-        let existing_position: i64 =
-            sqlx::query("SELECT position FROM grocery_list_entries WHERE id = ?")
-                .bind(entry.id)
+    /// get_existing_position_and_category is a helper for reorder_entries{_with_transaction}
+    async fn get_existing_position_and_category(&self, entry_id: i64) -> Result<(i64, i64)> {
+        let query =
+            sqlx::query("SELECT position, category_id FROM grocery_list_entries WHERE id = ?")
+                .bind(entry_id)
                 .fetch_one(&self.pool)
                 .await
                 .map_err(|e| {
                     tracing::error!(
                         "failed to get existing entry for grocery_list_entries.id: {}",
-                        entry.id
+                        entry_id
                     );
                     e
-                })?
-                .get("position");
+                })?;
 
-        let is_moving_up_list = existing_position > entry.new_position;
+        Ok((query.get("position"), query.get("category_id")))
+    }
+
+    /// reorder_entries will assign the specific entry.new_position to the entry
+    /// with entry.id, adjusting all other entries in the same category up or
+    /// down as needed to make room for the updated entry
+    pub async fn reorder_entries(&self, entry: ReorderEntry) -> Result<()> {
+        let (existing_position, existing_category_id) =
+            self.get_existing_position_and_category(entry.id).await?;
 
         let mut tx = self.pool.begin().await?;
+        self.reorder_entries_with_transaction(
+            entry.id,
+            existing_position,
+            entry.new_position,
+            existing_category_id,
+            &mut tx,
+        )
+        .await?;
+        tx.commit().await?;
+        Ok(())
+    }
+
+    /// reorder_entries_with_transaction does the actual reordering of entries, but requires the caller to commit the transaction
+    async fn reorder_entries_with_transaction(
+        &self,
+        entry_id: i64,
+        existing_position: i64,
+        new_position: i64,
+        existing_category_id: i64,
+        tx: &mut sqlx::Transaction<'static, Sqlite>,
+    ) -> Result<()> {
+        let is_moving_up_list = existing_position > new_position
+            && !existing_position == ORDERABLE_LIST_REORDER_TEMPORARY_POSITION;
 
         // set position of moved item to 0 to satisfy unique constraint while shifting
         sqlx::query(
@@ -236,17 +304,35 @@ impl Database {
                 WHERE id = ?",
         )
         .bind(ORDERABLE_LIST_REORDER_TEMPORARY_POSITION)
-        .bind(entry.id)
-        .execute(&mut *tx)
+        .bind(entry_id)
+        .execute(&mut **tx)
         .await?;
 
+        tracing::info!(
+            "temporary position: {}",
+            sqlx::query("select position from grocery_list_entries where id = ? limit 1")
+                .bind(entry_id)
+                .fetch_one(&mut **tx)
+                .await?
+                .get::<i64, &str>("position")
+        );
+
+        tracing::info!(
+            "shifting: incrementing={}, existing={}, new={}, existing_category_id={}",
+            is_moving_up_list,
+            existing_position,
+            new_position,
+            existing_category_id
+        );
+        
         sqlx::query(match is_moving_up_list {
             true => ENTRIES_REORDER_UP,
             false => ENTRIES_REORDER_DOWN,
         })
         .bind(existing_position)
-        .bind(entry.new_position)
-        .execute(&mut *tx)
+        .bind(new_position)
+        .bind(existing_category_id)
+        .execute(&mut **tx)
         .await?;
 
         sqlx::query(
@@ -254,12 +340,11 @@ impl Database {
             SET position = ?, updated_at = CURRENT_TIMESTAMP 
             WHERE id = ?",
         )
-        .bind(entry.new_position)
-        .bind(entry.id)
-        .execute(&mut *tx)
+        .bind(new_position)
+        .bind(entry_id)
+        .execute(&mut **tx)
         .await?;
 
-        tx.commit().await?;
         Ok(())
     }
 
@@ -276,10 +361,12 @@ impl Database {
     /// get_next_position_for_category gets the next position available for a
     /// category (i.e. what position to append it to the end of the list)
     pub async fn get_next_position_for_category(&self) -> Result<i64> {
-        Ok(sqlx::query("SELECT position + 1 as next_position FROM categories ORDER BY position DESC LIMIT 1")
+        Ok(sqlx::query(
+            "SELECT position + 1 as next_position FROM categories ORDER BY position DESC LIMIT 1",
+        )
         .fetch_optional(&self.pool)
         .await?
-        .map(|r|r.get("next_position"))
+        .map(|r| r.get("next_position"))
         .unwrap_or(ORDERABLE_LIST_MINIMUM_PERMANENT_POSITION))
     }
 
