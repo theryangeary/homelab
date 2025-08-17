@@ -9,6 +9,8 @@ use sqlx::{migrate::MigrateDatabase, sqlite::SqlitePool, Row, Sqlite};
 
 /// DEFAULT_CATEGORY_ID is the category of the default category, which must exist and must be the first category order by id
 pub const DEFAULT_CATEGORY_ID: i64 = 1;
+pub const REORDER_TEMPORARY_POSITION: i64 = 0;
+pub const MINIMUM_PERMANENT_POSITION: i64 = REORDER_TEMPORARY_POSITION + 1;
 
 // must bind (existing_position, new)
 const ENTRIES_REORDER_UP: &str = "UPDATE grocery_list_entries SET position = position + 1, updated_at = CURRENT_TIMESTAMP WHERE position < ? AND position >= ?";
@@ -85,7 +87,7 @@ impl Database {
         .fetch_optional(&self.pool)
         .await?
         .map(|r|r.get("next_position"))
-        .unwrap_or(0))
+        .unwrap_or(MINIMUM_PERMANENT_POSITION))
     }
 
     pub async fn get_last_category_for_description(
@@ -213,7 +215,7 @@ impl Database {
                 .await
                 .map_err(|e| {
                     tracing::error!(
-                        "Failed to get existing entry for grocery_list_entries.id: {}",
+                        "failed to get existing entry for grocery_list_entries.id: {}",
                         entry.id
                     );
                     e
@@ -224,6 +226,17 @@ impl Database {
 
         let mut tx = self.pool.begin().await?;
 
+        // set position of moved item to 0 to satisfy unique constraint while shifting
+        sqlx::query(
+            "UPDATE grocery_list_entries 
+                SET position = ? 
+                WHERE id = ?",
+        )
+        .bind(REORDER_TEMPORARY_POSITION)
+        .bind(entry.id)
+        .execute(&mut *tx)
+        .await?;
+
         sqlx::query(match is_moving_up_list {
             true => ENTRIES_REORDER_UP,
             false => ENTRIES_REORDER_DOWN,
@@ -233,8 +246,15 @@ impl Database {
         .execute(&mut *tx)
         .await?;
 
-        sqlx::query("UPDATE grocery_list_entries SET position = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
-        .bind(entry.new_position).bind(entry.id).execute(&mut *tx).await?;
+        sqlx::query(
+            "UPDATE grocery_list_entries 
+            SET position = ?, updated_at = CURRENT_TIMESTAMP 
+            WHERE id = ?",
+        )
+        .bind(entry.new_position)
+        .bind(entry.id)
+        .execute(&mut *tx)
+        .await?;
 
         tx.commit().await?;
         Ok(())
