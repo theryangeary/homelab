@@ -9,8 +9,8 @@ use sqlx::{migrate::MigrateDatabase, sqlite::SqlitePool, Row, Sqlite};
 
 /// DEFAULT_CATEGORY_ID is the category of the default category, which must exist and must be the first category order by id
 pub const DEFAULT_CATEGORY_ID: i64 = 1;
-pub const REORDER_TEMPORARY_POSITION: i64 = 0;
-pub const MINIMUM_PERMANENT_POSITION: i64 = REORDER_TEMPORARY_POSITION + 1;
+pub const ORDERABLE_LIST_REORDER_TEMPORARY_POSITION: i64 = 0;
+pub const ORDERABLE_LIST_MINIMUM_PERMANENT_POSITION: i64 = ORDERABLE_LIST_REORDER_TEMPORARY_POSITION + 1;
 
 // must bind (existing_position, new)
 const ENTRIES_REORDER_UP: &str = "UPDATE grocery_list_entries SET position = position + 1, updated_at = CURRENT_TIMESTAMP WHERE position < ? AND position >= ?";
@@ -81,13 +81,16 @@ impl Database {
         Ok(entries)
     }
 
-    pub async fn get_next_position_for_category(&self, category_id: i64) -> Result<i64> {
+    /// get_next_position_for_item_in_category gets the next position available
+    /// for an item going into the specified category (i.e. what position to
+    /// append it to the end of the list)
+    pub async fn get_next_position_for_item_in_category(&self, category_id: i64) -> Result<i64> {
         Ok(sqlx::query("SELECT position + 1 as next_position FROM grocery_list_entries WHERE category_id = ? ORDER BY position DESC LIMIT 1")
         .bind(category_id)
         .fetch_optional(&self.pool)
         .await?
         .map(|r|r.get("next_position"))
-        .unwrap_or(MINIMUM_PERMANENT_POSITION))
+        .unwrap_or(ORDERABLE_LIST_MINIMUM_PERMANENT_POSITION))
     }
 
     pub async fn get_last_category_for_description(
@@ -232,7 +235,7 @@ impl Database {
                 SET position = ? 
                 WHERE id = ?",
         )
-        .bind(REORDER_TEMPORARY_POSITION)
+        .bind(ORDERABLE_LIST_REORDER_TEMPORARY_POSITION)
         .bind(entry.id)
         .execute(&mut *tx)
         .await?;
@@ -270,11 +273,22 @@ impl Database {
         Ok(categories)
     }
 
+    /// get_next_position_for_category gets the next position available for a
+    /// category (i.e. what position to append it to the end of the list)
+    pub async fn get_next_position_for_category(&self) -> Result<i64> {
+        Ok(sqlx::query("SELECT position + 1 as next_position FROM categories ORDER BY position DESC LIMIT 1")
+        .fetch_optional(&self.pool)
+        .await?
+        .map(|r|r.get("next_position"))
+        .unwrap_or(ORDERABLE_LIST_MINIMUM_PERMANENT_POSITION))
+    }
+
     pub async fn create_category(&self, category: CreateCategory) -> Result<Category> {
         let row = sqlx::query(
-            "INSERT INTO categories (name) VALUES (?) RETURNING id, name, is_default_category, position, updated_at"
+            "INSERT INTO categories (name, position) VALUES (?, ?) RETURNING id, name, is_default_category, position, updated_at"
         )
         .bind(&category.name)
+        .bind(self.get_next_position_for_category().await?)
         .fetch_one(&self.pool)
         .await?;
 

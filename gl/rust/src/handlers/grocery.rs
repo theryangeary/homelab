@@ -118,7 +118,7 @@ pub async fn create_entry(
         .unwrap_or(database::DEFAULT_CATEGORY_ID);
 
     let position = db
-        .get_next_position_for_category(category_id)
+        .get_next_position_for_item_in_category(category_id)
         .await
         .map_err(|e| {
             tracing::error!("failed to find next position: {}", e);
