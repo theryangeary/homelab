@@ -4,10 +4,13 @@ use axum::{
     response::Json,
 };
 use serde::Deserialize;
-use std::sync::Arc;
+use std::{process::id, sync::Arc};
+use tokio::task::Id;
 
-use crate::database::Database;
-use crate::models::grocery_entry::{CreateGroceryListEntry, GroceryListEntry, ReorderEntry, UpdateGroceryListEntry};
+use crate::database::{self, Database};
+use crate::models::grocery_entry::{
+    CreateGroceryListEntry, GroceryListEntry, ReorderEntry, UpdateGroceryListEntry,
+};
 
 #[derive(Deserialize)]
 pub struct SuggestionsQuery {
@@ -65,11 +68,11 @@ pub async fn get_entries(
         Ok(entries) => {
             tracing::info!("Successfully retrieved {} entries", entries.len());
             Ok(Json(entries))
-        },
+        }
         Err(e) => {
             tracing::error!("Failed to get entries: {}", e);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
-        },
+        }
     }
 }
 
@@ -77,37 +80,68 @@ pub async fn create_entry(
     State(db): State<Arc<Database>>,
     Json(payload): Json<CreateGroceryListEntry>,
 ) -> Result<Json<GroceryListEntry>, StatusCode> {
-    tracing::info!("POST /api/entries called with description: '{}', position: {}", payload.description, payload.position);
+    tracing::info!(
+        "POST /api/entries '{:?}', '{:?}', '{:?}'",
+        payload.quantity,
+        payload.description,
+        payload.notes,
+    );
 
     // Parse the raw input if no quantity/notes are provided
     let (quantity, description, notes) = if payload.quantity.is_none() && payload.notes.is_none() {
-        let (parsed_quantity, parsed_description, parsed_notes) = parse_entry_input(&payload.description);
+        let (parsed_quantity, parsed_description, parsed_notes) =
+            parse_entry_input(&payload.description);
         (
-            if parsed_quantity.is_empty() { None } else { Some(parsed_quantity) },
+            if parsed_quantity.is_empty() {
+                None
+            } else {
+                Some(parsed_quantity)
+            },
             parsed_description,
-            if parsed_notes.is_empty() { None } else { Some(parsed_notes) }
+            if parsed_notes.is_empty() {
+                None
+            } else {
+                Some(parsed_notes)
+            },
         )
     } else {
         (payload.quantity, payload.description, payload.notes)
     };
 
+    let category_id = db
+        .get_last_category_for_description(&description)
+        .await
+        .map_err(|e| {
+            tracing::error!("failed to get category_id: {}", e);
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?
+        .unwrap_or(database::DEFAULT_CATEGORY_ID);
+
+    let position = db
+        .get_next_position_for_category(category_id)
+        .await
+        .map_err(|e| {
+            tracing::error!("failed to find next position: {}", e);
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
     let parsed_payload = CreateGroceryListEntry {
         description,
-        position: payload.position,
         quantity,
         notes,
-        category_id: payload.category_id,
+        category_id: Some(category_id),
+        position: Some(position),
     };
 
     match db.create_entry(parsed_payload).await {
         Ok(entry) => {
-            tracing::info!("Successfully created entry with id: {}", entry.id);
+            tracing::info!("created entry with id: {}", entry.id);
             Ok(Json(entry))
-        },
+        }
         Err(e) => {
-            tracing::error!("Failed to create entry: {}", e);
+            tracing::error!("failed to create entry: {}", e);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
-        },
+        }
     }
 }
 
@@ -119,12 +153,21 @@ pub async fn update_entry(
     // Parse the description if it's provided but quantity/notes are not
     let parsed_payload = if let Some(ref description) = payload.description {
         if payload.quantity.is_none() && payload.notes.is_none() {
-            let (parsed_quantity, parsed_description, parsed_notes) = parse_entry_input(description);
+            let (parsed_quantity, parsed_description, parsed_notes) =
+                parse_entry_input(description);
             UpdateGroceryListEntry {
                 description: Some(parsed_description),
                 completed: payload.completed,
-                quantity: if parsed_quantity.is_empty() { None } else { Some(parsed_quantity) },
-                notes: if parsed_notes.is_empty() { None } else { Some(parsed_notes) },
+                quantity: if parsed_quantity.is_empty() {
+                    None
+                } else {
+                    Some(parsed_quantity)
+                },
+                notes: if parsed_notes.is_empty() {
+                    None
+                } else {
+                    Some(parsed_notes)
+                },
                 category_id: payload.category_id,
             }
         } else {
@@ -158,7 +201,10 @@ pub async fn reorder_entries(
 ) -> Result<StatusCode, StatusCode> {
     match db.reorder_entries(payload).await {
         Ok(()) => Ok(StatusCode::NO_CONTENT),
-        Err(e) => {tracing::error!("Failed to reorder: {}", e); Err(StatusCode::INTERNAL_SERVER_ERROR)},
+        Err(e) => {
+            tracing::error!("Failed to reorder: {}", e);
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
     }
 }
 
@@ -166,15 +212,18 @@ pub async fn get_suggestions(
     State(db): State<Arc<Database>>,
     Query(params): Query<SuggestionsQuery>,
 ) -> Result<Json<Vec<String>>, StatusCode> {
-    tracing::info!("GET /api/entries/suggestions called with query: '{}'", params.query);
+    tracing::info!(
+        "GET /api/entries/suggestions called with query: '{}'",
+        params.query
+    );
     match db.get_suggestions(&params.query).await {
         Ok(suggestions) => {
             tracing::info!("Successfully retrieved {} suggestions", suggestions.len());
             Ok(Json(suggestions))
-        },
+        }
         Err(e) => {
             tracing::error!("Failed to get suggestions: {}", e);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
-        },
+        }
     }
 }

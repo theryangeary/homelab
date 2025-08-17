@@ -5,7 +5,7 @@ use sqlx::FromRow;
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct GroceryListEntry {
     pub id: i64,
-    pub completed: bool,
+    pub completed_at: Option<DateTime<Utc>>,
     pub updated_at: DateTime<Utc>,
     pub position: i64,
     pub quantity: String,
@@ -17,7 +17,7 @@ pub struct GroceryListEntry {
 #[derive(Debug, Deserialize)]
 pub struct CreateGroceryListEntry {
     pub description: String,
-    pub position: i64,
+    pub position: Option<i64>,
     pub quantity: Option<String>,
     pub notes: Option<String>,
     pub category_id: Option<i64>,
