@@ -17,6 +17,8 @@ import {
 import { useState } from 'react'
 import { CategoryRepository } from '../hooks/useCategories'
 import { GroceryListRepository } from '../hooks/useGroceryList'
+import { Category as CategoryModel } from '../types/category'
+import { GroceryListEntry } from '../types/grocery'
 import Category from './Category'
 import GroceryItem from './GroceryItem'
 import SortableCategory from './SortableCategory'
@@ -46,8 +48,33 @@ export default function GroceryList({
     setActive(event.active.data);
   }
 
-  const handleDragEnd = (_event: DragEndEvent) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     setActive(null);
+
+    var newPosition = undefined;
+    var newCategoryId = undefined;
+
+    if (event.active.data.current?.type === 'entry') {
+      const draggedEntry: GroceryListEntry = event.active.data.current?.entry;
+      
+      // if dropped on another entry, take that entry's position AND category
+      if (event.over?.data.current?.type === 'entry') {
+        const dropEntry: GroceryListEntry = event.over?.data.current?.entry
+        newPosition = dropEntry.position;
+        if (draggedEntry.category_id !== dropEntry.category_id) {
+          newCategoryId = dropEntry.category_id
+        }
+      // if dropped on a category, take that category's id
+      } else if (event.over?.data.current?.type === 'category') {
+        const dropCategory: CategoryModel = event.over?.data.current?.category
+        newCategoryId = dropCategory.id
+      }
+
+      groceryListRepository.reorderEntries(draggedEntry.id, newPosition, newCategoryId);
+    } else {
+      console.log("type issue?")
+    }
+
   }
 
   if (groceryListRepository.loading) {
@@ -76,8 +103,8 @@ export default function GroceryList({
             item={groceryListRepository.entries.filter((entry) => entry.id === active.current?.entry.id)[0]}
             onDelete={groceryListRepository.deleteEntry}
             onFetchSuggestions={groceryListRepository.fetchSuggestions}
-            onUpdate={groceryListRepository.updateEntry} 
-            dragHandleProps={undefined}            />
+            onUpdate={groceryListRepository.updateEntry}
+            dragHandleProps={undefined} />
         ) : null}
       </DragOverlay>
     </DndContext>

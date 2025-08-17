@@ -30,10 +30,12 @@ pub struct UpdateGroceryListEntry {
     pub quantity: Option<String>,
     pub notes: Option<String>,
     pub category_id: Option<i64>,
+    pub position: Option<i64>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct ReorderEntry {
     pub id: i64,
-    pub new_position: i64,
+    pub new_position: Option<i64>,
+    pub new_category_id: Option<i64>,
 }

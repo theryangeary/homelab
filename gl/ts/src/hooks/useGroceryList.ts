@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { GroceryListEntry } from '../types/grocery'
+import type { GroceryListEntry, ReorderRequest } from '../types/grocery'
 
 const API_BASE = '/api'
 
@@ -9,7 +9,7 @@ export type GroceryListRepository = {
   createEntry: (description: string, position: number, quantity?: string, notes?: string) => Promise<any>,
   updateEntry: (id: number, updates: Partial<GroceryListEntry>) => Promise<any>,
   deleteEntry: (id: number) => Promise<any>,
-  reorderEntries: (reorderedEntries: GroceryListEntry[]) => Promise<any>,
+  reorderEntries: (id: number, newPosition?: number, newCategoryId?: number) => Promise<any>,
   fetchSuggestions: (query: string) => Promise<string[]>,
 }
 
@@ -81,25 +81,26 @@ export function useGroceryList(): GroceryListRepository {
     }
   }, [])
 
-  const reorderEntries = useCallback(async (reorderedEntries: GroceryListEntry[]) => {
-    const entriesWithNewPositions = reorderedEntries.map((entry, index) => ({
-      ...entry,
-      position: index
-    }))
-
-    setEntries(entriesWithNewPositions)
+  const reorderEntries = async (id: number, newPosition: number, newCategoryId?: number) => {
+    var request: ReorderRequest = { id };
+    if (newPosition) {
+      request.new_position = newPosition;
+    }
+    if (newCategoryId) {
+      request.new_category_id = newCategoryId;
+    }
 
     try {
       await fetch(`${API_BASE}/entries/reorder`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(entriesWithNewPositions.map(entry => ({ id: entry.id, position: entry.position })))
+        body: JSON.stringify(request)
       })
     } catch (error) {
       console.error('Failed to reorder entries:', error)
-      fetchEntries()
     }
-  }, [fetchEntries])
+    fetchEntries()
+  }
 
   const fetchSuggestions = useCallback(async (query: string): Promise<string[]> => {
     if (query.length === 0) {

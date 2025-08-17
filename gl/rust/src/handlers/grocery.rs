@@ -4,8 +4,7 @@ use axum::{
     response::Json,
 };
 use serde::Deserialize;
-use std::{process::id, sync::Arc};
-use tokio::task::Id;
+use std::sync::Arc;
 
 use crate::database::{self, Database};
 use crate::models::grocery_entry::{
@@ -169,6 +168,7 @@ pub async fn update_entry(
                     Some(parsed_notes)
                 },
                 category_id: payload.category_id,
+                position: payload.position,
             }
         } else {
             payload
