@@ -3,8 +3,7 @@ mod handlers;
 mod models;
 
 use axum::{
-    routing::{delete, get, post, put},
-    Router,
+    http::{header, StatusCode, Uri}, response::{Html, IntoResponse, Response}, routing::{delete, get, post, put}, Router
 };
 use std::{env, sync::Arc};
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
@@ -15,6 +14,14 @@ use handlers::{
     create_entry, delete_entry, get_categories, get_entries, grocery, reorder_categories,
     reorder_entries, update_entry, create_category, update_category, delete_category, category,
 };
+use rust_embed::Embed;
+
+static INDEX_HTML: &str = "index.html";
+
+#[derive(Embed)]
+#[folder = "./dist"]
+
+struct Assets;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -36,7 +43,7 @@ async fn main() -> anyhow::Result<()> {
 
     let db = Arc::new(Database::new(&database_url).await?);
 
-    let app = Router::new()
+    let app = Router::new().fallback(static_handler)
         .route("/api/entries", get(get_entries))
         .route("/api/entries", post(create_entry))
         .route("/api/entries/:id", put(update_entry))
@@ -53,10 +60,45 @@ async fn main() -> anyhow::Result<()> {
         .layer(CorsLayer::permissive())
         .with_state(db);
 
+
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port)).await?;
     tracing::info!("Grocery List API server running on port {}", port);
 
     axum::serve(listener, app).await?;
 
     Ok(())
+}
+
+async fn static_handler(uri: Uri) -> impl IntoResponse {
+  let path = uri.path().trim_start_matches('/');
+
+  if path.is_empty() || path == INDEX_HTML {
+    return index_html().await;
+  }
+
+  match Assets::get(path) {
+    Some(content) => {
+      let mime = mime_guess::from_path(path).first_or_octet_stream();
+
+      ([(header::CONTENT_TYPE, mime.as_ref())], content.data).into_response()
+    }
+    None => {
+      if path.contains('.') {
+        return not_found().await;
+      }
+
+      index_html().await
+    }
+  }
+}
+
+async fn index_html() -> Response {
+  match Assets::get(INDEX_HTML) {
+    Some(content) => Html(content.data).into_response(),
+    None => not_found().await,
+  }
+}
+
+async fn not_found() -> Response {
+  (StatusCode::NOT_FOUND, "404").into_response()
 }
