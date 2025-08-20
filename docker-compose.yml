@@ -41,7 +41,7 @@ services:
       services:
 
   cloudflared:
-    image: cloudflare/cloudflared:latest
+    image: cloudflare/cloudflared:1755-08efe4c10307
     command: tunnel --no-autoupdate run
     env_file:
       - .env
