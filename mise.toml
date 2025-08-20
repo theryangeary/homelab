@@ -1,5 +1,6 @@
 [env]
 STATIC_DIR="{{config_root}}/static"
+STACK_NAME="homelab"
 _.file = '.env'
 
 [tasks.build_site]
@@ -48,16 +49,15 @@ run = '''
 #!/bin/bash
 docker stack config -c docker-compose.yml
 docker stack config -c docker-compose.yml \
-| ssh raspberrypi1.local \
+| ssh $MANAGER_HOST \
     'cd homelab && sudo docker stack deploy \
         --resolve-image=always \
         --detach=false \
         --with-registry-auth \
         -c - \
-        homelab \
+        $STACK_NAME \
     '
 '''
 
 [tasks.rollback]
-run = "ssh raspberrypi1.local 'docker service rollback $1'"
-
+run = "ssh $MANAGER_HOST 'docker service rollback $1'"
