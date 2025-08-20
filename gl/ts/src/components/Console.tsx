@@ -1,5 +1,5 @@
 import { FormEvent, useRef, useState } from 'react';
-import Autosuggest, { RenderSuggestionParams } from 'react-autosuggest';
+import Autosuggest, { RenderSuggestionParams, RenderSuggestionsContainerParams } from 'react-autosuggest';
 import { CategoryRepository } from '../hooks/useCategories';
 import { GroceryListRepository } from '../hooks/useGroceryList';
 import Executor from '../utils/cmd/exec';
@@ -11,20 +11,21 @@ const renderSuggestion = (
     suggestion: string,
     { isHighlighted }: RenderSuggestionParams,
 ) => {
-    if (isHighlighted) {
-        return (
-            <div style={{ background: 'red' }}>
-                {suggestion}
-            </div>
-        )
-    }
-
     return (
-        <div>
+        <div className={`p-1 w-full border-solid border-black ${isHighlighted ? 'bg-gray-200 text-gray-700 font-bold' : 'bg-gray-700 text-gray-100'}`}>
             {suggestion}
         </div>
     )
 };
+
+const renderSuggestionsContainer = ({ children, containerProps }: RenderSuggestionsContainerParams) => {
+    const {['key']: key, ...props} = containerProps
+    return (
+        <div key={containerProps.key} {...props} className={'absolute z-10 w-full'}>
+            {children}
+        </div>
+    )
+}
 
 interface ConsoleProps {
     groceryListRepository: GroceryListRepository,
@@ -124,11 +125,12 @@ export default function Console({
         onChange: (_event: FormEvent, { newValue }: any) => setValue(newValue.toLowerCase()),
         onBlur: () => setSuggestions([]),
         onKeyDown: onKeyDown,
-        ref: inputRef
+        ref: inputRef,
+        className: "w-full p-2 rounded-lg border border-black border-solid"
     };
 
     return (
-        <div className="relative">
+        <div className="relative justify-center m-1">
             <Autosuggest
                 ref={autosuggestRef}
                 suggestions={suggestions}
@@ -137,8 +139,10 @@ export default function Console({
                 shouldRenderSuggestions={() => true}
                 getSuggestionValue={getSuggestionValue}
                 renderSuggestion={renderSuggestion}
+                renderSuggestionsContainer={renderSuggestionsContainer}
                 // @ts-ignore
                 inputProps={inputProps}
+                containerProps={{ className: "w-full" }}
             />
         </div>
     )

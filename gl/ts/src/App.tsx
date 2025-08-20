@@ -41,12 +41,17 @@ function App() {
           groceryListRepository={groceryListRepository}
           categoryRepository={categoryRepository}
           onExecuteError={onExecuteError}
-
         />
-        <GroceryList
-          groceryListRepository={groceryListRepository}
-          categoryRepository={categoryRepository}
-        />
+        <div className="flex">
+          <div className="flex flex-1"></div>
+          <div className="w-99 justify-center">
+            <GroceryList
+              groceryListRepository={groceryListRepository}
+              categoryRepository={categoryRepository}
+            />
+          </div>
+          <div className="flex flex-1"></div>
+        </div>
       </div>
     </div>
   )

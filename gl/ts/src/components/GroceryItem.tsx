@@ -34,10 +34,10 @@ export default function GroceryItem({
   }
 
   return (
-    <div className="flex items-center gap-2 p-2 border border-gray-200 rounded" >
+    <div className="flex items-center gap-3 p-1 border-none border-gray-200 bg-white" >
       <div
         {...dragHandleProps}
-        className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 px-1"
+        className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 pl-4"
         title="Drag to reorder"
       >
         ⋮⋮
@@ -72,7 +72,7 @@ export default function GroceryItem({
       </div>
       <button
          onClick={handleDelete}
-         className="text-gray-400 hover:text-red-500 text-lg leading-none"
+         className="text-gray-400 hover:text-red-500 text-lg leading-none pr-4"
          aria-label="Delete item"
       >
         ×
