@@ -1,3 +1,10 @@
+# build frontend
+FROM node:24 as frontend
+WORKDIR /app
+COPY gl/ts .
+RUN npm install
+RUN npm run build
+
 # use chef for faster rust builds/better caching
 FROM lukemathwalker/cargo-chef:latest-rust-1.87 AS chef
 WORKDIR /app
@@ -5,8 +12,8 @@ WORKDIR /app
 # generate chef plan
 FROM chef AS planner
 
-COPY gl/rust/Cargo.toml gl/rust/Cargo.lock ./
-COPY gl/rust/src ./src
+COPY gl/Cargo.toml gl/Cargo.lock ./
+COPY gl/src ./src
 
 RUN cargo chef prepare --recipe-path recipe.json
 
@@ -16,8 +23,9 @@ COPY --from=planner /app/recipe.json recipe.json
 
 RUN cargo chef cook --release --recipe-path recipe.json
 
-COPY gl/rust/Cargo.toml gl/rust/Cargo.lock ./
-COPY gl/rust/src ./src
+COPY gl/Cargo.toml gl/Cargo.lock ./
+COPY gl/src ./src
+COPY --from=frontend /app/dist ./ts/dist
 
 RUN cargo build --release
 

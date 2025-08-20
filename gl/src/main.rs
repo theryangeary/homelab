@@ -19,7 +19,7 @@ use rust_embed::Embed;
 static INDEX_HTML: &str = "index.html";
 
 #[derive(Embed)]
-#[folder = "./dist"]
+#[folder = "./ts/dist"]
 
 struct Assets;
 
