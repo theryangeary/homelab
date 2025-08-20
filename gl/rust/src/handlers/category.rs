@@ -78,7 +78,7 @@ pub async fn delete_category(
 
 pub async fn reorder_categories(
     State(db): State<Arc<Database>>,
-    Json(payload): Json<Vec<ReorderCategory>>,
+    Json(payload): Json<ReorderCategory>,
 ) -> Result<StatusCode, StatusCode> {
     match db.reorder_categories(payload).await {
         Ok(()) => Ok(StatusCode::NO_CONTENT),

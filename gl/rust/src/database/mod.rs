@@ -230,7 +230,7 @@ impl Database {
                 .category_id
                 .unwrap_or_else(|| row.get(GROCERY_LIST_ENTRIES_CATEGORY_ID));
 
-            self.update_category_and_position(id, new_position, new_category_id, &mut tx)
+            self.update_category_and_position_for_entry(id, new_position, new_category_id, &mut tx)
                 .await?;
         }
 
@@ -252,24 +252,29 @@ impl Database {
 
     /// get_prior_position_and_category is a helper for reorder_entries{_with_transaction}
     async fn get_prior_position_and_category(&self, entry_id: i64) -> Result<(i64, i64)> {
-        let result: (i64, i64) =
-            sqlx::query_as(&format!(
-                "SELECT {GROCERY_LIST_ENTRIES_POSITION}, {GROCERY_LIST_ENTRIES_CATEGORY_ID} 
+        let result: (i64, i64) = sqlx::query_as(&format!(
+            "SELECT {GROCERY_LIST_ENTRIES_POSITION}, {GROCERY_LIST_ENTRIES_CATEGORY_ID} 
                 FROM {TABLE_NAME_GROCERY_LIST_ENTRIES} 
                 WHERE {GROCERY_LIST_ENTRIES_ID} = ?"
-            ))
-                .bind(entry_id)
-                .fetch_one(&self.pool)
-                .await
-                .map_err(|e| {
-                    tracing::error!(
-                        "failed to get entry for {TABLE_NAME_GROCERY_LIST_ENTRIES}.{GROCERY_LIST_ENTRIES_ID}: {}",
-                        entry_id
-                    );
-                    e
-                })?;
+        ))
+        .bind(entry_id)
+        .fetch_one(&self.pool)
+        .await?;
 
         Ok((result.0, result.1))
+    }
+
+    async fn get_prior_position_for_category(&self, category_id: i64) -> Result<i64> {
+        let result: i64 = sqlx::query_scalar(&format!(
+            "SELECT {CATEGORIES_POSITION}
+                FROM {TABLE_NAME_CATEGORIES} 
+                WHERE {CATEGORIES_ID} = ?"
+        ))
+        .bind(category_id)
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(result)
     }
 
     /// reorder_entries will assign the specific entry.new_position to the entry
@@ -290,7 +295,7 @@ impl Database {
 
         let mut tx = self.pool.begin().await?;
 
-        self.update_category_and_position(
+        self.update_category_and_position_for_entry(
             reorder_request.id,
             new_position,
             new_category_id,
@@ -304,40 +309,73 @@ impl Database {
         Ok(())
     }
 
-    async fn update_category_and_position(
+    /// reorder_categories will assign the specific category.new_position to the category
+    /// with category.id, adjusting all other categories up or
+    /// down as needed to make room for the updated category
+    pub async fn reorder_categories(&self, reorder_request: ReorderCategory) -> Result<()> {
+        let mut tx = self.pool.begin().await?;
+
+        self.update_position_for_category(
+            reorder_request.id,
+            reorder_request.new_position,
+            &mut tx,
+        )
+        .await
+        .inspect_err(|e| tracing::error!("failed to update_category_and_position: {}", e))?;
+
+        tx.commit().await?;
+
+        Ok(())
+    }
+
+    async fn update_category_and_position_for_entry(
         &self,
         entry_id: i64,
         new_position: i64,
         new_category_id: i64,
         tx: &mut sqlx::Transaction<'static, Sqlite>,
     ) -> Result<()> {
-        let (prior_position, prior_category_id) = self
-            .get_prior_position_and_category(entry_id)
-            .await
-            .inspect_err(|e| {
-                tracing::error!("failed to get prior position and category id: {}", e)
-            })?;
+        let (prior_position, prior_category_id) =
+            self.get_prior_position_and_category(entry_id).await?;
 
-        self.remove_from_ordering(entry_id, tx)
-            .await
-            .inspect_err(|e| tracing::error!("failed to remove from ordering: {}", e))?;
+        self.remove_entry_from_ordering(entry_id, tx).await?;
 
-        self.decrement_positions_gt(prior_position, prior_category_id, tx)
-            .await
-            .inspect_err(|e| tracing::error!("failed to decrement positions: {}", e))?;
+        self.decrement_entry_positions_gt(prior_position, prior_category_id, tx)
+            .await?;
 
-        self.increment_positions_ge(new_position, new_category_id, tx)
-            .await
-            .inspect_err(|e| tracing::error!("failed to increment positions: {}", e))?;
+        self.increment_entry_positions_ge(new_position, new_category_id, tx)
+            .await?;
 
-        self.insert_in_ordering(entry_id, new_position, new_category_id, tx)
-            .await
-            .inspect_err(|e| tracing::error!("failed to insert in ordering: {}", e))?;
+        self.insert_entry_in_ordering(entry_id, new_position, new_category_id, tx)
+            .await?;
 
         Ok(())
     }
 
-    async fn remove_from_ordering(
+    async fn update_position_for_category(
+        &self,
+        category_id: i64,
+        new_position: i64,
+        tx: &mut sqlx::Transaction<'static, Sqlite>,
+    ) -> Result<()> {
+        let prior_position = self.get_prior_position_for_category(category_id).await?;
+
+        self.remove_category_from_ordering(category_id, tx).await?;
+
+        self.decrement_category_positions_gt(prior_position, tx)
+            .await?;
+
+        self.increment_category_positions_ge(new_position, tx)
+            .await?;
+
+        self.insert_category_in_ordering(category_id, new_position, tx)
+            .await
+            .inspect_err(|e| tracing::error!("failed to insert category in ordering: {}", e))?;
+
+        Ok(())
+    }
+
+    async fn remove_entry_from_ordering(
         &self,
         entry_id: i64,
         tx: &mut sqlx::Transaction<'static, Sqlite>,
@@ -354,7 +392,24 @@ impl Database {
         Ok(())
     }
 
-    async fn insert_in_ordering(
+    async fn remove_category_from_ordering(
+        &self,
+        category_id: i64,
+        tx: &mut sqlx::Transaction<'static, Sqlite>,
+    ) -> Result<()> {
+        sqlx::query(&format!(
+            "UPDATE {TABLE_NAME_CATEGORIES}
+            SET {CATEGORIES_POSITION} = ? 
+            WHERE {CATEGORIES_ID} = ?"
+        ))
+        .bind(ORDERABLE_LIST_REORDER_TEMPORARY_POSITION)
+        .bind(category_id)
+        .execute(&mut **tx)
+        .await?;
+        Ok(())
+    }
+
+    async fn insert_entry_in_ordering(
         &self,
         entry_id: i64,
         new_position: i64,
@@ -374,8 +429,26 @@ impl Database {
         Ok(())
     }
 
+    async fn insert_category_in_ordering(
+        &self,
+        category_id: i64,
+        new_position: i64,
+        tx: &mut sqlx::Transaction<'static, Sqlite>,
+    ) -> Result<()> {
+        sqlx::query(&format!(
+            "UPDATE {TABLE_NAME_CATEGORIES} 
+            SET {CATEGORIES_POSITION} = ? WHERE
+            {CATEGORIES_ID} = ?"
+        ))
+        .bind(new_position)
+        .bind(category_id)
+        .execute(&mut **tx)
+        .await?;
+        Ok(())
+    }
+
     /// decrement_positions_gt decrements the position field if the position is greater than the provided position and the category_id matches
-    async fn decrement_positions_gt(
+    async fn decrement_entry_positions_gt(
         &self,
         prior_position: i64,
         prior_category_id: i64,
@@ -404,8 +477,35 @@ impl Database {
         Ok(())
     }
 
+    /// decrement_positions_gt decrements the position field if the position is greater than the provided position and the category_id matches
+    async fn decrement_category_positions_gt(
+        &self,
+        prior_position: i64,
+        tx: &mut sqlx::Transaction<'static, Sqlite>,
+    ) -> Result<()> {
+        sqlx::query(&format!(
+            "UPDATE {TABLE_NAME_CATEGORIES}
+            SET {CATEGORIES_POSITION} = {CATEGORIES_POSITION} + {}
+            WHERE {CATEGORIES_POSITION} > ?",
+            MAX_NUM_POSITIONED_GROCERY_ITEMS - 1
+        ))
+        .bind(prior_position)
+        .execute(&mut **tx)
+        .await?;
+
+        sqlx::query(&format!(
+            "UPDATE {TABLE_NAME_CATEGORIES}
+            SET {CATEGORIES_POSITION} = {CATEGORIES_POSITION} - {MAX_NUM_POSITIONED_GROCERY_ITEMS}
+            WHERE {CATEGORIES_POSITION} > ?",
+        ))
+        .bind(prior_position)
+        .execute(&mut **tx)
+        .await?;
+        Ok(())
+    }
+
     /// increment_positions_ge increments the position field if the position is greather than OR equal to the provided position and the category_id matches
-    async fn increment_positions_ge(
+    async fn increment_entry_positions_ge(
         &self,
         new_position: i64,
         new_category_id: i64,
@@ -433,6 +533,42 @@ impl Database {
         .await?;
 
         Ok(())
+    }
+
+    /// increment_positions_ge increments the position field if the position is greather than OR equal to the provided position and the category_id matches
+    async fn increment_category_positions_ge(
+        &self,
+        new_position: i64,
+        tx: &mut sqlx::Transaction<'static, Sqlite>,
+    ) -> Result<()> {
+        sqlx::query(&format!(
+            "UPDATE {TABLE_NAME_CATEGORIES}
+            SET {CATEGORIES_POSITION} = {CATEGORIES_POSITION} + {MAX_NUM_POSITIONED_GROCERY_ITEMS}
+            WHERE {CATEGORIES_POSITION} >= ?",
+        ))
+        .bind(new_position)
+        .execute(&mut **tx)
+        .await?;
+
+        sqlx::query(&format!(
+            "UPDATE {TABLE_NAME_CATEGORIES}
+            SET {CATEGORIES_POSITION} = {CATEGORIES_POSITION} - {}
+            WHERE {CATEGORIES_POSITION} >= ?",
+            MAX_NUM_POSITIONED_GROCERY_ITEMS - 1
+        ))
+        .bind(new_position)
+        .execute(&mut **tx)
+        .await?;
+
+        Ok(())
+    }
+
+    pub async fn get_category(&self, id: i64) -> Result<Category> {
+        Ok(sqlx::query_as(&format!(
+            "SELECT {} FROM {TABLE_NAME_CATEGORIES} WHERE {CATEGORIES_ID} = ? LIMIT 1",
+            all_fields(&CATEGORIES_FIELDS),
+        ))
+        .bind(id).fetch_one(&self.pool).await?)
     }
 
     pub async fn get_all_categories(&self) -> Result<Vec<Category>> {
@@ -522,26 +658,6 @@ impl Database {
         .await?;
 
         Ok(result.rows_affected() > 0)
-    }
-
-    /// TODO this is not a good reordering strategy, instead adjust every row between the old position and the new position by 1
-    pub async fn reorder_categories(&self, entries: Vec<ReorderCategory>) -> Result<()> {
-        let mut tx = self.pool.begin().await?;
-
-        for entry in entries {
-            sqlx::query(&format!(
-                "UPDATE {TABLE_NAME_CATEGORIES} 
-                SET {CATEGORIES_POSITION} = ?, {CATEGORIES_UPDATED_AT} = CURRENT_TIMESTAMP 
-                WHERE {CATEGORIES_ID} = ?",
-            ))
-            .bind(entry.position)
-            .bind(entry.id)
-            .execute(&mut *tx)
-            .await?;
-        }
-
-        tx.commit().await?;
-        Ok(())
     }
 
     pub async fn get_suggestions(&self, query: &str) -> Result<Vec<String>> {

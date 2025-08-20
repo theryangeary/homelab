@@ -81,7 +81,7 @@ export function useGroceryList(): GroceryListRepository {
     }
   }, [])
 
-  const reorderEntries = async (id: number, newPosition: number, newCategoryId?: number) => {
+  const reorderEntries = async (id: number, newPosition?: number, newCategoryId?: number) => {
     var request: ReorderRequest = { id };
     if (newPosition) {
       request.new_position = newPosition;

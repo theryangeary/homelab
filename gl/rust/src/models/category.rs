@@ -26,5 +26,5 @@ pub struct UpdateCategory {
 #[derive(Debug, Deserialize)]
 pub struct ReorderCategory {
     pub id: i64,
-    pub position: i64,
+    pub new_position: i64,
 }

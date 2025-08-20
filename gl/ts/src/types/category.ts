@@ -5,3 +5,8 @@ export interface Category {
     name: string;
     is_default_category: boolean;
 }
+
+export interface ReorderRequest {
+  id: number;
+  new_position?: number;
+}

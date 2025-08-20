@@ -51,12 +51,12 @@ export default function GroceryList({
   const handleDragEnd = (event: DragEndEvent) => {
     setActive(null);
 
-    var newPosition = undefined;
     var newCategoryId = undefined;
+    var newPosition: number | undefined = 0;
 
     if (event.active.data.current?.type === 'entry') {
       const draggedEntry: GroceryListEntry = event.active.data.current?.entry;
-      
+
       // if dropped on another entry, take that entry's position AND category
       if (event.over?.data.current?.type === 'entry') {
         const dropEntry: GroceryListEntry = event.over?.data.current?.entry
@@ -64,13 +64,34 @@ export default function GroceryList({
         if (draggedEntry.category_id !== dropEntry.category_id) {
           newCategoryId = dropEntry.category_id
         }
-      // if dropped on a category, take that category's id
+        // if dropped on a category, take that category's id
       } else if (event.over?.data.current?.type === 'category') {
         const dropCategory: CategoryModel = event.over?.data.current?.category
         newCategoryId = dropCategory.id
       }
 
       groceryListRepository.reorderEntries(draggedEntry.id, newPosition, newCategoryId);
+    } else if (event.active.data.current?.type === 'category') {
+      const draggedCategory: CategoryModel = event.active.data.current?.category;
+
+      // use a defined default value
+      newPosition = draggedCategory.position;
+
+      // if dropped on an entry, take that entry's category's position
+      if (event.over?.data.current?.type === 'entry') {
+        const dropEntry: GroceryListEntry = event.over?.data.current?.entry
+        const categoryId = dropEntry.category_id;
+        newPosition = categoryRepository.categories.filter((category) => category.id === categoryId)[0].position;
+        // if dropped on a category, take that category's position
+      } else if (event.over?.data.current?.type === 'category') {
+        const dropCategory: CategoryModel = event.over?.data.current?.category
+        newPosition = dropCategory.position
+      } else {
+        console.error("dropped on unsupported droppable");
+        return
+      }
+
+      categoryRepository.reorderCategories(draggedCategory.id, newPosition);
     } else {
       console.log("type issue?")
     }

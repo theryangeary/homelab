@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { Category } from '../types/category'
+import type { Category, ReorderRequest } from '../types/category'
+
 
 const API_BASE = '/api'
 
@@ -9,7 +10,7 @@ export type CategoryRepository = {
   createCategory: (name: string) => Promise<any>,
   updateCategory: (id: number, updates: Partial<Category>) => Promise<any>,
   deleteCategory: (id: number) => Promise<any>,
-  reorderCategories: (reorderedCategories: Category[]) => Promise<any>,
+  reorderCategories: (id: number, newPosition: number) => Promise<any>,
   fetchSuggestions: (query: string) => Promise<string[]>,
 }
 
@@ -82,25 +83,20 @@ export function useCategories(): CategoryRepository {
     }
   }, [])
 
-  const reorderCategories = useCallback(async (reorderedCategories: Category[]) => {
-    const categoriesWithNewPositions = reorderedCategories.map((category, index) => ({
-      ...category,
-      position: index
-    }))
-
-    setCategories(categoriesWithNewPositions)
+  const reorderCategories = async (id: number, newPosition: number ) => {
+    var request: ReorderRequest = { id, new_position: newPosition };
 
     try {
       await fetch(`${API_BASE}/categories/reorder`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(categoriesWithNewPositions.map(category => ({ id: category.id, position: category.position })))
+        body: JSON.stringify(request)
       })
     } catch (error) {
       console.error('Failed to reorder categories:', error)
-      fetchCategories()
     }
-  }, [fetchCategories])
+    fetchCategories()
+  }
 
   const fetchSuggestions = useCallback(async (query: string): Promise<string[]> => {
     if (query.length === 0) {
