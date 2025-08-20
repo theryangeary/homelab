@@ -21,16 +21,18 @@ pub const TABLE_NAME_CATEGORIES: &str = "categories";
 pub const GROCERY_LIST_ENTRIES_ID: &str = "id";
 pub const GROCERY_LIST_ENTRIES_DESCRIPTION: &str = "description";
 pub const GROCERY_LIST_ENTRIES_COMPLETED_AT: &str = "completed_at";
+pub const GROCERY_LIST_ENTRIES_ARCHIVED_AT: &str = "archived_at";
 pub const GROCERY_LIST_ENTRIES_POSITION: &str = "position";
 pub const GROCERY_LIST_ENTRIES_QUANTITY: &str = "quantity";
 pub const GROCERY_LIST_ENTRIES_NOTES: &str = "notes";
 pub const GROCERY_LIST_ENTRIES_CATEGORY_ID: &str = "category_id";
 pub const GROCERY_LIST_ENTRIES_UPDATED_AT: &str = "updated_at";
 
-pub const GROCERY_LIST_ENTRIES_FIELDS: [&'static str; 8] = [
+pub const GROCERY_LIST_ENTRIES_FIELDS: [&'static str; 9] = [
     GROCERY_LIST_ENTRIES_ID,
     GROCERY_LIST_ENTRIES_DESCRIPTION,
     GROCERY_LIST_ENTRIES_COMPLETED_AT,
+    GROCERY_LIST_ENTRIES_ARCHIVED_AT,
     GROCERY_LIST_ENTRIES_POSITION,
     GROCERY_LIST_ENTRIES_QUANTITY,
     GROCERY_LIST_ENTRIES_NOTES,

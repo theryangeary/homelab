@@ -36,6 +36,7 @@ impl Database {
                 {GROCERY_LIST_ENTRIES_ID} INTEGER PRIMARY KEY AUTOINCREMENT,
                 {GROCERY_LIST_ENTRIES_DESCRIPTION} TEXT NOT NULL,
                 {GROCERY_LIST_ENTRIES_COMPLETED_AT} TIMESTAMP,
+                {GROCERY_LIST_ENTRIES_ARCHIVED_AT} TIMESTAMP,
                 {GROCERY_LIST_ENTRIES_POSITION} INTEGER NOT NULL,
                 {GROCERY_LIST_ENTRIES_QUANTITY} TEXT NOT NULL DEFAULT '',
                 {GROCERY_LIST_ENTRIES_NOTES} TEXT NOT NULL DEFAULT '',
@@ -77,9 +78,11 @@ impl Database {
         Ok(entries)
     }
 
-    pub async fn get_all_entries(&self) -> Result<Vec<GroceryListEntry>> {
+    pub async fn get_active_entries(&self) -> Result<Vec<GroceryListEntry>> {
         let entries = sqlx::query_as::<_, GroceryListEntry>(&format!(
-            "SELECT {} FROM {TABLE_NAME_GROCERY_LIST_ENTRIES} ORDER BY position",
+            "SELECT {} FROM {TABLE_NAME_GROCERY_LIST_ENTRIES} 
+            WHERE {GROCERY_LIST_ENTRIES_ARCHIVED_AT} IS NULL
+            ORDER BY position",
             all_fields(&GROCERY_LIST_ENTRIES_FIELDS),
         ))
         .fetch_all(&self.pool)
@@ -568,7 +571,9 @@ impl Database {
             "SELECT {} FROM {TABLE_NAME_CATEGORIES} WHERE {CATEGORIES_ID} = ? LIMIT 1",
             all_fields(&CATEGORIES_FIELDS),
         ))
-        .bind(id).fetch_one(&self.pool).await?)
+        .bind(id)
+        .fetch_one(&self.pool)
+        .await?)
     }
 
     pub async fn get_all_categories(&self) -> Result<Vec<Category>> {
@@ -690,6 +695,19 @@ impl Database {
             .into_iter()
             .map(|s| format!("{} {}", quantity, s))
             .collect())
+    }
+
+    pub async fn archive_entries(&self) -> Result<()> {
+        sqlx::query(&format!(
+            "UPDATE {TABLE_NAME_GROCERY_LIST_ENTRIES} 
+            SET {GROCERY_LIST_ENTRIES_ARCHIVED_AT} = CURRENT_TIME
+            WHERE {GROCERY_LIST_ENTRIES_COMPLETED_AT} < datetime('now','-1 day')"
+        ))
+        .execute(&self.pool)
+        .await?;
+
+        tracing::debug!("archived entries");
+        Ok(())
     }
 }
 

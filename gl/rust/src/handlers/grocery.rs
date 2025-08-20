@@ -63,7 +63,13 @@ pub async fn get_entries(
     State(db): State<Arc<Database>>,
 ) -> Result<Json<Vec<GroceryListEntry>>, StatusCode> {
     tracing::info!("GET /api/entries called");
-    match db.get_all_entries().await {
+
+    tracing::info!("archiving entries");
+    if let Err(e) = db.archive_entries().await {
+        tracing::error!("Failed to archive entries: {}", e);
+    }
+
+    match db.get_active_entries().await {
         Ok(entries) => {
             tracing::info!("Successfully retrieved {} entries", entries.len());
             Ok(Json(entries))
