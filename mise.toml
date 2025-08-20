@@ -47,7 +47,15 @@ depends = ['push_all']
 run = '''
 #!/bin/bash
 docker stack config -c docker-compose.yml
-docker stack config -c docker-compose.yml | ssh raspberrypi1.local 'cd homelab && docker stack deploy --with-registry-auth -c - homelab'
+docker stack config -c docker-compose.yml \
+| ssh raspberrypi1.local \
+    'cd homelab && sudo docker stack deploy \
+        --resolve-image=always \
+        --detach=false \
+        --with-registry-auth \
+        -c - \
+        homelab \
+    '
 '''
 
 [tasks.rollback]
