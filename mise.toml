@@ -41,3 +41,6 @@ depends = ['push_gl', 'push_nginx', 'push_smallweb']
 [tasks.deploy]
 run = "docker stack config -c docker-compose.yml | ssh raspberrypi1.local 'cd homelab && docker stack deploy --with-registry-auth -c - homelab'"
 
+[tasks.rollback]
+run = "ssh raspberrypi1.local 'docker service rollback $1'"
+
