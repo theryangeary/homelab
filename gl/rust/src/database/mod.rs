@@ -5,13 +5,11 @@ use crate::models::{
     },
 };
 use anyhow::Result;
-use sqlx::{migrate::MigrateDatabase, sqlite::SqlitePool, Row, Sqlite};
+use sqlx::{migrate::MigrateDatabase, sqlite::SqlitePool, FromRow, Row, Sqlite};
 
-/// DEFAULT_CATEGORY_ID is the category of the default category, which must exist and must be the first category order by id
-pub const DEFAULT_CATEGORY_ID: i64 = 1;
-pub const ORDERABLE_LIST_REORDER_TEMPORARY_POSITION: i64 = 0;
-pub const ORDERABLE_LIST_MINIMUM_PERMANENT_POSITION: i64 =
-    ORDERABLE_LIST_REORDER_TEMPORARY_POSITION + 1;
+mod constants;
+pub use constants::DEFAULT_CATEGORY_ID;
+use constants::*;
 
 pub struct Database {
     pool: SqlitePool,
@@ -34,33 +32,32 @@ impl Database {
     async fn migrate(&self) -> Result<()> {
         sqlx::query(&format!(
             r#"
-            CREATE TABLE IF NOT EXISTS grocery_list_entries (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                description TEXT NOT NULL,
-                completed_at TIMESTAMP,
-                position INTEGER NOT NULL,
-                quantity TEXT NOT NULL DEFAULT '',
-                notes TEXT NOT NULL DEFAULT '',
-                category_id INTEGER NOT NULL DEFAULT {DEFAULT_CATEGORY_ID},
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY(category_id) REFERENCES categories(id)
-                UNIQUE(category_id, position)
+            CREATE TABLE IF NOT EXISTS {TABLE_NAME_GROCERY_LIST_ENTRIES} (
+                {GROCERY_LIST_ENTRIES_ID} INTEGER PRIMARY KEY AUTOINCREMENT,
+                {GROCERY_LIST_ENTRIES_DESCRIPTION} TEXT NOT NULL,
+                {GROCERY_LIST_ENTRIES_COMPLETED_AT} TIMESTAMP,
+                {GROCERY_LIST_ENTRIES_POSITION} INTEGER NOT NULL,
+                {GROCERY_LIST_ENTRIES_QUANTITY} TEXT NOT NULL DEFAULT '',
+                {GROCERY_LIST_ENTRIES_NOTES} TEXT NOT NULL DEFAULT '',
+                {GROCERY_LIST_ENTRIES_CATEGORY_ID} INTEGER NOT NULL DEFAULT {DEFAULT_CATEGORY_ID},
+                {GROCERY_LIST_ENTRIES_UPDATED_AT} TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY({GROCERY_LIST_ENTRIES_CATEGORY_ID}) REFERENCES {TABLE_NAME_CATEGORIES}({CATEGORIES_ID})
+                UNIQUE({GROCERY_LIST_ENTRIES_CATEGORY_ID}, {GROCERY_LIST_ENTRIES_POSITION})
             );
 
-            CREATE TABLE IF NOT EXISTS categories (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                is_default_category BOOLEAN NOT NULL DEFAULT FALSE,
-                position INTEGER NOT NULL,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            CREATE TABLE IF NOT EXISTS {TABLE_NAME_CATEGORIES} (
+                {CATEGORIES_ID} INTEGER PRIMARY KEY AUTOINCREMENT,
+                {CATEGORIES_NAME} TEXT NOT NULL,
+                {CATEGORIES_IS_DEFAULT_CATEGORY} BOOLEAN NOT NULL DEFAULT FALSE,
+                {CATEGORIES_POSITION} INTEGER NOT NULL,
+                {CATEGORIES_UPDATED_AT} TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
 
-            INSERT INTO categories (name, is_default_category, position)
-            SELECT "Uncategorized", TRUE, 0
-            WHERE NOT EXISTS (SELECT 1 FROM categories WHERE id = 1);
+            INSERT INTO {TABLE_NAME_CATEGORIES} ({CATEGORIES_NAME}, {CATEGORIES_IS_DEFAULT_CATEGORY}, {CATEGORIES_POSITION})
+            SELECT "{DEFAULT_CATEGORY_NAME}", TRUE, 0
+            WHERE NOT EXISTS (SELECT 1 FROM {TABLE_NAME_CATEGORIES} WHERE {CATEGORIES_ID} = {DEFAULT_CATEGORY_ID});
             "#
         ))
-        .bind(DEFAULT_CATEGORY_ID)
         .execute(&self.pool)
         .await?;
 
@@ -69,7 +66,9 @@ impl Database {
 
     pub async fn get_entry(&self, id: i64) -> Result<GroceryListEntry> {
         let entries = sqlx::query_as::<_, GroceryListEntry>(
-            "SELECT id, description, completed_at, position, quantity, notes, category_id, updated_at FROM grocery_list_entries WHERE id = ? LIMIT 1"
+        &format!("SELECT {} FROM {TABLE_NAME_GROCERY_LIST_ENTRIES} WHERE {GROCERY_LIST_ENTRIES_ID} = ? LIMIT 1",
+                all_fields(&GROCERY_LIST_ENTRIES_FIELDS),
+            )
         )
         .bind(id)
         .fetch_one(&self.pool)
@@ -79,9 +78,10 @@ impl Database {
     }
 
     pub async fn get_all_entries(&self) -> Result<Vec<GroceryListEntry>> {
-        let entries = sqlx::query_as::<_, GroceryListEntry>(
-            "SELECT id, description, completed_at, position, quantity, notes, category_id, updated_at FROM grocery_list_entries ORDER BY position"
-        )
+        let entries = sqlx::query_as::<_, GroceryListEntry>(&format!(
+            "SELECT {} FROM {TABLE_NAME_GROCERY_LIST_ENTRIES} ORDER BY position",
+            all_fields(&GROCERY_LIST_ENTRIES_FIELDS),
+        ))
         .fetch_all(&self.pool)
         .await?;
 
@@ -92,11 +92,18 @@ impl Database {
     /// for an item going into the specified category (i.e. what position to
     /// append it to the end of the list)
     pub async fn get_next_position_for_item_in_category(&self, category_id: i64) -> Result<i64> {
-        Ok(sqlx::query("SELECT position + 1 as next_position FROM grocery_list_entries WHERE category_id = ? ORDER BY position DESC LIMIT 1")
+        let next_position = "next_position";
+        Ok(sqlx::query(&format!(
+            "SELECT {GROCERY_LIST_ENTRIES_POSITION} + 1 as {next_position}
+            FROM {TABLE_NAME_GROCERY_LIST_ENTRIES} 
+            WHERE {GROCERY_LIST_ENTRIES_CATEGORY_ID} = ? 
+            ORDER BY {GROCERY_LIST_ENTRIES_POSITION} DESC 
+            LIMIT 1",
+        ))
         .bind(category_id)
         .fetch_optional(&self.pool)
         .await?
-        .map(|r|r.get("next_position"))
+        .map(|r| r.get(next_position))
         .unwrap_or(ORDERABLE_LIST_MINIMUM_PERMANENT_POSITION))
     }
 
@@ -104,14 +111,17 @@ impl Database {
         &self,
         description: &str,
     ) -> Result<Option<i64>> {
-        Ok(sqlx::query(
-            "SELECT category_id FROM grocery_list_entries WHERE description = ? ORDER BY updated_at DESC LIMIT 1",
-        )
+        Ok(sqlx::query(&format!(
+            "SELECT {GROCERY_LIST_ENTRIES_CATEGORY_ID} 
+            FROM {TABLE_NAME_GROCERY_LIST_ENTRIES} 
+            WHERE {GROCERY_LIST_ENTRIES_DESCRIPTION} = ? 
+            ORDER BY {GROCERY_LIST_ENTRIES_UPDATED_AT} DESC 
+            LIMIT 1",
+        ))
         .bind(description)
         .fetch_optional(&self.pool)
         .await?
-        .map(|r|r.get("category_id"))
-    )
+        .map(|r| r.get(GROCERY_LIST_ENTRIES_CATEGORY_ID)))
     }
 
     pub async fn create_entry(&self, entry: CreateGroceryListEntry) -> Result<GroceryListEntry> {
@@ -125,11 +135,19 @@ impl Database {
                 .unwrap_or(1),
         };
 
-        let row = sqlx::query(
-            "INSERT INTO grocery_list_entries (description, position, quantity, notes, category_id)
-             VALUES (?, ?, ?, ?, ?) 
-             RETURNING id, description, completed_at, position, quantity, notes, category_id, updated_at"
-        )
+        let entry = sqlx::query_as(&format!(
+            "INSERT INTO {TABLE_NAME_GROCERY_LIST_ENTRIES} 
+                (
+                    {GROCERY_LIST_ENTRIES_DESCRIPTION},
+                    {GROCERY_LIST_ENTRIES_POSITION}, 
+                    {GROCERY_LIST_ENTRIES_QUANTITY}, 
+                    {GROCERY_LIST_ENTRIES_NOTES}, 
+                    {GROCERY_LIST_ENTRIES_CATEGORY_ID}
+                )
+            VALUES (?, ?, ?, ?, ?)
+            RETURNING {}",
+            all_fields(&GROCERY_LIST_ENTRIES_FIELDS)
+        ))
         .bind(&entry.description)
         .bind(entry.position)
         .bind(&quantity)
@@ -138,16 +156,7 @@ impl Database {
         .fetch_one(&self.pool)
         .await?;
 
-        Ok(GroceryListEntry {
-            id: row.get("id"),
-            description: row.get("description"),
-            completed_at: row.get("completed_at"),
-            position: row.get("position"),
-            quantity: row.get("quantity"),
-            notes: row.get("notes"),
-            category_id: row.get("category_id"),
-            updated_at: row.get("updated_at"),
-        })
+        Ok(entry)
     }
 
     pub async fn update_entry(
@@ -155,39 +164,52 @@ impl Database {
         id: i64,
         entry: UpdateGroceryListEntry,
     ) -> Result<Option<GroceryListEntry>> {
-        let mut query_builder = sqlx::QueryBuilder::new("UPDATE grocery_list_entries SET ");
+        let mut query_builder =
+            sqlx::QueryBuilder::new(&format!("UPDATE {TABLE_NAME_GROCERY_LIST_ENTRIES} SET "));
         let mut separated = query_builder.separated(", ");
         let mut must_reorder = false;
 
         if let Some(description) = &entry.description {
             separated
-                .push("description = ")
+                .push(GROCERY_LIST_ENTRIES_DESCRIPTION)
+                .push(" = ")
                 .push_bind_unseparated(description);
         }
         if let Some(is_completed) = entry.completed {
+            separated.push(GROCERY_LIST_ENTRIES_COMPLETED_AT);
             if is_completed {
-                separated.push("completed_at = CURRENT_TIMESTAMP");
+                separated.push(" = CURRENT_TIMESTAMP");
             } else {
-                separated.push("completed_at = NULL");
+                separated.push(" = NULL");
             }
         }
         if let Some(quantity) = &entry.quantity {
             separated
-                .push("quantity = ")
+                .push(GROCERY_LIST_ENTRIES_QUANTITY)
+                .push(" = ")
                 .push_bind_unseparated(quantity);
         }
         if let Some(notes) = &entry.notes {
-            separated.push("notes = ").push_bind_unseparated(notes);
+            separated
+                .push(GROCERY_LIST_ENTRIES_NOTES)
+                .push(" = ")
+                .push_bind_unseparated(notes);
         }
         if entry.category_id.is_some() || entry.position.is_some() {
             must_reorder = true;
         }
 
-        separated.push("updated_at = CURRENT_TIMESTAMP");
+        separated.push(&format!(
+            "{GROCERY_LIST_ENTRIES_UPDATED_AT} = CURRENT_TIMESTAMP"
+        ));
 
-        query_builder.push(" WHERE id = ").push_bind(id);
         query_builder
-            .push(" RETURNING id, description, completed_at, position, quantity, notes, category_id, updated_at");
+            .push(&format!(" WHERE {GROCERY_LIST_ENTRIES_ID} = "))
+            .push_bind(id);
+        query_builder.push(&format!(
+            " RETURNING {}",
+            all_fields(&GROCERY_LIST_ENTRIES_FIELDS)
+        ));
 
         let mut tx = self.pool.begin().await?;
 
@@ -204,7 +226,9 @@ impl Database {
                 .unwrap_or(ORDERABLE_LIST_MINIMUM_PERMANENT_POSITION);
 
             // if no category is provided, we are just repositioning within the category
-            let new_category_id = entry.category_id.unwrap_or_else(|| row.get("category_id"));
+            let new_category_id = entry
+                .category_id
+                .unwrap_or_else(|| row.get(GROCERY_LIST_ENTRIES_CATEGORY_ID));
 
             self.update_category_and_position(id, new_position, new_category_id, &mut tx)
                 .await?;
@@ -216,30 +240,36 @@ impl Database {
     }
 
     pub async fn delete_entry(&self, id: i64) -> Result<bool> {
-        let result = sqlx::query("DELETE FROM grocery_list_entries WHERE id = ?")
-            .bind(id)
-            .execute(&self.pool)
-            .await?;
+        let result = sqlx::query(&format!(
+            "DELETE FROM {TABLE_NAME_GROCERY_LIST_ENTRIES} WHERE id = ?"
+        ))
+        .bind(id)
+        .execute(&self.pool)
+        .await?;
 
         Ok(result.rows_affected() > 0)
     }
 
     /// get_prior_position_and_category is a helper for reorder_entries{_with_transaction}
     async fn get_prior_position_and_category(&self, entry_id: i64) -> Result<(i64, i64)> {
-        let query =
-            sqlx::query("SELECT position, category_id FROM grocery_list_entries WHERE id = ?")
+        let result: (i64, i64) =
+            sqlx::query_as(&format!(
+                "SELECT {GROCERY_LIST_ENTRIES_POSITION}, {GROCERY_LIST_ENTRIES_CATEGORY_ID} 
+                FROM {TABLE_NAME_GROCERY_LIST_ENTRIES} 
+                WHERE {GROCERY_LIST_ENTRIES_ID} = ?"
+            ))
                 .bind(entry_id)
                 .fetch_one(&self.pool)
                 .await
                 .map_err(|e| {
                     tracing::error!(
-                        "failed to get entry for grocery_list_entries.id: {}",
+                        "failed to get entry for {TABLE_NAME_GROCERY_LIST_ENTRIES}.{GROCERY_LIST_ENTRIES_ID}: {}",
                         entry_id
                     );
                     e
                 })?;
 
-        Ok((query.get("position"), query.get("category_id")))
+        Ok((result.0, result.1))
     }
 
     /// reorder_entries will assign the specific entry.new_position to the entry
@@ -296,9 +326,6 @@ impl Database {
             .await
             .inspect_err(|e| tracing::error!("failed to decrement positions: {}", e))?;
 
-        self.snapshot(tx).await;
-
-        tracing::error!("incrementing >= {} in category {}", new_position, new_category_id);
         self.increment_positions_ge(new_position, new_category_id, tx)
             .await
             .inspect_err(|e| tracing::error!("failed to increment positions: {}", e))?;
@@ -310,22 +337,20 @@ impl Database {
         Ok(())
     }
 
-    async fn snapshot(&self, tx: &mut sqlx::Transaction<'static, Sqlite>) {
-        let rows = sqlx::query("select description,category_id,position from grocery_list_entries order by category_id, position asc").fetch_all(&mut **tx).await.unwrap();
-        for row in rows {
-            tracing::info!("{},{},{}", row.get::<String, &str>("description"), row.get::<i64, &str>("category_id"), row.get::<i64, &str>("position"));
-        }
-    }
     async fn remove_from_ordering(
         &self,
         entry_id: i64,
         tx: &mut sqlx::Transaction<'static, Sqlite>,
     ) -> Result<()> {
-        sqlx::query("UPDATE grocery_list_entries SET position = ? where id = ?")
-            .bind(ORDERABLE_LIST_REORDER_TEMPORARY_POSITION)
-            .bind(entry_id)
-            .execute(&mut **tx)
-            .await?;
+        sqlx::query(&format!(
+            "UPDATE {TABLE_NAME_GROCERY_LIST_ENTRIES}
+            SET {GROCERY_LIST_ENTRIES_POSITION} = ? 
+            WHERE {GROCERY_LIST_ENTRIES_ID} = ?"
+        ))
+        .bind(ORDERABLE_LIST_REORDER_TEMPORARY_POSITION)
+        .bind(entry_id)
+        .execute(&mut **tx)
+        .await?;
         Ok(())
     }
 
@@ -336,12 +361,16 @@ impl Database {
         new_category_id: i64,
         tx: &mut sqlx::Transaction<'static, Sqlite>,
     ) -> Result<()> {
-        sqlx::query("UPDATE grocery_list_entries SET position = ?, category_id = ? where id = ?")
-            .bind(new_position)
-            .bind(new_category_id)
-            .bind(entry_id)
-            .execute(&mut **tx)
-            .await?;
+        sqlx::query(&format!(
+            "UPDATE {TABLE_NAME_GROCERY_LIST_ENTRIES} 
+            SET {GROCERY_LIST_ENTRIES_POSITION} = ?, {GROCERY_LIST_ENTRIES_CATEGORY_ID} = ? WHERE
+            {GROCERY_LIST_ENTRIES_ID} = ?"
+        ))
+        .bind(new_position)
+        .bind(new_category_id)
+        .bind(entry_id)
+        .execute(&mut **tx)
+        .await?;
         Ok(())
     }
 
@@ -352,21 +381,22 @@ impl Database {
         prior_category_id: i64,
         tx: &mut sqlx::Transaction<'static, Sqlite>,
     ) -> Result<()> {
-        sqlx::query(
-            "UPDATE grocery_list_entries 
-                SET position = position + 99999 
-                WHERE position > ? AND category_id = ?",
-        )
+        sqlx::query(&format!(
+            "UPDATE {TABLE_NAME_GROCERY_LIST_ENTRIES}
+            SET {GROCERY_LIST_ENTRIES_POSITION} = {GROCERY_LIST_ENTRIES_POSITION} + {}
+            WHERE {GROCERY_LIST_ENTRIES_POSITION} > ? AND {GROCERY_LIST_ENTRIES_CATEGORY_ID} = ?",
+            MAX_NUM_POSITIONED_GROCERY_ITEMS - 1
+        ))
         .bind(prior_position)
         .bind(prior_category_id)
         .execute(&mut **tx)
         .await?;
 
-    sqlx::query(
-            "UPDATE grocery_list_entries 
-                SET position = position - 100000 
-                WHERE position > ? AND category_id = ?",
-        )
+        sqlx::query(&format!(
+            "UPDATE {TABLE_NAME_GROCERY_LIST_ENTRIES}
+            SET {GROCERY_LIST_ENTRIES_POSITION} = {GROCERY_LIST_ENTRIES_POSITION} - {MAX_NUM_POSITIONED_GROCERY_ITEMS}
+            WHERE {GROCERY_LIST_ENTRIES_POSITION} > ? AND {GROCERY_LIST_ENTRIES_CATEGORY_ID} = ?",
+        ))
         .bind(prior_position)
         .bind(prior_category_id)
         .execute(&mut **tx)
@@ -381,21 +411,22 @@ impl Database {
         new_category_id: i64,
         tx: &mut sqlx::Transaction<'static, Sqlite>,
     ) -> Result<()> {
-        sqlx::query(
-            "UPDATE grocery_list_entries 
-                SET position = position + 100000
-                WHERE position >= ? AND category_id = ?",
-        )
+        sqlx::query(&format!(
+            "UPDATE {TABLE_NAME_GROCERY_LIST_ENTRIES}
+            SET {GROCERY_LIST_ENTRIES_POSITION} = {GROCERY_LIST_ENTRIES_POSITION} + {MAX_NUM_POSITIONED_GROCERY_ITEMS}
+            WHERE {GROCERY_LIST_ENTRIES_POSITION} >= ? AND {GROCERY_LIST_ENTRIES_CATEGORY_ID} = ?",
+        ))
         .bind(new_position)
         .bind(new_category_id)
         .execute(&mut **tx)
         .await?;
 
-            sqlx::query(
-            "UPDATE grocery_list_entries 
-                SET position = position -99999
-                WHERE position >= ? AND category_id = ?",
-        )
+        sqlx::query(&format!(
+            "UPDATE {TABLE_NAME_GROCERY_LIST_ENTRIES}
+            SET {GROCERY_LIST_ENTRIES_POSITION} = {GROCERY_LIST_ENTRIES_POSITION} - {}
+            WHERE {GROCERY_LIST_ENTRIES_POSITION} >= ? AND {GROCERY_LIST_ENTRIES_CATEGORY_ID} = ?",
+            MAX_NUM_POSITIONED_GROCERY_ITEMS - 1
+        ))
         .bind(new_position)
         .bind(new_category_id)
         .execute(&mut **tx)
@@ -405,9 +436,10 @@ impl Database {
     }
 
     pub async fn get_all_categories(&self) -> Result<Vec<Category>> {
-        let categories = sqlx::query_as::<_, Category>(
-            "SELECT id, name, is_default_category, position, updated_at FROM categories ORDER BY position"
-        )
+        let categories = sqlx::query_as::<_, Category>(&format!(
+            "SELECT {} FROM {TABLE_NAME_CATEGORIES} ORDER BY {CATEGORIES_POSITION}",
+            all_fields(&CATEGORIES_FIELDS)
+        ))
         .fetch_all(&self.pool)
         .await?;
 
@@ -417,31 +449,33 @@ impl Database {
     /// get_next_position_for_category gets the next position available for a
     /// category (i.e. what position to append it to the end of the list)
     pub async fn get_next_position_for_category(&self) -> Result<i64> {
-        Ok(sqlx::query(
-            "SELECT position + 1 as next_position FROM categories ORDER BY position DESC LIMIT 1",
-        )
+        let next_position = "next_position";
+        Ok(sqlx::query(&format!(
+            "SELECT {CATEGORIES_POSITION} + 1 as {next_position} 
+            FROM {TABLE_NAME_CATEGORIES} 
+            ORDER BY {CATEGORIES_POSITION} DESC 
+            LIMIT 1",
+        ))
         .fetch_optional(&self.pool)
         .await?
-        .map(|r| r.get("next_position"))
+        .map(|r| r.get(next_position))
         .unwrap_or(ORDERABLE_LIST_MINIMUM_PERMANENT_POSITION))
     }
 
     pub async fn create_category(&self, category: CreateCategory) -> Result<Category> {
-        let row = sqlx::query(
-            "INSERT INTO categories (name, position) VALUES (?, ?) RETURNING id, name, is_default_category, position, updated_at"
-        )
+        let category = sqlx::query_as(&format!(
+            "INSERT INTO {TABLE_NAME_CATEGORIES} 
+            ({CATEGORIES_NAME}, {CATEGORIES_POSITION}) 
+            VALUES (?, ?) 
+            RETURNING {}",
+            all_fields(&CATEGORIES_FIELDS)
+        ))
         .bind(&category.name)
         .bind(self.get_next_position_for_category().await?)
         .fetch_one(&self.pool)
         .await?;
 
-        Ok(Category {
-            id: row.get("id"),
-            name: row.get("name"),
-            position: row.get("position"),
-            is_default_category: row.get("is_default_category"),
-            updated_at: row.get("updated_at"),
-        })
+        Ok(category)
     }
 
     pub async fn update_category(
@@ -449,38 +483,43 @@ impl Database {
         id: i64,
         category: UpdateCategory,
     ) -> Result<Option<Category>> {
-        let mut query_builder = sqlx::QueryBuilder::new("UPDATE categories SET ");
+        let mut query_builder =
+            sqlx::QueryBuilder::new(&format!("UPDATE {TABLE_NAME_CATEGORIES} SET "));
         let mut separated = query_builder.separated(", ");
 
         if let Some(name) = &category.name {
-            separated.push("name = ").push_bind_unseparated(name);
+            separated
+                .push(CATEGORIES_NAME)
+                .push(" = ")
+                .push_bind_unseparated(name);
         }
 
-        separated.push("updated_at = CURRENT_TIMESTAMP");
+        separated
+            .push(CATEGORIES_UPDATED_AT)
+            .push(" = CURRENT_TIMESTAMP");
 
-        query_builder.push(" WHERE id = ").push_bind(id);
-        query_builder.push(" RETURNING id, name, is_default_category, position, updated_at");
+        query_builder
+            .push(&format!(" WHERE {CATEGORIES_ID} = "))
+            .push_bind(id);
+        query_builder.push(" RETURNING ");
+        query_builder.push(all_fields(&CATEGORIES_FIELDS));
 
         let row = query_builder.build().fetch_optional(&self.pool).await?;
 
         if let Some(row) = row {
-            Ok(Some(Category {
-                id: row.get("id"),
-                name: row.get("name"),
-                position: row.get("position"),
-                is_default_category: row.get("is_default_category"),
-                updated_at: row.get("updated_at"),
-            }))
+            Ok(Some(Category::from_row(&row)?))
         } else {
             Ok(None)
         }
     }
 
     pub async fn delete_category(&self, id: i64) -> Result<bool> {
-        let result = sqlx::query("DELETE FROM categories WHERE id = ?")
-            .bind(id)
-            .execute(&self.pool)
-            .await?;
+        let result = sqlx::query(&format!(
+            "DELETE FROM {TABLE_NAME_CATEGORIES} WHERE {CATEGORIES_ID} = ?"
+        ))
+        .bind(id)
+        .execute(&self.pool)
+        .await?;
 
         Ok(result.rows_affected() > 0)
     }
@@ -490,9 +529,11 @@ impl Database {
         let mut tx = self.pool.begin().await?;
 
         for entry in entries {
-            sqlx::query(
-                "UPDATE categories SET position = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-            )
+            sqlx::query(&format!(
+                "UPDATE {TABLE_NAME_CATEGORIES} 
+                SET {CATEGORIES_POSITION} = ?, {CATEGORIES_UPDATED_AT} = CURRENT_TIMESTAMP 
+                WHERE {CATEGORIES_ID} = ?",
+            ))
             .bind(entry.position)
             .bind(entry.id)
             .execute(&mut *tx)
@@ -518,9 +559,13 @@ impl Database {
             false => ("".to_string(), query.to_string()),
         };
 
-        let suggestions = sqlx::query_scalar::<_, String>(
-            "SELECT DISTINCT description FROM grocery_list_entries WHERE description LIKE ? AND description != '' ORDER BY description LIMIT 10"
-        )
+        let suggestions = sqlx::query_scalar::<_, String>(&format!(
+            "SELECT DISTINCT {GROCERY_LIST_ENTRIES_DESCRIPTION} 
+            FROM {TABLE_NAME_GROCERY_LIST_ENTRIES} 
+            WHERE {GROCERY_LIST_ENTRIES_DESCRIPTION} LIKE ? AND {GROCERY_LIST_ENTRIES_DESCRIPTION} != '' 
+            ORDER BY {GROCERY_LIST_ENTRIES_DESCRIPTION} 
+            LIMIT 10"
+        ))
         .bind(format!("{}%", match_query))
         .fetch_all(&self.pool)
         .await?;
@@ -530,4 +575,8 @@ impl Database {
             .map(|s| format!("{} {}", quantity, s))
             .collect())
     }
+}
+
+fn all_fields(field_list: &[&str]) -> String {
+    field_list.join(", ")
 }
