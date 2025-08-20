@@ -29,7 +29,7 @@ services:
       services:
 
   gl:
-    image: ghcr.io/theryangeary/gl:v3
+    image: ghcr.io/theryangeary/gl:v4
     build:
       context: .
       dockerfile: gl/Dockerfile
