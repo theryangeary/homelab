@@ -6,7 +6,7 @@ x-common-deploy: &common-deploy
     parallelism: 1
     delay: 30s
     failure_action: rollback
-    monitor: 60s
+    monitor: 30s
     order: start-first
   rollback_config:
     parallelism: 1
@@ -44,14 +44,12 @@ services:
       services:
 
   nginx:
-    image: ghcr.io/theryangeary/nginx:v3
+    image: ghcr.io/theryangeary/nginx:v4
     build:
       context: .
       dockerfile: nginx/Dockerfile
     deploy: *common-deploy
     restart: unless-stopped
-    volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
     networks:
       cloudflared:
       services:
