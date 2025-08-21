@@ -1,46 +1,58 @@
 [env]
 STATIC_DIR="{{config_root}}/static"
+VERSION="v1"
+_.file = '.env'
 
-[tasks.build_www_site]
-run = "cd www && npm run build && mkdir -p $STATIC_DIR/www && rm -r $STATIC_DIR/www/* && mv dist/* $STATIC_DIR/www"
+[tasks.build_site]
+run = '''
+#!/bin/bash
+SITE=${1}
+TS_DIR=${2:-${SITE}}
+echo $SITE
+cd $TS_DIR && pwd && npm run build && mkdir -p $STATIC_DIR/$SITE && rm -r $STATIC_DIR/$SITE/* && mv dist/* $STATIC_DIR/$SITE
+'''
 
-[tasks.build_gl_site]
-run = "cd gl/ts && npm run build && mkdir -p $STATIC_DIR/gl && rm -rf $STATIC_DIR/gl/* && mv dist/* $STATIC_DIR/gl"
+[tasks.build_site_www]
+depends = "build_site www"
+
+[tasks.build_site_gl]
+depends = "build_site gl gl/ts"
 
 [tasks.build_sites]
-depends = ['build_www_site', 'build_gl_site']
+depends = ['build_site_www', 'build_site_gl']
 
-[tasks.build_nginx_container]
-depends = ['build_sites']
-run = "docker compose build -- nginx"
-
-[tasks.build_gl_container]
-run = "docker compose build -- gl"
-
-[tasks.build_smallweb_container]
-run = "docker compose build -- smallweb"
+[tasks.build_container]
+run = 'docker compose build -- '
 
 [tasks.build_gl]
-depends = ['build_gl_container', 'build_nginx_container', 'build_gl_site']
+depends = ['build_container gl', 'build_container nginx', 'build_site_gl']
 
 [tasks.build_containers]
-depends = ['build_nginx_container', 'build_gl_container', 'build_smallweb_container']
+depends = ['build_container nginx', 'build_container gl', 'build_container smallweb']
 
 [tasks.build]
 depends = ['build_containers']
 
-[tasks.push_gl]
-run = "docker push ghcr.io/theryangeary/gl"
-[tasks.push_nginx]
-run = "docker push ghcr.io/theryangeary/nginx"
-[tasks.push_smallweb]
-run = "docker push ghcr.io/theryangeary/smallweb"
 [tasks.push]
-depends = ['push_gl', 'push_nginx', 'push_smallweb']
+run = '''
+#!/bin/sh
+docker push ghcr.io/theryangeary/${1}:${VERSION}
+'''
+
+[tasks.push_all]
+depends = ['push gl', 'push nginx', 'push smallweb']
 
 [tasks.deploy]
+depends = ['push_all']
 run = "docker stack config -c docker-compose.yml | ssh raspberrypi1.local 'cd homelab && docker stack deploy --with-registry-auth -c - homelab'"
 
 [tasks.rollback]
 run = "ssh raspberrypi1.local 'docker service rollback $1'"
 
+[tasks.bump_version]
+run = '''
+#!/bin/bash
+current_version=$(grep -o '^VERSION="v[0-9]\+' mise.toml | grep -o '[0-9]\+')
+new_version=$(($current_version + 1))
+sed -i '' -E "s/^VERSION=\"v[0-9]+\"/VERSION=\"v${new_version}\"/" mise.toml
+'''
