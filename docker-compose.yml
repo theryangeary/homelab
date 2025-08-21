@@ -44,10 +44,11 @@ services:
       services:
 
   nginx:
-    image: ghcr.io/theryangeary/nginx:v2
+    image: ghcr.io/theryangeary/nginx:v3
     build:
       context: .
       dockerfile: nginx/Dockerfile
+    deploy: *common-deploy
     restart: unless-stopped
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf

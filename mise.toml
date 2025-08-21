@@ -1,6 +1,5 @@
 [env]
 STATIC_DIR="{{config_root}}/static"
-VERSION="v1"
 _.file = '.env'
 
 [tasks.build_site]
@@ -36,7 +35,8 @@ depends = ['build_containers']
 [tasks.push]
 run = '''
 #!/bin/sh
-docker push ghcr.io/theryangeary/${1}:${VERSION}
+mise run build_container $1
+docker compose push ${1}
 '''
 
 [tasks.push_all]
@@ -44,15 +44,12 @@ depends = ['push gl', 'push nginx', 'push smallweb']
 
 [tasks.deploy]
 depends = ['push_all']
-run = "docker stack config -c docker-compose.yml | ssh raspberrypi1.local 'cd homelab && docker stack deploy --with-registry-auth -c - homelab'"
+run = '''
+#!/bin/bash
+docker stack config -c docker-compose.yml
+docker stack config -c docker-compose.yml | ssh raspberrypi1.local 'cd homelab && docker stack deploy --with-registry-auth -c - homelab'
+'''
 
 [tasks.rollback]
 run = "ssh raspberrypi1.local 'docker service rollback $1'"
 
-[tasks.bump_version]
-run = '''
-#!/bin/bash
-current_version=$(grep -o '^VERSION="v[0-9]\+' mise.toml | grep -o '[0-9]\+')
-new_version=$(($current_version + 1))
-sed -i '' -E "s/^VERSION=\"v[0-9]+\"/VERSION=\"v${new_version}\"/" mise.toml
-'''
