@@ -1,7 +1,21 @@
 version: '3'
+
+x-common-deploy: &common-deploy
+  replicas: 2
+  update_config:
+    parallelism: 1
+    delay: 30s
+    failure_action: rollback
+    monitor: 60s
+    order: start-first
+  rollback_config:
+    parallelism: 1
+    delay: 30s
+    monitor: 60s
+
 services:
   smallweb:
-    image: ghcr.io/theryangeary/smallweb:latest
+    image: ghcr.io/theryangeary/smallweb:v2
     build:
       context: .
       dockerfile: smallweb/Dockerfile
@@ -15,10 +29,11 @@ services:
       services:
 
   gl:
-    image: ghcr.io/theryangeary/gl:latest
+    image: ghcr.io/theryangeary/gl:v3
     build:
       context: .
       dockerfile: gl/Dockerfile
+    deploy: *common-deploy
     restart: unless-stopped
     environment:
       - DATABASE_URL=sqlite:/data/grocery.db
@@ -29,7 +44,7 @@ services:
       services:
 
   nginx:
-    image: ghcr.io/theryangeary/nginx:latest
+    image: ghcr.io/theryangeary/nginx:v2
     build:
       context: .
       dockerfile: nginx/Dockerfile
