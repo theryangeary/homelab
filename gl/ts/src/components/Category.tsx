@@ -19,7 +19,7 @@ export default function Category({
 
     return (
         <div>
-            <div className="flex bg-sky-400/50 text-black font-bold p-1">
+            <div className="flex bg-blue-400/50 text-black font-bold p-1">
                 <div
                     {...dragHandleProps}
                     className="cursor-grab active:cursor-grabbing text-white-1000 hover:text-gray-600 px-1"
