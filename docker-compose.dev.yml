@@ -1,0 +1,20 @@
+version: '3'
+
+# in the 'dev' compose, we augment our production (default) compose with useful
+# changes for debugging.
+#
+# this includes port mapping to the host for testing without nginx, and volume
+# mapping for testing without rebuilding images
+
+services:
+  smallweb:
+    volumes:
+      - ./smallweb:/smallweb
+    ports:
+      - 7777:7777
+  gl:
+    ports:
+      - 3001:3001
+  nginx:
+    ports:
+      - 80:80
