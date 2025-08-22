@@ -22,7 +22,6 @@ services:
     restart: unless-stopped
     command: up
     volumes:
-      - ./smallweb:/smallweb
       - deno_cache:/home/ryan/.cache/deno
       - certmagic_cache:/home/ryan/.cache/certmagic
     networks:
@@ -62,6 +61,16 @@ services:
     restart: unless-stopped
     networks:
       cloudflared:
+
+  volume_backup:
+    image: alpine
+    command: tar cvf /backup/backup.tar.gz data
+    restart: 'no'
+    volumes:
+      - gl_data:/data/gl
+      - deno_cache:/data/deno_cache
+      - certmagic_cache:/data/certmagic_cache
+      - ./backup:/backup
 
 networks:
   services:
