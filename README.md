@@ -16,6 +16,8 @@ This is my homelab, aka personal infrastructure I run at home. It is very WIP.
 ### on your development machine (used to control deployments):
 1. set TUNNEL_TOKEN in .env
 1. set MANAGER_HOST in .env
+1. set FTP_HOST in .env
+1. set FTP_USERNAME in .env
 
 ### on your swarm manager server (where deploys are hosted):
 1. install docker. do not use docker rootless!
@@ -27,6 +29,11 @@ This is my homelab, aka personal infrastructure I run at home. It is very WIP.
 ### on swarm nodes that are not managers
 // TODO if I ever add some, but basically the above^ but join to the swarm
 instead of being a manager
+
+### do the deploy (on dev machine)
+1. if you are upgrading the version of a service, bump the image tag in
+   docker-compose.yml.
+1. run `mise run deploy`
 
 ## Design Philosophy
 

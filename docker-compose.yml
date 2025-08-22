@@ -63,10 +63,19 @@ services:
       cloudflared:
 
   volume_backup:
-    image: alpine
-    command: tar cvf /backup/backup.tar.gz data
+    image: ghcr.io/theryangeary/volume_backup:v1
+    build:
+      context: .
+      dockerfile: volume_backup/Dockerfile
     restart: 'no'
+    env_file:
+      - .env
+    environment:
+      - FTP_PASSWORD_FILE=/run/secrets/homelab_ftp_password
+    secrets:
+      - homelab_ftp_password
     volumes:
+      - ./volume_backup:/script
       - gl_data:/data/gl
       - deno_cache:/data/deno_cache
       - certmagic_cache:/data/certmagic_cache
@@ -81,3 +90,7 @@ volumes:
   deno_cache:
   certmagic_cache:
   gl_data:
+
+secrets:
+  homelab_ftp_password:
+    external: true
