@@ -36,7 +36,11 @@ things up and easy to do the right things.
 
 Therefore:
 
-1. all data created/accessed by containers that is not ephemeral (i.e. if it is
+1. This repo should aim to be a monorepo. As much as possible should remain
+   inside this repo to avoid introducing dependencies. Only home grown projects
+   that are truly worth something in their own right outside of my homelab
+   should be moved to an independant repository.
+1. All data created/accessed by containers that is not ephemeral (i.e. if it is
    destroyed forever no one cares) should be stored in a subdirectory of ./data
 1. ./data will be backed up to an external system
 1. No config should be volume mounted for deployments (it is fine for
@@ -47,7 +51,7 @@ Therefore:
    defined and not open ended in a way where not remembering how things work
    can be a footgun, as I may be coming back to manage this after a long time
    away. Rollbacks should be similarly simple.
-1. Deploys should run from outside the docker hosts. The hosts should be
+1. Deploys must run from outside the docker hosts. The hosts should be
    treated like cattle and not pets, require special tending beyond docker
    swarm setup. This includes downloading/syncing this git repo to them or
    managing anything about their filesystems.
