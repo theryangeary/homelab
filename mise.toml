@@ -28,7 +28,12 @@ run = 'docker compose build -- '
 depends = ['build_container gl', 'build_container nginx', 'build_site_gl']
 
 [tasks.build_containers]
-depends = ['build_container nginx', 'build_container gl', 'build_container smallweb']
+depends = [
+    'build_container nginx',
+    'build_container gl',
+    'build_container smallweb',
+    'build_container volume_backup',
+]
 
 [tasks.build]
 depends = ['build_containers']
@@ -41,7 +46,12 @@ docker compose push ${1}
 '''
 
 [tasks.push_all]
-depends = ['push gl', 'push nginx', 'push smallweb']
+depends = [
+    'push gl',
+    'push nginx',
+    'push smallweb',
+    'push volume_backup',
+]
 
 [tasks.deploy]
 depends = ['push_all']
@@ -55,7 +65,7 @@ docker stack config -c docker-compose.yml \
         --detach=false \
         --with-registry-auth \
         -c - \
-        $STACK_NAME \
+        homelab
     '
 '''
 

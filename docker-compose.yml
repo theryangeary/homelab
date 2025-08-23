@@ -75,11 +75,9 @@ services:
     secrets:
       - homelab_ftp_password
     volumes:
-      - ./volume_backup:/script
       - gl_data:/data/gl
       - deno_cache:/data/deno_cache
       - certmagic_cache:/data/certmagic_cache
-      - ./backup:/backup
 
 networks:
   services:
