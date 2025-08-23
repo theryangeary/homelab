@@ -3,6 +3,7 @@ import {
   CollisionDetection,
   DataRef,
   DndContext,
+  DragOverEvent,
   DragOverlay,
   DragStartEvent,
   getFirstCollision,
@@ -77,8 +78,8 @@ export default function GroceryList({
 
   const lastOverId = useRef<UniqueIdentifier | null>(null);
   const recentlyMovedToNewContainer = useRef(false);
-  const isSortingContainer =
-    activeId != null ? containers.includes(activeId) : false;
+  // const isSortingContainer =
+  //   activeId != null ? containers.includes(activeId) : false;
 
   const collisionDetectionStrategy: CollisionDetection = useCallback(
     (args) => {
@@ -145,17 +146,17 @@ export default function GroceryList({
     return Object.keys(items).find((key) => items[key].includes(id));
   };
 
-  const getIndex = (id: UniqueIdentifier) => {
-    const container = findContainer(id);
+  // const getIndex = (id: UniqueIdentifier) => {
+  //   const container = findContainer(id);
 
-    if (!container) {
-      return -1;
-    }
+  //   if (!container) {
+  //     return -1;
+  //   }
 
-    const index = items[container].indexOf(id);
+  //   const index = items[container].indexOf(id);
 
-    return index;
-  };
+  //   return index;
+  // };
 
 
 
@@ -260,8 +261,9 @@ export default function GroceryList({
   }
 
   // todo this doesn't show the item in the correct place in a different category
-  function handleDragOver({ active, over }) {
+  function handleDragOver({ active, over }: DragOverEvent) {
     const overId = over?.id;
+    if (!overId) { return }
 
     const overContainer = findContainer(overId);
     const activeContainer = findContainer(active.id);

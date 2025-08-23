@@ -20,8 +20,8 @@ export default function SortableGroceryItem({
     onFetchSuggestions: (query: string) => Promise<string[]>
 }) {
     const {
-        active, 
-        over, 
+        // active, 
+        // over, 
         isDragging,
         attributes,
         listeners,

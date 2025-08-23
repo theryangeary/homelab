@@ -15,8 +15,8 @@ export default function SortableCategory({
   groceryListRepository: GroceryListRepository,
 }) {
   const {
-    active,
-    over,
+    // active,
+    // over,
     isDragging,
     attributes,
     listeners,
