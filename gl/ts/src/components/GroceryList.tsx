@@ -318,11 +318,11 @@ export default function GroceryList({
         duration: 500,
         easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
       }}>
-         {activeId
-            ? containers.includes(activeId)
-              ? renderContainerDragOverlay(activeId)
-              : renderSortableItemDragOverlay(activeId)
-            : null}
+        {activeId
+          ? containers.includes(activeId)
+            ? renderContainerDragOverlay(activeId)
+            : renderSortableItemDragOverlay(activeId)
+          : null}
       </DragOverlay>
     </DndContext>
   )
