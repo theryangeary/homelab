@@ -1,4 +1,4 @@
-import { SortableContext } from '@dnd-kit/sortable';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { getLabel as getEntryLabel, GroceryListRepository } from '../hooks/useGroceryList';
 import { Category as CategoryModel } from '../types/category';
 import SortableGroceryItem from './SortableGroceryItem';
@@ -30,7 +30,7 @@ export default function Category({
                 </div>
                 <p className="pl-2">{category.name}</p>
             </div>
-            <SortableContext items={itemIds}>
+            <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
                 <div>
                     {items.map((entry) => (
                         <SortableGroceryItem
