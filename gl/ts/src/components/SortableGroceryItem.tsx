@@ -40,7 +40,7 @@ export default function SortableGroceryItem({
         transform: CSS.Transform.toString(transform),
         transition,
         opacity: isDragging ? 0.5 : undefined,
-        scale: active && active.id === getLabel(entry) ? 1.02 : 1,
+        // scale: active && active.id === getLabel(entry) ? 1.02 : 1,
     }
 
     return (
