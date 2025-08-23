@@ -269,13 +269,11 @@ export default function GroceryList({
     }
 
     if (activeContainer !== overContainer) {
-      console.log("setting items")
       setItems((items) => {
         const activeItems = items[activeContainer];
         const overItems = items[overContainer];
         const overIndex = overItems.indexOf(overId);
         const activeIndex = activeItems.indexOf(active.id);
-        console.log(activeItems, overItems, overIndex, activeIndex)
 
         let newIndex: number;
 
