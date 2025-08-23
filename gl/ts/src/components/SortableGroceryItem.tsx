@@ -19,6 +19,9 @@ export default function SortableGroceryItem({
     onFetchSuggestions: (query: string) => Promise<string[]>
 }) {
     const {
+        active, 
+        over, 
+        isDragging,
         attributes,
         listeners,
         setNodeRef,
@@ -35,16 +38,20 @@ export default function SortableGroceryItem({
     const style = {
         transform: CSS.Transform.toString(transform),
         transition,
+        opacity: isDragging ? 0.5 : undefined,
     }
 
     return (
-        <div ref={setNodeRef} style={style} {...attributes}>
+        <div ref={setNodeRef} style={style}>
             <GroceryItem
                 item={entry}
                 onUpdate={onUpdate}
                 onDelete={onDelete}
                 autoFocus={autoFocus}
-                dragHandleProps={listeners}
+                dragHandleProps={{
+                    ...listeners,
+                    ...attributes,
+                }}
                 onFetchSuggestions={onFetchSuggestions}
             />
         </div>

@@ -14,6 +14,9 @@ export default function SortableCategory({
   groceryListRepository: GroceryListRepository,
 }) {
   const {
+    active,
+    over,
+    isDragging,
     attributes,
     listeners,
     setNodeRef,
@@ -30,14 +33,18 @@ export default function SortableCategory({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
+    opacity: isDragging ? 0.5 : undefined,
   }
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes}>
+    <div ref={setNodeRef} style={style}>
       <Category
         category={category}
         groceryListRepository={groceryListRepository}
-        dragHandleProps={listeners}
+        dragHandleProps={{
+          ...attributes,
+          ...listeners
+        }}
       />
     </div>
   )
