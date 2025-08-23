@@ -37,6 +37,7 @@ export default function GroceryItem({
     <div className="flex items-center gap-3 p-1 border-none border-gray-200 bg-white" >
       <div
         {...dragHandleProps}
+        style={{touchAction: 'manipulation'}}
         className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 pl-4"
         title="Drag to reorder"
       >

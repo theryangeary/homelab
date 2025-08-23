@@ -22,6 +22,7 @@ export default function Category({
             <div className="flex bg-blue-400/50 text-black font-bold p-1">
                 <div
                     {...dragHandleProps}
+                    style={{touchAction: 'manipulation'}}
                     className="cursor-grab active:cursor-grabbing text-white-1000 hover:text-gray-600 px-1"
                     title="Drag to reorder"
                 >
