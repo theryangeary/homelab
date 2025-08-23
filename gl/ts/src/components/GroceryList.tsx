@@ -105,14 +105,13 @@ export default function GroceryList({
         if (overId in items) {
           const containerItems = items[overId];
 
-          // If a container is matched and it contains items (columns 'A', 'B', 'C')
           if (containerItems.length > 0) {
             // Return the closest droppable within that container
             overId = closestCenter({
               ...args,
               droppableContainers: args.droppableContainers.filter(
                 (container) =>
-                  container.id !== overId &&
+                  container.id === overId ||
                   containerItems.includes(container.id)
               ),
             })[0]?.id;
@@ -120,7 +119,6 @@ export default function GroceryList({
         }
 
         lastOverId.current = overId;
-
         return [{ id: overId }];
       }
 
@@ -255,7 +253,6 @@ export default function GroceryList({
 
       categoryRepository.reorderCategories(draggedCategory.id, newPosition);
     } else {
-      console.log("type issue?")
     }
 
   }
