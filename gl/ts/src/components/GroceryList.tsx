@@ -1,7 +1,6 @@
 import {
   closestCenter,
   CollisionDetection,
-  DataRef,
   DndContext,
   DragOverEvent,
   DragOverlay,
@@ -73,7 +72,6 @@ export default function GroceryList({
     Object.keys(items) as UniqueIdentifier[]
   );
 
-  const [active, setActive] = useState<DataRef | null>(null);
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
 
   const lastOverId = useRef<UniqueIdentifier | null>(null);
@@ -159,7 +157,6 @@ export default function GroceryList({
 
 
   function handleDragStart(event: DragStartEvent) {
-    setActive(event.active.data);
     setActiveId(event.active.id);
   }
 
@@ -209,7 +206,6 @@ export default function GroceryList({
     }
 
     setActiveId(null);
-    setActive(null);
 
     var newCategoryId = undefined;
     var newPosition: number | undefined = 0;
@@ -362,8 +358,9 @@ export default function GroceryList({
   function renderContainerDragOverlay(containerId: UniqueIdentifier): ReactNode {
     {
       const c = categoryRepository.getByLabel(containerId as string);
+      const glitems: GroceryListEntry[] = items[containerId].map((label: UniqueIdentifier) => groceryListRepository.getByLabel(label as string)).filter((t) => t !== undefined)
       return c ?
-        <Category category={c} groceryListRepository={groceryListRepository} /> : null
+        <Category category={c} items={glitems} groceryListRepository={groceryListRepository} /> : null
     }
   }
 
