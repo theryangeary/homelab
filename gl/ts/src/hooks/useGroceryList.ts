@@ -11,6 +11,7 @@ export type GroceryListRepository = {
   deleteEntry: (id: number) => Promise<any>,
   reorderEntries: (id: number, newPosition?: number, newCategoryId?: number) => Promise<any>,
   fetchSuggestions: (query: string) => Promise<string[]>,
+  getByLabel: (label: string) => GroceryListEntry | undefined,
 }
 
 export function useGroceryList(): GroceryListRepository {
@@ -126,6 +127,10 @@ export function useGroceryList(): GroceryListRepository {
     fetchEntries()
   }, [fetchEntries])
 
+  const getByLabel = (entryLabel: string) => {
+      return entries.find((entry) => getLabel(entry) === entryLabel);
+    }
+
   return {
     entries,
     loading,
@@ -133,6 +138,11 @@ export function useGroceryList(): GroceryListRepository {
     updateEntry,
     deleteEntry,
     reorderEntries,
-    fetchSuggestions
+    fetchSuggestions,
+    getByLabel,
   }
+}
+
+export function getLabel(entry: GroceryListEntry): string {
+  return `entry-${entry.id}`
 }

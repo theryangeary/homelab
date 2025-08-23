@@ -2,6 +2,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { getLabel } from '../hooks/useCategories'
 import { GroceryListRepository } from '../hooks/useGroceryList'
 import type { Category as CategoryModel } from '../types/category'
 import Category from './Category'
@@ -23,7 +24,7 @@ export default function SortableCategory({
     transform,
     transition,
   } = useSortable({ 
-    id: `category-${category.id}`,
+    id: getLabel(category),
     data: {
       type: 'category',
       category: category,
@@ -34,6 +35,7 @@ export default function SortableCategory({
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : undefined,
+    scale: active && active.id === getLabel(category) ? 1.02 : 1,
   }
 
   return (

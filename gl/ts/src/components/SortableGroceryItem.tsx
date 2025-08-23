@@ -2,6 +2,7 @@ import {
     useSortable,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { getLabel } from '../hooks/useGroceryList'
 import type { GroceryListEntry } from '../types/grocery'
 import GroceryItem from './GroceryItem'
 
@@ -28,7 +29,7 @@ export default function SortableGroceryItem({
         transform,
         transition,
     } = useSortable({
-        id: `entry-${entry.id}`,
+        id: getLabel(entry),
         data: {
             type: 'entry',
             entry: entry
@@ -39,6 +40,7 @@ export default function SortableGroceryItem({
         transform: CSS.Transform.toString(transform),
         transition,
         opacity: isDragging ? 0.5 : undefined,
+        scale: active && active.id === getLabel(entry) ? 1.02 : 1,
     }
 
     return (

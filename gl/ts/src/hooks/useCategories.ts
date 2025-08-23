@@ -12,6 +12,7 @@ export type CategoryRepository = {
   deleteCategory: (id: number) => Promise<any>,
   reorderCategories: (id: number, newPosition: number) => Promise<any>,
   fetchSuggestions: (query: string) => Promise<string[]>,
+  getByLabel: (label: string) => Category | undefined,
 }
 
 
@@ -83,7 +84,7 @@ export function useCategories(): CategoryRepository {
     }
   }, [])
 
-  const reorderCategories = async (id: number, newPosition: number ) => {
+  const reorderCategories = async (id: number, newPosition: number) => {
     var request: ReorderRequest = { id, new_position: newPosition };
 
     try {
@@ -118,6 +119,10 @@ export function useCategories(): CategoryRepository {
     }
   }, [])
 
+  const getByLabel = (categoryLabel: string) => {
+    return categories.find((category) => getLabel(category) === categoryLabel);
+  }
+
   useEffect(() => {
     fetchCategories()
   }, [fetchCategories])
@@ -129,6 +134,11 @@ export function useCategories(): CategoryRepository {
     updateCategory,
     deleteCategory,
     reorderCategories,
-    fetchSuggestions
+    fetchSuggestions,
+    getByLabel,
   }
+}
+
+export function getLabel(category: Category): string {
+  return `category-${category.id}`
 }

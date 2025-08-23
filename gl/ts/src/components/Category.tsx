@@ -1,5 +1,5 @@
 import { SortableContext } from '@dnd-kit/sortable';
-import { GroceryListRepository } from '../hooks/useGroceryList';
+import { getLabel as getEntryLabel, GroceryListRepository } from '../hooks/useGroceryList';
 import { Category as CategoryModel } from '../types/category';
 import SortableGroceryItem from './SortableGroceryItem';
 
@@ -15,7 +15,7 @@ export default function Category({
     dragHandleProps,
 }: CategoryProps) {
     const items = groceryListRepository.entries.filter(entry => entry.category_id === category.id);
-    const itemIds = items.map((entry) => `entry-${entry.id}`);
+    const itemIds = items.map((entry) => getEntryLabel(entry));
 
     return (
         <div>
