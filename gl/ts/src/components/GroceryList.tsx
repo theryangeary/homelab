@@ -22,9 +22,9 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy
 } from '@dnd-kit/sortable'
-import { ReactNode, useCallback, useRef, useState } from 'react'
+import { ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import { CategoryRepository, getLabel as getCategoryLabel } from '../hooks/useCategories'
-import { GroceryListRepository } from '../hooks/useGroceryList'
+import { getLabel as getEntryLabel, GroceryListRepository } from '../hooks/useGroceryList'
 import { Category as CategoryModel } from '../types/category'
 import { GroceryListEntry } from '../types/grocery'
 import Category from './Category'
@@ -42,12 +42,6 @@ export default function GroceryList({
   groceryListRepository,
   categoryRepository,
 }: GroceryListProps) {
-  if (groceryListRepository.loading || categoryRepository.loading) {
-    return <div className="text-center">Loading...</div>
-  }
-
-  categoryRepository.categories.sort((a, b) => a.position - b.position);
-
   const sensors = useSensors(
     useSensor(MouseSensor),
     useSensor(TouchSensor),
@@ -56,29 +50,33 @@ export default function GroceryList({
     })
   );
 
-  const [items, setItems] = useState<Items>(
-    () => {
-      var result: Items = {}
-      categoryRepository.categories.forEach((category) => {
-        result[getCategoryLabel(category)] = groceryListRepository.entries
-          .filter((entry) => entry.category_id === category.id)
-          .map((entry) => `entry-${entry.id}`)
-      })
-      return result;
-    }
-  );
-  const [clonedItems, setClonedItems] = useState<Items>(items);
-
-  const [containers, setContainers] = useState(
-    Object.keys(items) as UniqueIdentifier[]
-  );
-
+  // Initialize items state
+  const [items, setItems] = useState<Items>({});
+  const [clonedItems, setClonedItems] = useState<Items>({});
+  const [containers, setContainers] = useState<UniqueIdentifier[]>([]);
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
-
   const lastOverId = useRef<UniqueIdentifier | null>(null);
   const recentlyMovedToNewContainer = useRef(false);
-  // const isSortingContainer =
-  //   activeId != null ? containers.includes(activeId) : false;
+
+  // Sync items with repository data whenever it changes
+  useEffect(() => {
+    if (groceryListRepository.loading || categoryRepository.loading) {
+      return;
+    }
+
+    categoryRepository.categories.sort((a, b) => a.position - b.position);
+    
+    const newItems: Items = {};
+    categoryRepository.categories.forEach((category) => {
+      newItems[getCategoryLabel(category)] = groceryListRepository.entries
+        .filter((entry) => entry.category_id === category.id)
+        .map((entry) => getEntryLabel(entry))
+    });
+    
+    setItems(newItems);
+    setClonedItems(newItems);
+    setContainers(Object.keys(newItems) as UniqueIdentifier[]);
+  }, [groceryListRepository.entries, categoryRepository.categories, groceryListRepository.loading, categoryRepository.loading]);
 
   const collisionDetectionStrategy: CollisionDetection = useCallback(
     (args) => {
@@ -134,6 +132,11 @@ export default function GroceryList({
     },
     [activeId, items]
   );
+
+  // Show loading state
+  if (groceryListRepository.loading || categoryRepository.loading) {
+    return <div className="text-center">Loading...</div>;
+  }
 
   const findContainer = (id: UniqueIdentifier) => {
     if (id in items) {
