@@ -23,7 +23,7 @@ import {
   verticalListSortingStrategy
 } from '@dnd-kit/sortable'
 import { ReactNode, useCallback, useRef, useState } from 'react'
-import { CategoryRepository, getLabel } from '../hooks/useCategories'
+import { CategoryRepository, getLabel as getCategoryLabel } from '../hooks/useCategories'
 import { GroceryListRepository } from '../hooks/useGroceryList'
 import { Category as CategoryModel } from '../types/category'
 import { GroceryListEntry } from '../types/grocery'
@@ -60,13 +60,14 @@ export default function GroceryList({
     () => {
       var result: Items = {}
       categoryRepository.categories.forEach((category) => {
-        result[getLabel(category)] = groceryListRepository.entries
+        result[getCategoryLabel(category)] = groceryListRepository.entries
           .filter((entry) => entry.category_id === category.id)
           .map((entry) => `entry-${entry.id}`)
       })
       return result;
     }
   );
+  const [clonedItems, setClonedItems] = useState<Items>(items);
 
   const [containers, setContainers] = useState(
     Object.keys(items) as UniqueIdentifier[]
@@ -144,19 +145,27 @@ export default function GroceryList({
 
   function handleDragStart(event: DragStartEvent) {
     setActiveId(event.active.id);
+    setClonedItems(items);
   }
 
   const handleDragEnd = (event: DragEndEvent) => {
     const active = event.active;
     const over = event.over;
 
-    if (active.id in items && over?.id) {
-      setContainers((containers) => {
-        const activeIndex = containers.indexOf(active.id);
-        const overIndex = containers.indexOf(over.id);
+    var newCategoryId = undefined;
+    var newPosition: number | undefined = 0;
 
+    const movingContainers = active.id in clonedItems && over?.id;
+    if (movingContainers) {
+      const activeIndex = containers.indexOf(active.id);
+      const overIndex = containers.indexOf(over.id);
+
+      setContainers((containers) => {
         return arrayMove(containers, activeIndex, overIndex);
       });
+
+      const draggedCategory: CategoryModel = active.data.current?.category;
+      categoryRepository.reorderCategories(draggedCategory.id, over?.data.current?.category.position);
     }
 
     const activeContainer = findContainer(active.id);
@@ -175,9 +184,24 @@ export default function GroceryList({
 
     const overContainer = findContainer(overId);
 
-    if (overContainer) {
+    if (overContainer && !movingContainers) {
       const activeIndex = items[activeContainer].indexOf(active.id);
       const overIndex = items[overContainer].indexOf(overId);
+      const itemAtDropLocationWhenDragStart = clonedItems[overContainer][overIndex];
+
+      newCategoryId = categoryRepository.getByLabel(overContainer as string)?.id;
+
+      // if nothing was at this index before we are appending to the end
+      if (itemAtDropLocationWhenDragStart === undefined) {
+        // set newPosition to 1 after the last item in the drop container
+        const lastPosition = groceryListRepository.getByLabel(clonedItems[overContainer].slice(-1)[0] as string)?.position
+        newPosition = 1 + (lastPosition ? lastPosition : 0)
+      } else {
+        // there was something at this index before, use that items position
+        newPosition = groceryListRepository.getByLabel(itemAtDropLocationWhenDragStart as string)?.position
+      }
+      
+      groceryListRepository.reorderEntries(active.data.current?.entry.id, newPosition, newCategoryId);
 
       if (activeIndex !== overIndex) {
         setItems((items) => ({
@@ -192,51 +216,6 @@ export default function GroceryList({
     }
 
     setActiveId(null);
-
-    var newCategoryId = undefined;
-    var newPosition: number | undefined = 0;
-
-    if (event.active.data.current?.type === 'entry') {
-      const draggedEntry: GroceryListEntry = event.active.data.current?.entry;
-
-      // if dropped on another entry, take that entry's position AND category
-      if (event.over?.data.current?.type === 'entry') {
-        const dropEntry: GroceryListEntry = event.over?.data.current?.entry
-        newPosition = dropEntry.position;
-        if (draggedEntry.category_id !== dropEntry.category_id) {
-          newCategoryId = dropEntry.category_id
-        }
-        // if dropped on a category, take that category's id
-      } else if (event.over?.data.current?.type === 'category') {
-        const dropCategory: CategoryModel = event.over?.data.current?.category
-        newCategoryId = dropCategory.id
-      }
-
-      groceryListRepository.reorderEntries(draggedEntry.id, newPosition, newCategoryId);
-    } else if (event.active.data.current?.type === 'category') {
-      const draggedCategory: CategoryModel = event.active.data.current?.category;
-
-      // use a defined default value
-      newPosition = draggedCategory.position;
-
-      // if dropped on an entry, take that entry's category's position
-      if (event.over?.data.current?.type === 'entry') {
-        const dropEntry: GroceryListEntry = event.over?.data.current?.entry
-        const categoryId = dropEntry.category_id;
-        newPosition = categoryRepository.categories.filter((category) => category.id === categoryId)[0].position;
-        // if dropped on a category, take that category's position
-      } else if (event.over?.data.current?.type === 'category') {
-        const dropCategory: CategoryModel = event.over?.data.current?.category
-        newPosition = dropCategory.position
-      } else {
-        console.error("dropped on unsupported droppable");
-        return
-      }
-
-      categoryRepository.reorderCategories(draggedCategory.id, newPosition);
-    } else {
-    }
-
   }
 
   function handleDragOver({ active, over }: DragOverEvent) {
