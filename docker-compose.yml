@@ -63,7 +63,7 @@ services:
       cloudflared:
 
   volume_backup:
-    image: ghcr.io/theryangeary/volume_backup:v1
+    image: ghcr.io/theryangeary/volume_backup:v3
     build:
       context: .
       dockerfile: volume_backup/Dockerfile
