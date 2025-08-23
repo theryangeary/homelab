@@ -142,20 +142,6 @@ export default function GroceryList({
     return Object.keys(items).find((key) => items[key].includes(id));
   };
 
-  // const getIndex = (id: UniqueIdentifier) => {
-  //   const container = findContainer(id);
-
-  //   if (!container) {
-  //     return -1;
-  //   }
-
-  //   const index = items[container].indexOf(id);
-
-  //   return index;
-  // };
-
-
-
   function handleDragStart(event: DragStartEvent) {
     setActiveId(event.active.id);
   }
