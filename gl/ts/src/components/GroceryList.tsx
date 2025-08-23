@@ -23,7 +23,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy
 } from '@dnd-kit/sortable'
-import { useCallback, useRef, useState } from 'react'
+import { ReactNode, useCallback, useRef, useState } from 'react'
 import { CategoryRepository, getLabel } from '../hooks/useCategories'
 import { GroceryListRepository } from '../hooks/useGroceryList'
 import { Category as CategoryModel } from '../types/category'
@@ -257,7 +257,6 @@ export default function GroceryList({
 
   }
 
-  // todo this doesn't show the item in the correct place in a different category
   function handleDragOver({ active, over }: DragOverEvent) {
     const overId = over?.id;
     if (!overId) { return }
@@ -270,11 +269,13 @@ export default function GroceryList({
     }
 
     if (activeContainer !== overContainer) {
+      console.log("setting items")
       setItems((items) => {
         const activeItems = items[activeContainer];
         const overItems = items[overContainer];
         const overIndex = overItems.indexOf(overId);
         const activeIndex = activeItems.indexOf(active.id);
+        console.log(activeItems, overItems, overIndex, activeIndex)
 
         let newIndex: number;
 
@@ -325,8 +326,9 @@ export default function GroceryList({
         {
           containers.map((categoryLabel) => {
             const category = categoryRepository.getByLabel(categoryLabel as string);
+            const glitems: GroceryListEntry[] = items[categoryLabel].map((label: UniqueIdentifier) => groceryListRepository.getByLabel(label as string)).filter((t) => t !== undefined)
             if (category) {
-              return <SortableCategory key={categoryLabel} category={category} groceryListRepository={groceryListRepository} />
+              return <SortableCategory key={categoryLabel} category={category} items={glitems} groceryListRepository={groceryListRepository} />
             }
           })
         }
@@ -336,18 +338,35 @@ export default function GroceryList({
         duration: 500,
         easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
       }}>
-        {active && active.current?.type === 'category' ? (
-          <Category category={categoryRepository.categories.filter((cat) => cat.id === active.current?.category.id)[0]} groceryListRepository={groceryListRepository} />
-        ) : null}
-        {active && active.current?.type === 'entry' ? (
-          <GroceryItem
-            item={groceryListRepository.entries.filter((entry) => entry.id === active.current?.entry.id)[0]}
-            onDelete={groceryListRepository.deleteEntry}
-            onFetchSuggestions={groceryListRepository.fetchSuggestions}
-            onUpdate={groceryListRepository.updateEntry}
-            dragHandleProps={undefined} />
-        ) : null}
+         {activeId
+            ? containers.includes(activeId)
+              ? renderContainerDragOverlay(activeId)
+              : renderSortableItemDragOverlay(activeId)
+            : null}
       </DragOverlay>
     </DndContext>
   )
+
+  function renderSortableItemDragOverlay(id: UniqueIdentifier): React.ReactNode {
+    {
+      const item = groceryListRepository.getByLabel(id as string);
+      return item ? (
+        <GroceryItem
+          item={item}
+          onDelete={groceryListRepository.deleteEntry}
+          onFetchSuggestions={groceryListRepository.fetchSuggestions}
+          onUpdate={groceryListRepository.updateEntry}
+          dragHandleProps={undefined} />
+      ) : null
+    }
+  }
+
+  function renderContainerDragOverlay(containerId: UniqueIdentifier): ReactNode {
+    {
+      const c = categoryRepository.getByLabel(containerId as string);
+      return c ?
+        <Category category={c} groceryListRepository={groceryListRepository} /> : null
+    }
+  }
+
 }

@@ -59,7 +59,6 @@ export default function GroceryItem({
           onChange={(option) => {
             if (option) {
               const newDescription = option.value.toLowerCase()
-              console.log(newDescription)
               handleDescriptionChange(newDescription)
             }
           }}

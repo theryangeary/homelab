@@ -5,13 +5,16 @@ import { CSS } from '@dnd-kit/utilities'
 import { getLabel } from '../hooks/useCategories'
 import { GroceryListRepository } from '../hooks/useGroceryList'
 import type { Category as CategoryModel } from '../types/category'
+import { GroceryListEntry } from '../types/grocery'
 import Category from './Category'
 
 export default function SortableCategory({
   category,
+  items,
   groceryListRepository,
 }: {
-  category: CategoryModel
+  category: CategoryModel,
+  items: GroceryListEntry[],
   groceryListRepository: GroceryListRepository,
 }) {
   const {
@@ -42,6 +45,7 @@ export default function SortableCategory({
     <div ref={setNodeRef} style={style}>
       <Category
         category={category}
+        items={items}
         groceryListRepository={groceryListRepository}
         dragHandleProps={{
           ...attributes,
