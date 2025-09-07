@@ -30,7 +30,7 @@ services:
       services:
 
   nginx:
-    image: ghcr.io/theryangeary/nginx:v5
+    image: ghcr.io/theryangeary/nginx:v6
     build:
       context: .
       dockerfile: nginx/Dockerfile
