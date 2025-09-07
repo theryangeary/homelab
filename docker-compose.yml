@@ -14,19 +14,6 @@ x-common-deploy: &common-deploy
     monitor: 60s
 
 services:
-  # smallweb:
-  #   image: ghcr.io/theryangeary/smallweb:v2
-  #   build:
-  #     context: .
-  #     dockerfile: smallweb/Dockerfile
-  #   restart: unless-stopped
-  #   command: up
-  #   volumes:
-  #     - deno_cache:/home/ryan/.cache/deno
-  #     - certmagic_cache:/home/ryan/.cache/certmagic
-  #   networks:
-  #     services:
-
   gl:
     image: ghcr.io/theryangeary/gl:v8
     build:
@@ -43,7 +30,7 @@ services:
       services:
 
   nginx:
-    image: ghcr.io/theryangeary/nginx:v4
+    image: ghcr.io/theryangeary/nginx:v5
     build:
       context: .
       dockerfile: nginx/Dockerfile
