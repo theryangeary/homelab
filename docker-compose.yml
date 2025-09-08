@@ -15,7 +15,7 @@ x-common-deploy: &common-deploy
 
 services:
   gl:
-    image: ghcr.io/theryangeary/gl:v8
+    image: ghcr.io/theryangeary/gl:v10
     build:
       context: .
       dockerfile: gl/Dockerfile

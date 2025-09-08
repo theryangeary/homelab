@@ -178,7 +178,6 @@ impl Database {
                 .push_bind_unseparated(description);
         }
 
-        dbg!(&entry.completed);
         if let Some(is_completed) = entry.completed {
             separated.push(GROCERY_LIST_ENTRIES_COMPLETED_AT);
             if is_completed {
