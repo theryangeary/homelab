@@ -26,6 +26,41 @@ services:
       - PORT=3001
     volumes:
       - gl_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      services:
+
+  pathfinder:
+    image: ghcr.io/theryangeary/pathfinder:latest
+    environment:
+      - RUST_LOG=info 
+      - ALLOWED_ORIGINS=https://pathfinder-game.fly.dev,https://pathfinder.prof,https://pathfinder-game.fly.dev,http://pathfinder.localhost
+      - REFERER_VALIDATION_ENABLED=true 
+      - SESSION_TIMEOUT_MINUTES=1440 
+      - RATE_LIMIT_PER_MINUTE=100 
+      - SERVER_HOST=0.0.0.0
+      - HTTP_PORT=8080
+      - RATE_LIMIT_SESSION=10
+      - RATE_LIMIT_READ=200
+      - RATE_LIMIT_WRITE=50
+      - RATE_LIMIT_WINDOW=60
+      - COOKIE_MAX_AGE=31536000
+      - REQUEST_TIMEOUT=30
+      - MAX_REQUEST_SIZE=1048576
+      - STRICT_REFERER="false"
+      - HSTS_MAX_AGE=31536000
+      - CORS_MAX_AGE=300
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
       services:
 
@@ -36,6 +71,11 @@ services:
       dockerfile: nginx/Dockerfile
     deploy: *common-deploy
     restart: unless-stopped
+    depends_on:
+      pathfinder:
+        condition: service_healthy
+      gl:
+        condition: service_healthy
     networks:
       cloudflared:
       services:
