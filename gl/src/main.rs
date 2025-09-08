@@ -3,7 +3,7 @@ mod handlers;
 mod models;
 
 use axum::{
-    http::{header, StatusCode, Uri}, response::{Html, IntoResponse, Response}, routing::{delete, get, post, put}, Router
+    http::{header, StatusCode, Uri}, response::{Html, IntoResponse, Response}, routing::{delete, get, post, put}, Json, Router
 };
 use std::{env, sync::Arc};
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
@@ -56,6 +56,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/api/categories/:id", delete(delete_category))
         .route("/api/categories/reorder", put(reorder_categories))
         .route("/api/categories/suggestions", get(category::get_suggestions))
+        .route("/health", get(health_check))
         .layer(TraceLayer::new_for_http())
         .layer(CorsLayer::permissive())
         .with_state(db);
@@ -67,6 +68,13 @@ async fn main() -> anyhow::Result<()> {
     axum::serve(listener, app).await?;
 
     Ok(())
+}
+
+async fn health_check() -> Result<Json<serde_json::Value>, StatusCode> {
+    Ok(Json(serde_json::json!({
+        "status": "healthy",
+        "timestamp": chrono::Utc::now().to_rfc3339(),
+    })))
 }
 
 async fn static_handler(uri: Uri) -> impl IntoResponse {
