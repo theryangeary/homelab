@@ -169,33 +169,34 @@ impl Database {
     ) -> Result<Option<GroceryListEntry>> {
         let mut query_builder =
             sqlx::QueryBuilder::new(&format!("UPDATE {TABLE_NAME_GROCERY_LIST_ENTRIES} SET "));
-        let mut separated = query_builder.separated(", ");
+        let mut separated = query_builder.separated(",");
         let mut must_reorder = false;
 
         if let Some(description) = &entry.description {
             separated
                 .push(GROCERY_LIST_ENTRIES_DESCRIPTION)
-                .push(" = ")
+                .push_unseparated(" = ")
                 .push_bind_unseparated(description);
         }
+        dbg!(&entry.completed);
         if let Some(is_completed) = entry.completed {
             separated.push(GROCERY_LIST_ENTRIES_COMPLETED_AT);
             if is_completed {
-                separated.push(" = CURRENT_TIMESTAMP");
+                separated.push_unseparated(" = CURRENT_TIMESTAMP");
             } else {
-                separated.push(" = NULL");
+                separated.push_unseparated(" = NULL");
             }
         }
         if let Some(quantity) = &entry.quantity {
             separated
                 .push(GROCERY_LIST_ENTRIES_QUANTITY)
-                .push(" = ")
+                .push_unseparated(" = ")
                 .push_bind_unseparated(quantity);
         }
         if let Some(notes) = &entry.notes {
             separated
                 .push(GROCERY_LIST_ENTRIES_NOTES)
-                .push(" = ")
+                .push_unseparated(" = ")
                 .push_bind_unseparated(notes);
         }
         if entry.category_id.is_some() || entry.position.is_some() {

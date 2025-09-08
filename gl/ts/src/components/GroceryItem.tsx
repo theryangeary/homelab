@@ -1,5 +1,6 @@
 import AsyncCreatableSelect from 'react-select/async-creatable';
 
+import { useState } from 'react';
 import type { GroceryListEntry } from '../types/grocery';
 
 interface GroceryItemProps {
@@ -19,6 +20,8 @@ export default function GroceryItem({
   autoFocus = false,
   dragHandleProps,
 }: GroceryItemProps) {
+  const [checked, setChecked] = useState(item.completed);
+
   const fullLabel = `${item.quantity} ${item.description} ${item.notes}`;
 
   const handleDescriptionChange = (newDescription: string) => {
@@ -45,8 +48,8 @@ export default function GroceryItem({
       </div>
       <input
         type="checkbox"
-        checked={item.completed}
-        onChange={(e) => handleCheckboxChange(e.target.checked)}
+        checked={checked}
+        onChange={(e) => { handleCheckboxChange(e.target.checked); setChecked(e.target.checked) } }
         className="w-4 h-4"
       />
       <div className="flex-1">

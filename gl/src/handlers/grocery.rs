@@ -6,7 +6,7 @@ use axum::{
 use serde::Deserialize;
 use std::sync::Arc;
 
-use crate::database::{self, Database};
+use crate::{database::{self, Database}, models::grocery_entry::ApiGroceryListEntry};
 use crate::models::grocery_entry::{
     CreateGroceryListEntry, GroceryListEntry, ReorderEntry, UpdateGroceryListEntry,
 };
@@ -61,7 +61,7 @@ fn parse_entry_input(input: &str) -> (String, String, String) {
 
 pub async fn get_entries(
     State(db): State<Arc<Database>>,
-) -> Result<Json<Vec<GroceryListEntry>>, StatusCode> {
+) -> Result<Json<Vec<ApiGroceryListEntry>>, StatusCode> {
     tracing::info!("GET /api/entries called");
 
     tracing::info!("archiving entries");
@@ -72,7 +72,7 @@ pub async fn get_entries(
     match db.get_active_entries().await {
         Ok(entries) => {
             tracing::info!("Successfully retrieved {} entries", entries.len());
-            Ok(Json(entries))
+            Ok(Json(entries.iter().map(Into::into).collect()))
         }
         Err(e) => {
             tracing::error!("Failed to get entries: {}", e);
