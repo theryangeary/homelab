@@ -174,10 +174,10 @@ impl Database {
 
         if let Some(description) = &entry.description {
             separated
-                .push(GROCERY_LIST_ENTRIES_DESCRIPTION)
-                .push_unseparated(" = ")
+                .push(&format!("{GROCERY_LIST_ENTRIES_DESCRIPTION} = "))
                 .push_bind_unseparated(description);
         }
+
         dbg!(&entry.completed);
         if let Some(is_completed) = entry.completed {
             separated.push(GROCERY_LIST_ENTRIES_COMPLETED_AT);
@@ -189,14 +189,12 @@ impl Database {
         }
         if let Some(quantity) = &entry.quantity {
             separated
-                .push(GROCERY_LIST_ENTRIES_QUANTITY)
-                .push_unseparated(" = ")
+                .push(&format!("{GROCERY_LIST_ENTRIES_QUANTITY} = "))
                 .push_bind_unseparated(quantity);
         }
         if let Some(notes) = &entry.notes {
             separated
-                .push(GROCERY_LIST_ENTRIES_NOTES)
-                .push_unseparated(" = ")
+                .push(&format!("{GROCERY_LIST_ENTRIES_NOTES} = "))
                 .push_bind_unseparated(notes);
         }
         if entry.category_id.is_some() || entry.position.is_some() {
