@@ -629,14 +629,13 @@ impl Database {
 
         if let Some(name) = &category.name {
             separated
-                .push(CATEGORIES_NAME)
-                .push(" = ")
+                .push(&format!("{CATEGORIES_NAME} = "))
                 .push_bind_unseparated(name);
         }
 
         separated
             .push(CATEGORIES_UPDATED_AT)
-            .push(" = CURRENT_TIMESTAMP");
+            .push_unseparated(" = CURRENT_TIMESTAMP");
 
         query_builder
             .push(&format!(" WHERE {CATEGORIES_ID} = "))
