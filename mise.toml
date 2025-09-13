@@ -59,6 +59,7 @@ run = '''
 #!/bin/bash
 docker stack config -c docker-compose.yml
 docker stack config -c docker-compose.yml \
+| yq 'del(.. | select(has("env_file")) | .env_file)' \
 | ssh $MANAGER_HOST \
     'cd homelab && sudo docker stack deploy \
         --resolve-image=always \

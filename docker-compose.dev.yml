@@ -13,3 +13,9 @@ services:
   nginx:
     ports:
       - 80:80
+    depends_on:
+      pathfinder:
+        condition: service_healthy
+      gl:
+        condition: service_healthy
+
