@@ -14,6 +14,17 @@ x-common-deploy: &common-deploy
     monitor: 60s
 
 services:
+  www:
+    image: ghcr.io/theryangeary/www:latest
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      services:
+
   gl:
     image: ghcr.io/theryangeary/gl:v10
     build:
@@ -36,9 +47,10 @@ services:
       services:
 
   pathfinder:
-    image: ghcr.io/theryangeary/pathfinder:latest
+    image: ghcr.io/theryangeary/pathfinder:v2
     env_file:
       - ./pathfinder/.env
+    command: ["./cron_entrypoint.sh"]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 10s
@@ -51,7 +63,7 @@ services:
       services:
 
   nginx:
-    image: ghcr.io/theryangeary/nginx:v7
+    image: ghcr.io/theryangeary/nginx:v10
     build:
       context: .
       dockerfile: nginx/Dockerfile

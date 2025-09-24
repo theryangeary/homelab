@@ -31,7 +31,6 @@ depends = ['build_container gl', 'build_container nginx', 'build_site_gl']
 depends = [
     'build_container nginx',
     'build_container gl',
-    # 'build_container smallweb',
     'build_container volume_backup',
 ]
 
@@ -49,7 +48,6 @@ docker compose push ${1}
 depends = [
     'push gl',
     'push nginx',
-    # 'push smallweb',
     'push volume_backup',
 ]
 
