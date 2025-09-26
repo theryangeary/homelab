@@ -47,7 +47,7 @@ services:
       services:
 
   pathfinder:
-    image: ghcr.io/theryangeary/pathfinder:v2
+    image: ghcr.io/theryangeary/pathfinder:v4
     env_file:
       - ./pathfinder/.env
     command: ["./cron_entrypoint.sh"]
