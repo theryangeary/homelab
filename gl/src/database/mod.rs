@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use crate::models::{
     category::{Category, CreateCategory, ReorderCategory, UpdateCategory},
     grocery_entry::{
@@ -5,11 +7,16 @@ use crate::models::{
     },
 };
 use anyhow::Result;
-use sqlx::{migrate::MigrateDatabase, sqlite::SqlitePool, FromRow, Row, Sqlite};
+use sqlx::{
+    migrate::MigrateDatabase,
+    sqlite::{SqliteConnectOptions, SqlitePool},
+    ConnectOptions, FromRow, Row, Sqlite,
+};
 
 mod constants;
 pub use constants::DEFAULT_CATEGORY_ID;
 use constants::*;
+use tracing::log;
 
 pub struct Database {
     pool: SqlitePool,
@@ -21,7 +28,10 @@ impl Database {
             Sqlite::create_database(database_url).await?;
         }
 
-        let pool = SqlitePool::connect(database_url).await?;
+        let options =
+            SqliteConnectOptions::from_str(database_url)?.log_statements(log::LevelFilter::Trace);
+
+        let pool = SqlitePool::connect_with(options).await?;
 
         let db = Database { pool };
         db.migrate().await?;
@@ -30,37 +40,7 @@ impl Database {
     }
 
     async fn migrate(&self) -> Result<()> {
-        sqlx::query(&format!(
-            r#"
-            CREATE TABLE IF NOT EXISTS {TABLE_NAME_GROCERY_LIST_ENTRIES} (
-                {GROCERY_LIST_ENTRIES_ID} INTEGER PRIMARY KEY AUTOINCREMENT,
-                {GROCERY_LIST_ENTRIES_DESCRIPTION} TEXT NOT NULL,
-                {GROCERY_LIST_ENTRIES_COMPLETED_AT} TIMESTAMP,
-                {GROCERY_LIST_ENTRIES_ARCHIVED_AT} TIMESTAMP,
-                {GROCERY_LIST_ENTRIES_POSITION} INTEGER NOT NULL,
-                {GROCERY_LIST_ENTRIES_QUANTITY} TEXT NOT NULL DEFAULT '',
-                {GROCERY_LIST_ENTRIES_NOTES} TEXT NOT NULL DEFAULT '',
-                {GROCERY_LIST_ENTRIES_CATEGORY_ID} INTEGER NOT NULL DEFAULT {DEFAULT_CATEGORY_ID},
-                {GROCERY_LIST_ENTRIES_UPDATED_AT} TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY({GROCERY_LIST_ENTRIES_CATEGORY_ID}) REFERENCES {TABLE_NAME_CATEGORIES}({CATEGORIES_ID})
-                UNIQUE({GROCERY_LIST_ENTRIES_CATEGORY_ID}, {GROCERY_LIST_ENTRIES_POSITION})
-            );
-
-            CREATE TABLE IF NOT EXISTS {TABLE_NAME_CATEGORIES} (
-                {CATEGORIES_ID} INTEGER PRIMARY KEY AUTOINCREMENT,
-                {CATEGORIES_NAME} TEXT NOT NULL,
-                {CATEGORIES_IS_DEFAULT_CATEGORY} BOOLEAN NOT NULL DEFAULT FALSE,
-                {CATEGORIES_POSITION} INTEGER NOT NULL,
-                {CATEGORIES_UPDATED_AT} TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-
-            INSERT INTO {TABLE_NAME_CATEGORIES} ({CATEGORIES_NAME}, {CATEGORIES_IS_DEFAULT_CATEGORY}, {CATEGORIES_POSITION})
-            SELECT "{DEFAULT_CATEGORY_NAME}", TRUE, 0
-            WHERE NOT EXISTS (SELECT 1 FROM {TABLE_NAME_CATEGORIES} WHERE {CATEGORIES_ID} = {DEFAULT_CATEGORY_ID});
-            "#
-        ))
-        .execute(&self.pool)
-        .await?;
+        sqlx::migrate!("./migrations").run(&self.pool).await?;
 
         Ok(())
     }
@@ -96,10 +76,12 @@ impl Database {
     /// append it to the end of the list)
     pub async fn get_next_position_for_item_in_category(&self, category_id: i64) -> Result<i64> {
         let next_position = "next_position";
+
         Ok(sqlx::query(&format!(
             "SELECT {GROCERY_LIST_ENTRIES_POSITION} + 1 as {next_position}
             FROM {TABLE_NAME_GROCERY_LIST_ENTRIES} 
-            WHERE {GROCERY_LIST_ENTRIES_CATEGORY_ID} = ? 
+            WHERE {GROCERY_LIST_ENTRIES_POSITION} IS NOT NULL
+            AND {GROCERY_LIST_ENTRIES_CATEGORY_ID} = ? 
             ORDER BY {GROCERY_LIST_ENTRIES_POSITION} DESC 
             LIMIT 1",
         ))
@@ -458,7 +440,9 @@ impl Database {
         sqlx::query(&format!(
             "UPDATE {TABLE_NAME_GROCERY_LIST_ENTRIES}
             SET {GROCERY_LIST_ENTRIES_POSITION} = {GROCERY_LIST_ENTRIES_POSITION} + {}
-            WHERE {GROCERY_LIST_ENTRIES_POSITION} > ? AND {GROCERY_LIST_ENTRIES_CATEGORY_ID} = ?",
+            WHERE {GROCERY_LIST_ENTRIES_POSITION} IS NOT NULL 
+                AND {GROCERY_LIST_ENTRIES_POSITION} > ? 
+                AND {GROCERY_LIST_ENTRIES_CATEGORY_ID} = ?",
             MAX_NUM_POSITIONED_GROCERY_ITEMS - 1
         ))
         .bind(prior_position)
@@ -469,7 +453,9 @@ impl Database {
         sqlx::query(&format!(
             "UPDATE {TABLE_NAME_GROCERY_LIST_ENTRIES}
             SET {GROCERY_LIST_ENTRIES_POSITION} = {GROCERY_LIST_ENTRIES_POSITION} - {MAX_NUM_POSITIONED_GROCERY_ITEMS}
-            WHERE {GROCERY_LIST_ENTRIES_POSITION} > ? AND {GROCERY_LIST_ENTRIES_CATEGORY_ID} = ?",
+            WHERE {GROCERY_LIST_ENTRIES_POSITION} IS NOT NULL 
+                AND {GROCERY_LIST_ENTRIES_POSITION} > ? 
+                AND {GROCERY_LIST_ENTRIES_CATEGORY_ID} = ?",
         ))
         .bind(prior_position)
         .bind(prior_category_id)
@@ -515,7 +501,9 @@ impl Database {
         sqlx::query(&format!(
             "UPDATE {TABLE_NAME_GROCERY_LIST_ENTRIES}
             SET {GROCERY_LIST_ENTRIES_POSITION} = {GROCERY_LIST_ENTRIES_POSITION} + {MAX_NUM_POSITIONED_GROCERY_ITEMS}
-            WHERE {GROCERY_LIST_ENTRIES_POSITION} >= ? AND {GROCERY_LIST_ENTRIES_CATEGORY_ID} = ?",
+            WHERE {GROCERY_LIST_ENTRIES_POSITION} IS NOT NULL 
+                AND {GROCERY_LIST_ENTRIES_POSITION} >= ? 
+                AND {GROCERY_LIST_ENTRIES_CATEGORY_ID} = ?",
         ))
         .bind(new_position)
         .bind(new_category_id)
@@ -525,7 +513,9 @@ impl Database {
         sqlx::query(&format!(
             "UPDATE {TABLE_NAME_GROCERY_LIST_ENTRIES}
             SET {GROCERY_LIST_ENTRIES_POSITION} = {GROCERY_LIST_ENTRIES_POSITION} - {}
-            WHERE {GROCERY_LIST_ENTRIES_POSITION} >= ? AND {GROCERY_LIST_ENTRIES_CATEGORY_ID} = ?",
+            WHERE {GROCERY_LIST_ENTRIES_POSITION} IS NOT NULL 
+                AND {GROCERY_LIST_ENTRIES_POSITION} >= ? 
+                AND {GROCERY_LIST_ENTRIES_CATEGORY_ID} = ?",
             MAX_NUM_POSITIONED_GROCERY_ITEMS - 1
         ))
         .bind(new_position)
@@ -697,7 +687,9 @@ impl Database {
     pub async fn archive_entries(&self) -> Result<()> {
         sqlx::query(&format!(
             "UPDATE {TABLE_NAME_GROCERY_LIST_ENTRIES} 
-            SET {GROCERY_LIST_ENTRIES_ARCHIVED_AT} = CURRENT_TIME
+            SET 
+                {GROCERY_LIST_ENTRIES_ARCHIVED_AT} = CURRENT_TIMESTAMP,
+                {GROCERY_LIST_ENTRIES_POSITION} = NULL
             WHERE {GROCERY_LIST_ENTRIES_COMPLETED_AT} < datetime('now','-1 day')"
         ))
         .execute(&self.pool)
