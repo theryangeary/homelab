@@ -22,7 +22,10 @@ export default function GroceryItem({
 }: GroceryItemProps) {
   const [checked, setChecked] = useState(item.completed);
 
-  const fullLabel = `${item.quantity} ${item.description} ${item.notes}`;
+  var fullLabel = `${item.quantity} ${item.description}`
+  if (item.notes.length > 0) {
+    fullLabel += ` (${item.notes})`;
+  }
 
   const handleDescriptionChange = (newDescription: string) => {
     onUpdate(item.id, { description: newDescription })
