@@ -25,6 +25,7 @@ RUN cargo chef cook --release --recipe-path recipe.json
 
 COPY gl/Cargo.toml gl/Cargo.lock ./
 COPY gl/src ./src
+COPY gl/migrations ./migrations
 COPY --from=frontend /app/dist ./ts/dist
 
 RUN cargo build --release
