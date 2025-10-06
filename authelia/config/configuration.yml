@@ -22,13 +22,8 @@ session:
 
 server:
   address: 'tcp://:9091'
-  # tls:
-  #   certificate: '/config/certs/cert.pem'
-  #   key: '/config/certs/key.pem'
   endpoints:
     authz:
-      # auth-request:
-      #   implementation: 'AuthRequest'
       forward-auth:
         implementation: 'ForwardAuth'
 
@@ -42,9 +37,6 @@ authentication_backend:
 
 access_control:
   default_policy: 'one_factor'
-  rules:
-    - domain: 'auth.ryangeary.localhost'
-      policy: bypass
 
 notifier:
   disable_startup_check: true
