@@ -100,6 +100,36 @@ services:
       - deno_cache:/data/deno_cache
       - certmagic_cache:/data/certmagic_cache
 
+  authelia:
+    # container_name: 'authelia'
+    image: 'docker.io/authelia/authelia:latest'
+    restart: 'unless-stopped'
+    networks:
+      services:
+    ports:
+      - 9091:9091
+    environment:
+      AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: '/secrets/AUTHELIA_JWT_SECRET'
+      AUTHELIA_SESSION_SECRET_FILE: '/secrets/AUTHELIA_SESSION_SECRET'
+      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: '/secrets/AUTHELIA_STORAGE_ENCRYPTION_KEY'
+    volumes:
+      - '${PWD}/authelia/config:/config'
+      - '${PWD}/authelia/secrets:/secrets'
+
+  caddy:
+    image: caddy:2.10
+    restart: 'unless-stopped'
+    networks:
+      services:
+      cloudflared:
+    deploy: *common-deploy
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - '${PWD}/caddy/conf:/etc/caddy'
+      - caddy_data:/data
+
 networks:
   services:
   cloudflared:
@@ -110,6 +140,7 @@ volumes:
   certmagic_cache:
   gl_data:
   pathfinder_data:
+  caddy_data:
 
 secrets:
   homelab_ftp_password:
