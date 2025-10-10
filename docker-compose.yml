@@ -101,20 +101,23 @@ services:
       - certmagic_cache:/data/certmagic_cache
 
   authelia:
-    # container_name: 'authelia'
     image: 'docker.io/authelia/authelia:latest'
     restart: 'unless-stopped'
     networks:
       services:
-    ports:
-      - 9091:9091
     environment:
-      AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: '/secrets/AUTHELIA_JWT_SECRET'
-      AUTHELIA_SESSION_SECRET_FILE: '/secrets/AUTHELIA_SESSION_SECRET'
-      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: '/secrets/AUTHELIA_STORAGE_ENCRYPTION_KEY'
-    volumes:
-      - '${PWD}/authelia/config:/config'
-      - '${PWD}/authelia/secrets:/secrets'
+      AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: '/run/secrets/authelia_jwt_secret'
+      AUTHELIA_SESSION_SECRET_FILE: '/run/secrets/authelia_session_secret'
+      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: '/run/secrets/authelia_storage_encryption_key'
+    configs:
+      - source: authelia_config_blue
+        target: /config/configuration.yml
+      - source: authelia_users_green
+        target: /config/users_database.yml
+    secrets:
+      - authelia_jwt_secret
+      - authelia_session_secret
+      - authelia_storage_encryption_key
 
   caddy:
     image: caddy:2.10
@@ -127,8 +130,10 @@ services:
       - 80:80
       - 443:443
     volumes:
-      - '${PWD}/caddy/conf:/etc/caddy'
       - caddy_data:/data
+    configs:
+      - source: caddy_config_blue
+        target: /etc/caddy/Caddyfile
 
 networks:
   services:
@@ -144,4 +149,24 @@ volumes:
 
 secrets:
   homelab_ftp_password:
+    external: true
+  authelia_jwt_secret:
+    external: true
+  authelia_session_secret:
+    external: true
+  authelia_storage_encryption_key:
+    external: true
+
+configs:
+  caddy_config_blue:
+    external: true
+  caddy_config_green:
+    external: true
+  authelia_config_blue:
+    external: true
+  authelia_config_green:
+    external: true
+  authelia_users_blue:
+    external: true
+  authelia_users_green:
     external: true
