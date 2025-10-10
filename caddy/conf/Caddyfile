@@ -1,16 +1,32 @@
-auth.ryangeary.localhost {
+{
+    servers {
+        trusted_proxies static private_ranges
+    }
+
+    auto_https off
+}
+
+http://auth.ryangeary.dev, http://auth.ryangeary.localhost {
     reverse_proxy http://authelia:9091
 }
 
-www.ryangeary.localhost {
+http://www.ryangeary.dev, http://www.ryangeary.localhost, http://ryangeary.dev, http://ryangeary.localhost {
     reverse_proxy http://www:3000
 }
 
-gl.ryangeary.localhost {
+http://pathfinder.prof, http://pathfinder.ryangeary.dev, http://pathfinder.localhost {
+    reverse_proxy http://pathfinder:8080
+}
+
+http://gl.ryangeary.dev, http://gl.ryangeary.localhost {
     forward_auth http://authelia:9091 {
         uri /api/authz/forward-auth
         copy_headers Remote-User Remote-Groups Remote-Email Remote-Name
     }
 
     reverse_proxy http://gl:3001
+}
+
+http://*.ryangeary.dev {
+    redir https://www.ryangeary.dev{uri}
 }
