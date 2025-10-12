@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "@headlessui/react": "^2.2.7",
-    "react-autosuggest": "^10.1.0"
-  }
-}
