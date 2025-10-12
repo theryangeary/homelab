@@ -12,25 +12,11 @@ echo $SITE
 cd $TS_DIR && pwd && npm run build && mkdir -p $STATIC_DIR/$SITE && rm -r $STATIC_DIR/$SITE/* && mv dist/* $STATIC_DIR/$SITE
 '''
 
-[tasks.build_site_www]
-depends = "build_site www"
-
-[tasks.build_site_gl]
-depends = "build_site gl gl/ts"
-
-[tasks.build_sites]
-depends = ['build_site_www', 'build_site_gl']
-
 [tasks.build_container]
 run = 'docker compose build -- '
 
-[tasks.build_gl]
-depends = ['build_container gl', 'build_container nginx', 'build_site_gl']
-
 [tasks.build_containers]
 depends = [
-    'build_container nginx',
-    'build_container gl',
     'build_container volume_backup',
 ]
 
@@ -46,8 +32,6 @@ docker compose push ${1}
 
 [tasks.push_all]
 depends = [
-    'push gl',
-    'push nginx',
     'push volume_backup',
 ]
 
@@ -70,3 +54,9 @@ docker stack config -c docker-compose.yml \
 
 [tasks.rollback]
 run = "ssh $MANAGER_HOST 'docker service rollback $1'"
+
+[tasks.config_view]
+run = '''
+#!/bin/bash
+ssh $MANAGER_HOST "sudo docker config inspect $1" | jq '.[0].Spec.Data' | tr -d '\"' | base64 -d 
+'''

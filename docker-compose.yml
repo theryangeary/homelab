@@ -26,7 +26,7 @@ services:
       services:
 
   gl:
-    image: ghcr.io/theryangeary/gl:v11
+    image: ghcr.io/theryangeary/gl:v12
     build:
       context: .
       dockerfile: gl/Dockerfile
@@ -60,17 +60,6 @@ services:
     volumes:
       - pathfinder_data:/data
     networks:
-      services:
-
-  nginx:
-    image: ghcr.io/theryangeary/nginx:v10
-    build:
-      context: .
-      dockerfile: nginx/Dockerfile
-    deploy: *common-deploy
-    restart: unless-stopped
-    networks:
-      cloudflared:
       services:
 
   cloudflared:
