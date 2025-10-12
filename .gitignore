@@ -36,3 +36,4 @@ target
 *.db-shm
 *.db-wal
 backup
+authelia/config/users_database.yml

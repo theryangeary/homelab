@@ -5,20 +5,15 @@ storage:
 log:
   level: debug
 
-# session:
-#   expiration: '1m'
-#   cookies:
-#     - domain: 'ryangeary.dev'
-#       authelia_url: 'https://auth.ryangeary.dev'
-#       default_redirection_url: 'https://www.ryangeary.dev'
-
 session:
-  expiration: '1m'
+  expiration: '3m'
+  inactivity: '1m'
+  remember_me: '3m'
   name: authelia_session
   cookies:
-    - domain: 'ryangeary.localhost'
-      authelia_url: 'https://auth.ryangeary.localhost'
-      default_redirection_url: 'https://www.ryangeary.localhost'
+    - domain: 'ryangeary.dev'
+      authelia_url: 'https://auth.ryangeary.dev'
+      default_redirection_url: 'https://www.ryangeary.dev'
 
 server:
   address: 'tcp://:9091'
