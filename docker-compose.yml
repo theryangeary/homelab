@@ -26,10 +26,7 @@ services:
       services:
 
   gl:
-    image: ghcr.io/theryangeary/gl:v13
-    build:
-      context: .
-      dockerfile: gl/Dockerfile
+    image: ghcr.io/theryangeary/gl:v14
     deploy: *common-deploy
     restart: unless-stopped
     environment:
@@ -37,6 +34,23 @@ services:
       - PORT=3001
     volumes:
       - gl_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      services:
+
+  gldemo:
+    image: ghcr.io/theryangeary/gl:v14
+    deploy: *common-deploy
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=sqlite:/app/grocery.db
+      - PORT=3001
+      - GL_DEMO=true
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
       interval: 10s
@@ -121,7 +135,7 @@ services:
     volumes:
       - caddy_data:/data
     configs:
-      - source: caddy_config_blue
+      - source: caddy_config_green
         target: /etc/caddy/Caddyfile
 
 networks:

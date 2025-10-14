@@ -60,3 +60,10 @@ run = '''
 #!/bin/bash
 ssh $MANAGER_HOST "sudo docker config inspect $1" | jq '.[0].Spec.Data' | tr -d '\"' | base64 -d 
 '''
+
+[tasks.deploy_image]
+run = '''
+#!/bin/bash
+TAG=${2:-latest}
+ssh $MANAGER_HOST "sudo docker service update --force --image ghcr.io/theryangeary/$1:$TAG homelab_$1"
+'''

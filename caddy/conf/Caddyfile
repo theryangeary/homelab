@@ -27,6 +27,10 @@ http://gl.ryangeary.dev, http://gl.ryangeary.localhost {
     reverse_proxy http://gl:3001
 }
 
+http://gldemo.ryangeary.dev {
+    reverse_proxy http://gldemo:3001
+}
+
 http://*.ryangeary.dev {
     redir https://www.ryangeary.dev{uri}
 }
