@@ -31,6 +31,10 @@ http://gldemo.ryangeary.dev {
     reverse_proxy http://gldemo:3001
 }
 
+http://webhook.ryangeary.dev {
+    reverse_proxy http://imageupdatewebhook:8080
+}
+
 http://*.ryangeary.dev {
     redir https://www.ryangeary.dev{uri}
 }

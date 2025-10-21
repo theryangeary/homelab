@@ -61,7 +61,7 @@ services:
       services:
 
   pathfinder:
-    image: ghcr.io/theryangeary/pathfinder:v4
+    image: ghcr.io/theryangeary/pathfinder:main
     env_file:
       - ./pathfinder/.env
     command: ["./cron_entrypoint.sh"]
@@ -102,6 +102,23 @@ services:
       - pathfinder_data:/data/pathfinder
       - deno_cache:/data/deno_cache
       - certmagic_cache:/data/certmagic_cache
+
+  imageupdatewebhook:
+    build: 
+      context: ./image_update_webhook
+      dockerfile: Dockerfile
+    restart: 'unless-stopped'
+    environment: 
+      - WEBHOOK_SECRET_FILE=/run/secrets/webhook_secret
+    # secrets:
+    #   - webhook_secret
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager 
 
   authelia:
     image: 'docker.io/authelia/authelia:latest'
@@ -158,6 +175,8 @@ secrets:
   authelia_session_secret:
     external: true
   authelia_storage_encryption_key:
+    external: true
+  webhook_secret:
     external: true
 
 configs:

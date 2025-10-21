@@ -10,7 +10,7 @@ services:
   gl:
     ports:
       - 3001:3001
-  nginx:
+  caddy:
     ports:
       - 80:80
     depends_on:
@@ -18,4 +18,9 @@ services:
         condition: service_healthy
       gl:
         condition: service_healthy
+  imageupdatewebhook:
+    ports:
+      - 8080:8080
+    environment:
+      "WEBHOOK_SECRET": abcd
 
