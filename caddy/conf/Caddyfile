@@ -32,7 +32,7 @@ http://gldemo.ryangeary.dev {
 }
 
 http://webhook.ryangeary.dev {
-    reverse_proxy http://imageupdatewebhook:8080
+    reverse_proxy http://image_update_webhook:8080
 }
 
 http://*.ryangeary.dev {
