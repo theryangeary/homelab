@@ -3,21 +3,13 @@ STATIC_DIR="{{config_root}}/static"
 STACK_NAME="homelab"
 _.file = '.env'
 
-[tasks.build_site]
-run = '''
-#!/bin/bash
-SITE=${1}
-TS_DIR=${2:-${SITE}}
-echo $SITE
-cd $TS_DIR && pwd && npm run build && mkdir -p $STATIC_DIR/$SITE && rm -r $STATIC_DIR/$SITE/* && mv dist/* $STATIC_DIR/$SITE
-'''
-
 [tasks.build_container]
 run = 'docker compose build -- '
 
 [tasks.build_containers]
 depends = [
     'build_container volume_backup',
+    'build_container image_update_webhook'
 ]
 
 [tasks.build]
@@ -33,6 +25,7 @@ docker compose push ${1}
 [tasks.push_all]
 depends = [
     'push volume_backup',
+    'push image_update_webhook'
 ]
 
 [tasks.deploy]
@@ -59,6 +52,88 @@ run = "ssh $MANAGER_HOST 'docker service rollback $1'"
 run = '''
 #!/bin/bash
 ssh $MANAGER_HOST "sudo docker config inspect $1" | jq '.[0].Spec.Data' | tr -d '\"' | base64 -d 
+'''
+
+[tasks.get_config_path]
+description = "get the filesystem mount path of the given config. warning: this can provide more than one result if the config is mounted more than once; this is kind of a feature as it will probably break callers that expect exactly one result"
+run = '''
+#!/bin/bash
+
+SERVICE_NAME=$1
+CONFIG_NAME=$2
+CONFIG_VARIANT=$3
+
+ssh $MANAGER_HOST -- sudo docker service inspect ${STACK_NAME}_${SERVICE_NAME} \
+    | jq '.[].Spec.TaskTemplate.ContainerSpec.Configs.[]' \
+    | jq "select(.ConfigName | test(\"${CONFIG_NAME}_${CONFIG_VARIANT}\"))" \
+    | jq '.File.Name'
+'''
+
+[tasks.get_active_config_names_for_service_by_prefix]
+description = "get the actively used config name for a given config name prefix used by a given service. useful for detecting if a blue/green config is active."
+run = '''
+#!/bin/bash
+
+SERVICE_NAME=$1
+CONFIG_NAME=$2
+
+ssh $MANAGER_HOST -- sudo docker service inspect ${STACK_NAME}_${SERVICE_NAME} \
+    | jq '.[].Spec.TaskTemplate.ContainerSpec.Configs.[]' \
+    | jq "select(.ConfigName | test(\"^${CONFIG_NAME}\"))" \
+    | jq '.ConfigName'
+'''
+
+[tasks.update_config]
+description = "update the unused blue/green config variant with the given file content. does not update services to use this config."
+run = '''
+#!/bin/bash
+
+CONFIG_NAME="$1"
+CONFIG_FILE="$2"
+
+# ensure both _green and _blue variants exist
+ssh $MANAGER_HOST "echo '' | sudo docker config create ${CONFIG_NAME}_green -" 2>/dev/null || true 
+ssh $MANAGER_HOST "echo '' | sudo docker config create ${CONFIG_NAME}_blue  -" 2>/dev/null || true 
+
+roll_config() {
+    CONFIG_VARIANT="$1"
+    ssh $MANAGER_HOST "sudo docker config rm ${CONFIG_NAME}_${CONFIG_VARIANT}" 2>/dev/null \
+        && cat $CONFIG_FILE | ssh $MANAGER_HOST "sudo docker config create ${CONFIG_NAME}_${CONFIG_VARIANT} -" >&/dev/null \
+        && exit 0
+}
+
+roll_config "green"
+roll_config "blue"
+
+# no config was updated; error
+exit 1
+'''
+
+[tasks.deploy_config]
+description = "deploy a new config and provide it to the specified service"
+run = '''
+#!/bin/bash
+
+SERVICE_NAME=$1
+echo service: ${SERVICE_NAME}
+CONFIG_NAME=$2
+echo config prefix: ${CONFIG_NAME}
+CONFIG_FILE=$3
+echo config source filepath: ${CONFIG_FILE}
+
+existing_path="$(mise get_config_path $SERVICE_NAME $CONFIG_NAME)"
+echo config destination filepath: ${existing_path}
+active_config_name="$(mise get_active_config_names_for_service_by_prefix $SERVICE_NAME $CONFIG_NAME)"
+echo config to be unmounted: ${active_config_name}
+updated_config_name="$(mise update_config $CONFIG_NAME $CONFIG_FILE)"
+echo config to be mounted: ${updated_config_name}
+
+ssh $MANAGER_HOST -- sudo docker service update \
+    --config-rm $active_config_name \
+    --config-add source=$updated_config_name,target=$existing_path \
+    ${STACK_NAME}_${SERVICE_NAME}
+
+
 '''
 
 [tasks.deploy_image]
