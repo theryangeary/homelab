@@ -131,6 +131,8 @@ services:
       placement:
         constraints:
           - node.role == manager
+    networks:
+      services:
 
   authelia:
     image: 'docker.io/authelia/authelia:latest'
