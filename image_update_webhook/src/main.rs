@@ -1,10 +1,10 @@
 // src/main.rs
 use axum::{
+    Json, Router,
     extract::State,
     http::{HeaderMap, StatusCode},
     response::IntoResponse,
     routing::{get, post},
-    Json, Router,
 };
 use hmac::{Hmac, Mac};
 use serde::{Deserialize, Serialize};
@@ -12,6 +12,7 @@ use sha2::Sha256;
 use std::process::Command;
 use std::sync::Arc;
 use tokio::net::TcpListener;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 type HmacSha256 = Hmac<Sha256>;
 
@@ -20,7 +21,7 @@ struct AppState {
     webhook_secret: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct WebhookPayload {
     repository: Repository,
     #[serde(default)]
@@ -29,28 +30,28 @@ struct WebhookPayload {
     after: Option<String>, // Commit SHA for push events
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct Repository {
     full_name: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct Package {
     package_version: PackageVersion,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct PackageVersion {
     #[serde(default)]
     container_metadata: Option<ContainerMetadata>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct ContainerMetadata {
     tag: Tag,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct Tag {
     name: String,
 }
@@ -70,18 +71,28 @@ fn verify_signature(secret: &str, payload: &[u8], signature: &str) -> bool {
         None => return false,
     };
 
+    tracing::debug!("Verifying signature: {}", signature);
+
     let mut mac = match HmacSha256::new_from_slice(secret.as_bytes()) {
         Ok(m) => m,
-        Err(_) => return false,
+        Err(e) => {
+            tracing::error!("Failed to create HMAC: {}", e);
+            return false;
+        }
     };
-    
+
+    tracing::debug!("Updating HMAC with payload of length: {}", payload.len());
+
     mac.update(payload);
-    
+
     let expected = match hex::decode(signature) {
         Ok(bytes) => bytes,
-        Err(_) => return false,
+        Err(e) => {
+            tracing::error!("Failed to decode signature: {}", e);
+            return false;
+        }
     };
-    
+
     mac.verify_slice(&expected).is_ok()
 }
 
@@ -104,7 +115,10 @@ async fn webhook_deploy(
         .and_then(|v| v.to_str().ok())
         .unwrap_or("");
 
+    tracing::debug!("Received webhook with signature: {}", signature);
+
     if !verify_signature(&state.webhook_secret, &body, signature) {
+        tracing::warn!("Signature verification failed");
         return Err((
             StatusCode::UNAUTHORIZED,
             Json(Response {
@@ -121,8 +135,10 @@ async fn webhook_deploy(
         .and_then(|v| v.to_str().ok())
         .unwrap_or("");
 
-    // Accept both package and push events
-    if event_type != "registry_package" && event_type != "push" {
+    tracing::debug!("Received event type: {}", event_type);
+
+    if event_type != "package" {
+        tracing::info!("Event type '{}' ignored", event_type);
         return Ok(Json(Response {
             message: format!("Event '{}' ignored", event_type),
             output: None,
@@ -130,10 +146,13 @@ async fn webhook_deploy(
         }));
     }
 
+    tracing::debug!("Event type '{}' accepted", event_type);
+
     // Parse payload
     let payload: WebhookPayload = match serde_json::from_slice(&body) {
         Ok(p) => p,
         Err(e) => {
+            tracing::error!("Failed to parse JSON payload: {}: {:?}", e, body);
             return Err((
                 StatusCode::BAD_REQUEST,
                 Json(Response {
@@ -141,18 +160,16 @@ async fn webhook_deploy(
                     output: None,
                     error: Some(e.to_string()),
                 }),
-            ))
+            ));
         }
     };
 
-    let repo_name = payload
-        .repository
-        .full_name
-        .split('/')
-        .last()
-        .unwrap_or("");
+    tracing::debug!("Processing payload: {:?}", payload);
+
+    let repo_name = payload.repository.full_name.split('/').last().unwrap_or("");
 
     if repo_name.is_empty() {
+        tracing::error!("Could not determine repository name from full_name: {}", payload.repository.full_name);
         return Err((
             StatusCode::BAD_REQUEST,
             Json(Response {
@@ -164,35 +181,24 @@ async fn webhook_deploy(
     }
 
     // Extract image tag from payload
-    let image_tag = if event_type == "registry_package" {
+    let image_tag = if event_type == "package" {
+        tracing::debug!("Extracting image tag for registry_package event");
         // For package events, get the tag from the package metadata
         payload
             .package
             .and_then(|p| p.package_version.container_metadata)
             .map(|m| m.tag.name)
             .unwrap_or_else(|| "latest".to_string())
-    } else if event_type == "push" {
-        // For push events, use the commit SHA
-        payload
-            .after
-            .map(|sha| {
-                // Use short SHA (first 7 chars) or full SHA
-                if sha.len() >= 7 {
-                    sha[..7].to_string()
-                } else {
-                    sha
-                }
-            })
-            .unwrap_or_else(|| "latest".to_string())
     } else {
+        tracing::debug!("Extracting image tag for unknown event type: defaulting to 'latest'");
         "latest".to_string()
     };
-
-    println!("Updating service with tag: {}", image_tag);
 
     // Update Docker service
     let image = format!("ghcr.io/{}:{}", payload.repository.full_name, image_tag);
     let service = format!("homelab_{}", repo_name);
+
+    tracing::info!("Updating service {} to image: {}", service, image);
 
     let output = Command::new("docker")
         .args([
@@ -207,32 +213,48 @@ async fn webhook_deploy(
         .output();
 
     match output {
-        Ok(result) if result.status.success() => Ok(Json(Response {
-            message: format!("Successfully updated {}", service),
-            output: Some(String::from_utf8_lossy(&result.stdout).to_string()),
-            error: None,
-        })),
-        Ok(result) => Err((
+        Ok(result) if result.status.success() => {
+            tracing::info!("Service {} updated successfully", service);
+            Ok(Json(Response {
+                message: format!("Successfully updated {}", service),
+                output: Some(String::from_utf8_lossy(&result.stdout).to_string()),
+                error: None,
+            }))
+        },
+        Ok(result) => {
+            tracing::error!("Service {} update failed: {}", service, String::from_utf8_lossy(&result.stderr));
+            Err((
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(Response {
                 message: "Update failed".to_string(),
                 output: Some(String::from_utf8_lossy(&result.stdout).to_string()),
                 error: Some(String::from_utf8_lossy(&result.stderr).to_string()),
             }),
-        )),
-        Err(e) => Err((
+        ))},
+        Err(e) => {
+            tracing::error!("Failed to execute docker command: {}", e);
+            Err((
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(Response {
                 message: "Failed to execute command".to_string(),
                 output: None,
                 error: Some(e.to_string()),
             }),
-        )),
+        ))},
     }
 }
 
 #[tokio::main]
 async fn main() {
+    // Initialize tracing
+    tracing_subscriber::registry()
+        .with(
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| "debug".into()),
+        )
+        .with(tracing_subscriber::fmt::layer())
+        .init();
+
     let webhook_secret_file = std::env::var("WEBHOOK_SECRET_FILE").unwrap_or("".to_string());
     let webhook_secret = std::fs::read_to_string(webhook_secret_file)
         .or_else(|_| std::env::var("WEBHOOK_SECRET"))
@@ -253,7 +275,5 @@ async fn main() {
 
     println!("Webhook receiver listening on port 8080");
 
-    axum::serve(listener, app)
-        .await
-        .expect("Server error");
+    axum::serve(listener, app).await.expect("Server error");
 }
