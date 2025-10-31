@@ -4,12 +4,13 @@ STACK_NAME="homelab"
 _.file = '.env'
 
 [tasks.build_container]
+description = "build the container image for the specified service (i.e. specify service name from docker-compose.yml, not the image name)"
 run = 'docker compose build -- '
 
 [tasks.build_containers]
 depends = [
     'build_container volume_backup',
-    'build_container image_update_webhook'
+    'build_container imageupdatewebhook'
 ]
 
 [tasks.build]
@@ -25,7 +26,7 @@ docker compose push ${1}
 [tasks.push_all]
 depends = [
     'push volume_backup',
-    'push image_update_webhook'
+    'push imageupdatewebhook'
 ]
 
 [tasks.deploy]

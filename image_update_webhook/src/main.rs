@@ -243,7 +243,7 @@ async fn main() {
     let state = Arc::new(AppState { webhook_secret });
 
     let app = Router::new()
-        .route("/health", get(health))
+        .route("/health", get(health_check))
         .route("/webhook/deploy", post(webhook_deploy))
         .with_state(state);
 
