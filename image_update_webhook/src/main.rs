@@ -85,12 +85,12 @@ fn verify_signature(secret: &str, payload: &[u8], signature: &str) -> bool {
     mac.verify_slice(&expected).is_ok()
 }
 
-async fn health() -> impl IntoResponse {
-    Json(Response {
-        message: "healthy".to_string(),
-        output: None,
-        error: None,
-    })
+async fn health_check() -> Json<serde_json::Value> {
+    Json(serde_json::json!({
+        "status": "healthy",
+        "timestamp": chrono::Utc::now().to_rfc3339(),
+        "service": "image_update_webhook"
+    }))
 }
 
 async fn webhook_deploy(
