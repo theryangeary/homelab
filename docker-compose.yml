@@ -25,6 +25,17 @@ services:
     networks:
       services:
 
+  mta-display:
+    image: ghcr.io/theryangeary/mta-display:latest
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      services:
+
   gl:
     image: ghcr.io/theryangeary/gl:v14
     deploy: *common-deploy
@@ -103,23 +114,23 @@ services:
       - deno_cache:/data/deno_cache
       - certmagic_cache:/data/certmagic_cache
 
-  image_update_webhook:
-    image: ghcr.io/theryangeary/image_update_webhook:v1
-    build: 
+  imageupdatewebhook:
+    image: ghcr.io/theryangeary/image_update_webhook:v2
+    build:
       context: ./image_update_webhook
       dockerfile: Dockerfile
     restart: 'unless-stopped'
-    environment: 
-      - WEBHOOK_SECRET_FILE=/run/secrets/webhook_secret
+    environment:
+      - WEBHOOK_SECRET_FILE=/run/secrets/webhook_secret_green
     secrets:
-      - webhook_secret
+      - webhook_secret_green
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     deploy:
       replicas: 1
       placement:
         constraints:
-          - node.role == manager 
+          - node.role == manager
 
   authelia:
     image: 'docker.io/authelia/authelia:latest'
@@ -177,7 +188,7 @@ secrets:
     external: true
   authelia_storage_encryption_key:
     external: true
-  webhook_secret:
+  webhook_secret_green:
     external: true
 
 configs:
