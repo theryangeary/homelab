@@ -31,8 +31,12 @@ http://gldemo.ryangeary.dev {
     reverse_proxy http://gldemo:3001
 }
 
-http://webhook.ryangeary.dev {
-    reverse_proxy http://image_update_webhook:8080
+http://webhook.ryangeary.dev http://webhooks.ryangeary.dev {
+    reverse_proxy http://imageupdatewebhook:8080
+}
+
+http://mta-display.ryangeary.dev http://mtadisplay.ryangeary.dev {
+    reverse_proxy http://mta-display:3000
 }
 
 http://*.ryangeary.dev {
