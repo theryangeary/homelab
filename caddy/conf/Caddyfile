@@ -37,6 +37,12 @@ http://webhook.ryangeary.dev http://webhooks.ryangeary.dev {
 
 http://mta-display.ryangeary.dev http://mtadisplay.ryangeary.dev {
     reverse_proxy http://mta-display:3000
+
+    @protected path /gallery/review
+    forward_auth @protected http://authelia:9091 {
+        uri /api/authz/forward-auth
+        copy_headers Remote-User Remote-Groups Remote-Email Remote-Name
+    }
 }
 
 http://*.ryangeary.dev {
