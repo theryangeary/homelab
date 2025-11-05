@@ -24,6 +24,10 @@ FROM debian:bookworm-slim AS runtime
 
 WORKDIR /app
 
+RUN apt-get update && apt-get install -y \
+    docker.io \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY --from=builder /app/target/release/image-update-webhook /image_update_webhook
 
 EXPOSE 3000
