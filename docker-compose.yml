@@ -35,6 +35,11 @@ services:
       start_period: 30s
     networks:
       services:
+    volumes:
+      - mtadisplay_data:/data
+    environment:
+      - DATABASE_URL=sqlite:/data/mta-display.db
+      - RUST_LOG=info
 
   gl:
     image: ghcr.io/theryangeary/gl:v14
@@ -180,6 +185,7 @@ volumes:
   gl_data:
   pathfinder_data:
   caddy_data:
+  mtadisplay_data:
 
 secrets:
   homelab_ftp_password:
@@ -205,4 +211,8 @@ configs:
   authelia_users_blue:
     external: true
   authelia_users_green:
+    external: true
+  docker_config_green:
+    external: true
+  docker_config_blue:
     external: true
