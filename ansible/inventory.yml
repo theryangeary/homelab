@@ -1,0 +1,7 @@
+production:
+  hosts:
+    raspberrypi1.local:
+
+staging:
+  hosts:
+    vagrants@127.0.0.1:50023

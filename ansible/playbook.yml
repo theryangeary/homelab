@@ -1,0 +1,19 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+    - name: Update apt package list
+      apt:
+        update_cache: yes
+
+    - name: Ensure NTP is installed.
+      ansible.builtin.apt: name=ntp state=present
+
+    - name: Ensure NTP is running.
+      ansible.builtin.service: name=ntp state=started enabled=yes
+
+    - name: Ensure docker is installed.
+      ansible.builtin.apt: name=docker.io state=present
+
+    - name: Ensure docker is running.
+      ansible.builtin.service: name=docker state=started enabled=yes
