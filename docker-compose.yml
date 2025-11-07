@@ -15,7 +15,9 @@ x-common-deploy: &common-deploy
 
 services:
   www:
-    image: ghcr.io/theryangeary/www:latest
+    image: ghcr.io/theryangeary/www:main
+    deploy: *common-deploy
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 10s
@@ -26,7 +28,9 @@ services:
       services:
 
   mta-display:
-    image: ghcr.io/theryangeary/mta-display:latest
+    image: ghcr.io/theryangeary/mta-display:main
+    deploy: *common-deploy
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 10s
@@ -78,6 +82,8 @@ services:
 
   pathfinder:
     image: ghcr.io/theryangeary/pathfinder:main
+    deploy: *common-deploy
+    restart: unless-stopped
     env_file:
       - ./pathfinder/.env
     command: ["./cron_entrypoint.sh"]
@@ -106,6 +112,7 @@ services:
     build:
       context: .
       dockerfile: volume_backup/Dockerfile
+    deploy: *common-deploy
     restart: 'no'
     env_file:
       - .env
@@ -120,7 +127,7 @@ services:
       - certmagic_cache:/data/certmagic_cache
 
   imageupdatewebhook:
-    image: ghcr.io/theryangeary/image_update_webhook:v8
+    image: ghcr.io/theryangeary/image_update_webhook:v9
     build:
       context: ./image_update_webhook
       dockerfile: Dockerfile
@@ -142,6 +149,7 @@ services:
   authelia:
     image: 'docker.io/authelia/authelia:latest'
     restart: 'unless-stopped'
+    deploy: *common-deploy
     networks:
       services:
     environment:
@@ -171,7 +179,7 @@ services:
     volumes:
       - caddy_data:/data
     configs:
-      - source: caddy_config_green
+      - source: caddy_config_blue
         target: /etc/caddy/Caddyfile
 
 networks:
