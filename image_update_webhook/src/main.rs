@@ -208,6 +208,24 @@ async fn webhook_deploy(
         }
     };
 
+    if !image_tag.starts_with("sha-") {
+        tracing::info!(
+            "Image tag '{}' does not start with 'sha-', likely a branch or git tag, ignoring update",
+            image_tag
+        );
+        return Err((
+            StatusCode::OK,
+            Json(Response {
+                message: format!(
+                    "Image tag '{}' does not start with 'sha-', ignoring update",
+                    image_tag
+                ),
+                output: None,
+                error: None,
+            }),
+        ));
+    }
+
     // Update Docker service
     let image = format!("ghcr.io/{}:{}", payload.repository.full_name, image_tag);
     let service = format!("homelab_{}", repo_name);
