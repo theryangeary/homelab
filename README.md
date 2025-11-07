@@ -37,7 +37,7 @@ instead of being a manager
 
 ## Design Philosophy
 
-I have to maintian this in my free time. Things should be stupidly simple. If I
+I have to maintain this in my free time. Things should be stupidly simple. If I
 come back after time away and forget everything, it should be difficult to mess
 things up and easy to do the right things.
 
