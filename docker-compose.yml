@@ -123,8 +123,7 @@ services:
     volumes:
       - gl_data:/data/gl
       - pathfinder_data:/data/pathfinder
-      - deno_cache:/data/deno_cache
-      - certmagic_cache:/data/certmagic_cache
+      - mtadisplay_data:/data/mtadisplay
 
   imageupdatewebhook:
     image: ghcr.io/theryangeary/image_update_webhook:v9
@@ -188,8 +187,6 @@ networks:
     name: cloudflared
 
 volumes:
-  deno_cache:
-  certmagic_cache:
   gl_data:
   pathfinder_data:
   caddy_data:
