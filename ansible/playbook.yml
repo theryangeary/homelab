@@ -3,8 +3,7 @@
   become: yes
   tasks:
     - name: Update apt package list
-      apt:
-        update_cache: yes
+      ansible.builtin.apt: update_cache=yes cache_valid_time=3600
 
     - name: Ensure NTP is installed.
       ansible.builtin.apt: name=ntp state=present
@@ -17,3 +16,9 @@
 
     - name: Ensure docker is running.
       ansible.builtin.service: name=docker state=started enabled=yes
+
+    - name: Ensure tailscale is installed.
+      include_role:
+        name: artis3n.tailscale.machine
+      vars:
+        state: absent

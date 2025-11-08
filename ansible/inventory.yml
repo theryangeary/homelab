@@ -4,4 +4,8 @@ production:
 
 staging:
   hosts:
-    vagrants@127.0.0.1:50023
+    vagrant:
+      ansible_host: 127.0.0.1
+      ansible_port: 50025
+      ansible_user: vagrant
+      ansible_ssh_private_key_file: /Users/ryan/repos/homelab/.vagrant/machines/default/qemu/private_key
