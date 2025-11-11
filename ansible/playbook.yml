@@ -21,4 +21,5 @@
       include_role:
         name: artis3n.tailscale.machine
       vars:
-        state: absent
+        state: present
+        tailscale_authkey: "{{ lookup('env', 'TAILSCALE_AUTH_KEY') }}"
