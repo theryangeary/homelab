@@ -6,9 +6,9 @@ log:
   level: debug
 
 session:
-  expiration: '3m'
-  inactivity: '1m'
-  remember_me: '3m'
+  expiration: '3M'
+  inactivity: '1M'
+  remember_me: '3M'
   name: authelia_session
   cookies:
     - domain: 'ryangeary.dev'
