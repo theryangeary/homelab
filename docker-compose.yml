@@ -132,9 +132,9 @@ services:
       dockerfile: Dockerfile
     restart: 'unless-stopped'
     environment:
-      - WEBHOOK_SECRET_FILE=/run/secrets/webhook_secret_green
+      - WEBHOOK_SECRET_FILE=/run/secrets/webhook_secret
     secrets:
-      - webhook_secret_green
+      - webhook_secret
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     deploy:
@@ -156,9 +156,9 @@ services:
       AUTHELIA_SESSION_SECRET_FILE: '/run/secrets/authelia_session_secret'
       AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: '/run/secrets/authelia_storage_encryption_key'
     configs:
-      - source: authelia_config_blue
+      - source: authelia_config
         target: /config/configuration.yml
-      - source: authelia_users_green
+      - source: authelia_users
         target: /config/users_database.yml
     secrets:
       - authelia_jwt_secret
@@ -178,7 +178,7 @@ services:
     volumes:
       - caddy_data:/data
     configs:
-      - source: caddy_config_blue
+      - source: caddy_config
         target: /etc/caddy/Caddyfile
 
 networks:
@@ -201,23 +201,25 @@ secrets:
     external: true
   authelia_storage_encryption_key:
     external: true
-  webhook_secret_green:
+  webhook_secret:
     external: true
 
 configs:
+  caddy_config:
+    external: true
   caddy_config_blue:
     external: true
   caddy_config_green:
+    external: true
+  authelia_config:
     external: true
   authelia_config_blue:
     external: true
   authelia_config_green:
     external: true
+  authelia_users:
+    external: true
   authelia_users_blue:
     external: true
   authelia_users_green:
-    external: true
-  docker_config_green:
-    external: true
-  docker_config_blue:
     external: true

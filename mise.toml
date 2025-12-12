@@ -1,6 +1,8 @@
 [env]
 STATIC_DIR="{{config_root}}/static"
 STACK_NAME="homelab"
+# this prevents forking by ansible which causes crashes on macOS hosts
+OBJC_DISABLE_INITIALIZE_FORK_SAFETY="YES"
 _.file = '.env'
 
 [tasks.build_container]
