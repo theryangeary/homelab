@@ -16,17 +16,17 @@
     - name: Ensure NTP is running.
       ansible.builtin.service: name=ntp state=started enabled=yes
     
-    - name: Ensure pip is installed.
-      ansible.builtin.apt: name=pip state=present
+    # - name: Ensure pip is installed.
+    #   ansible.builtin.apt: name=pip state=present
 
-    - name: Ensure jsondiff is installed (needed for compose).
-      ansible.builtin.pip: name=jsondiff state=present
+    # - name: Ensure jsondiff is installed (needed for compose).
+    #   ansible.builtin.apt: name=python3-jsondiff state=present
 
-    - name: Ensure docker is installed.
-      ansible.builtin.apt: name=docker.io state=present
+    # - name: Ensure docker is installed.
+    #   ansible.builtin.apt: name=docker.io state=present
 
-    - name: Ensure docker is running.
-      ansible.builtin.service: name=docker state=started enabled=yes
+    # - name: Ensure docker is running.
+    #   ansible.builtin.service: name=docker state=started enabled=yes
 
     - name: Ensure tailscale is installed.
       include_role:
@@ -35,8 +35,8 @@
         state: present
         tailscale_authkey: "{{ tailscale_authkey_secret }}"
 
-    - name: Ensure docker-compose is installed.
-      ansible.builtin.apt: name=docker-compose state=present
+    # - name: Ensure docker-compose is installed.
+    #   ansible.builtin.apt: name=docker-compose state=present
 
     - name: Init a new swarm with default parameters
       community.docker.docker_swarm:
@@ -116,6 +116,10 @@
       delegate_to: localhost
       become: false
 
+    - name: Display generated stack configuration
+      ansible.builtin.debug:
+        var: stack_config
+
     - name: Deploy/Update Homelab Stack
       community.docker.docker_stack:
         state: present
@@ -123,8 +127,8 @@
         compose:
           - "{{ stack_config.stdout | from_yaml }}"
 
-    - name: Undeploy Homelab Stack
-      community.docker.docker_stack:
-        state: absent 
-        name: homelab
+    # - name: Undeploy Homelab Stack
+    #   community.docker.docker_stack:
+    #     state: absent 
+    #     name: homelab
 
