@@ -1,0 +1,4 @@
+---
+env: prod
+stack_prefix: prod_
+domain_name: ryangeary.dev

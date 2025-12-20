@@ -1,0 +1,24 @@
+---
+- name: Update apt package list
+  ansible.builtin.apt: update_cache=yes cache_valid_time=3600
+  become: true
+
+- name: Ensure NTP is installed.
+  ansible.builtin.apt: name=ntp state=present
+  become: true
+
+- name: Ensure NTP is running.
+  ansible.builtin.service: name=ntp state=started enabled=yes
+
+- name: Ensure tailscale is installed.
+  include_role:
+    name: artis3n.tailscale.machine
+  vars:
+    state: present
+    tailscale_authkey: "{{ tailscale_authkey_secret }}"
+
+- name: Log in to ghcr.io
+  community.docker.docker_login:
+    registry: ghcr.io
+    username: theryangeary
+    password: "{{ ghcr_token }}"

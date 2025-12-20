@@ -1,0 +1,3 @@
+---
+tailscale_authkey_secret: "{{ lookup('bitwarden.secrets.lookup', '83613b90-a61d-4426-9bbe-b3ad00210afd') }}"
+ghcr_token: "{{ lookup('bitwarden.secrets.lookup', 'a11c7900-ee0b-4c0d-8a38-b3ad00209876') }}"

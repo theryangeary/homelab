@@ -1,0 +1,7 @@
+---
+# Docker uses different architecture names than system reports
+docker_arch_map:
+  x86_64: amd64
+  aarch64: arm64
+  armv7l: armhf
+  armv6l: armhf

@@ -1,24 +1,8 @@
 ---
-- name: Install Docker on Ubuntu using official Docker repo
-  hosts: all
-  become: true
-  vars:
-    # Docker uses different architecture names than system reports
-    docker_arch_map:
-      x86_64: amd64
-      aarch64: arm64      # This is the key mapping!
-      armv7l: armhf
-      armv6l: armhf
-
-  tasks:
-
     - name: Set Docker architecture
       set_fact:
         docker_arch: "{{ docker_arch_map[ansible_facts['architecture']] | default('amd64') }}"
 
-    - name: Debug architecture
-      debug:
-        msg: "System arch: {{ ansible_facts['architecture'] }}, Docker arch: {{ docker_arch }}"
     - name: Update apt cache
       ansible.builtin.apt:
         update_cache: yes
@@ -62,3 +46,9 @@
         name: docker
         state: started
         enabled: true
+
+    - name: Log in to ghcr.io
+      community.docker.docker_login:
+        registry: ghcr.io
+        username: theryangeary
+        password: "{{ ghcr_token }}"

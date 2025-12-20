@@ -1,0 +1,3 @@
+swarm_networks:
+  cloudflare: "{{ stack_prefix | default('') }}cloudflare"
+  services: "{{ stack_prefix | default('') }}services"

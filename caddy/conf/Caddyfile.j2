@@ -6,19 +6,19 @@
     auto_https off
 }
 
-http://auth.ryangeary.dev, http://auth.ryangeary.localhost {
+http://auth.{{ domain_name }}, http://auth.ryangeary.localhost {
     reverse_proxy http://authelia:9091
 }
 
-http://www.ryangeary.dev, http://www.ryangeary.localhost, http://ryangeary.dev, http://ryangeary.localhost {
+http://www.{{ domain_name }}, http://www.ryangeary.localhost, http://{{ domain_name }}, http://ryangeary.localhost {
     reverse_proxy http://www:3000
 }
 
-http://pathfinder.prof, http://pathfinder.ryangeary.dev, http://pathfinder.localhost {
+http://pathfinder.prof, http://pathfinder.{{ domain_name }}, http://pathfinder.localhost {
     reverse_proxy http://pathfinder:8080
 }
 
-http://gl.ryangeary.dev, http://gl.ryangeary.localhost {
+http://gl.{{ domain_name }}, http://gl.ryangeary.localhost {
     forward_auth http://authelia:9091 {
         uri /api/authz/forward-auth
         copy_headers Remote-User Remote-Groups Remote-Email Remote-Name
@@ -27,15 +27,15 @@ http://gl.ryangeary.dev, http://gl.ryangeary.localhost {
     reverse_proxy http://gl:3001
 }
 
-http://gldemo.ryangeary.dev {
+http://gldemo.{{ domain_name }} {
     reverse_proxy http://gldemo:3001
 }
 
-http://webhook.ryangeary.dev http://webhooks.ryangeary.dev {
+http://webhook.{{ domain_name }} http://webhooks.{{ domain_name }} {
     reverse_proxy http://imageupdatewebhook:8080
 }
 
-http://mta-display.ryangeary.dev http://mtadisplay.ryangeary.dev {
+http://mta-display.{{ domain_name }} http://mtadisplay.{{ domain_name }} {
     reverse_proxy http://mta-display:3000
 
     @protected path /gallery/review
@@ -45,10 +45,10 @@ http://mta-display.ryangeary.dev http://mtadisplay.ryangeary.dev {
     }
 }
 
-http://jellyfin.ryangeary.dev {
+http://jellyfin.{{ domain_name }} {
     reverse_proxy http://192.168.0.227:30013
 }
 
-http://*.ryangeary.dev {
-    redir https://www.ryangeary.dev{uri}
+http://*.{{ domain_name }} {
+    redir https://www.{{ domain_name }}{uri}
 }

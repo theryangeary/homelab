@@ -1,0 +1,4 @@
+---
+env: stg
+stack_prefix: stg_
+domain_name: staging.ryangeary.dev

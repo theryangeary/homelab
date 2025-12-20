@@ -1,0 +1,22 @@
+- hosts: swarm_managers
+  roles:
+    - role: host-setup
+      tags: [infrastructure]
+
+    - role: install-docker
+      tags: [docker, infrastructure]
+
+    - role: init-swarm
+      tags: [swarm, infrastructure]
+
+    - role: swarm-networks
+      tags: [swarm, infrastructure]
+
+    - role: service-caddy
+      tags: [caddy, services]
+
+- hosts: swarm_workers
+  roles:
+    - role: host-setup
+    - role: install-docker
+      tags: [docker]

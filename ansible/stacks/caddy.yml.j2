@@ -1,0 +1,29 @@
+version: '3.3'
+services:
+  caddy:
+    image: caddy:2.10
+    restart: 'unless-stopped'
+    networks:
+      services:
+      cloudflared:
+    deploy: 
+      replicas: 1
+      update_config:
+          parallelism: 1
+          delay: 30s
+          failure_action: rollback
+          monitor: 30s
+          order: start-first
+      rollback_config:
+          parallelism: 1
+          delay: 30s
+          monitor: 60s
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - caddy_data:/data
+      - /opt/stacks/caddy/Caddyfile:/etc/caddy/Caddyfile
+
+volumes:
+  caddy_data:

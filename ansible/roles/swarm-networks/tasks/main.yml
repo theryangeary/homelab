@@ -1,0 +1,12 @@
+---
+- name: Create overlay networks
+  community.docker.docker_network:
+    name: "{{ stack_prefix }}{{ item }}"
+    driver: overlay
+    attachable: yes
+    state: present
+  loop:
+    - cloudflare
+    - services
+  when: inventory_hostname == groups['swarm_managers'][0]
+  run_once: true
