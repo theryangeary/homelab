@@ -38,3 +38,4 @@ target
 backup
 authelia/config/users_database.yml
 .vagrant
+sdk-sm
