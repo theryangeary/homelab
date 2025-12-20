@@ -1,0 +1,32 @@
+version: '3'
+services:
+  caddy:
+    image: caddy:2.10
+    restart: 'unless-stopped'
+    networks:
+      {{ stack_prefix }}services:
+      {{ stack_prefix }}cloudflare:
+    deploy: 
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 30s
+        failure_action: rollback
+        monitor: 30s
+        order: start-first
+      rollback_config:
+        parallelism: 1
+        delay: 30s
+        monitor: 60s
+    volumes:
+      - {{ stack_prefix }}caddy_data:/data
+      - /opt/stacks/{{ stack_prefix }}caddy/Caddyfile:/etc/caddy/Caddyfile
+
+volumes:
+  {{ stack_prefix }}caddy_data:
+
+networks:
+  {{ stack_prefix }}services:
+    external: true
+  {{ stack_prefix }}cloudflare:
+    external: true

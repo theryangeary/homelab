@@ -1,54 +1,57 @@
 ---
-    - name: Set Docker architecture
-      set_fact:
-        docker_arch: "{{ docker_arch_map[ansible_facts['architecture']] | default('amd64') }}"
+- name: Set Docker architecture
+  set_fact:
+    docker_arch: "{{ docker_arch_map[ansible_facts['architecture']] | default('amd64') }}"
 
-    - name: Update apt cache
-      ansible.builtin.apt:
-        update_cache: yes
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: yes
+  become: true
 
-    - name: Ensure dependencies are installed
-      ansible.builtin.package:
-        name:
-          - ca-certificates
-          - curl
-          - gnupg
-          - lsb-release
-        state: present
+- name: Ensure dependencies are installed
+  ansible.builtin.package:
+    name:
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+    state: present
+  become: true
 
-    - name: Add Docker's official GPG key
-      ansible.builtin.apt_key:
-        url: https://download.docker.com/linux/debian/gpg
-        state: present
+- name: Add Docker's official GPG key
+  ansible.builtin.apt_key:
+    url: https://download.docker.com/linux/debian/gpg
+    state: present
 
-    - name: Add Docker repository
-      ansible.builtin.apt_repository:
-        repo: 'deb [arch={{ docker_arch }}] https://download.docker.com/linux/{{ ansible_facts["distribution"] | lower }} {{ ansible_facts["distribution_release"] }} stable'
-        state: present
+- name: Add Docker repository
+  ansible.builtin.apt_repository:
+    repo: 'deb [arch={{ docker_arch }}] https://download.docker.com/linux/{{ ansible_facts["distribution"] | lower }} {{ ansible_facts["distribution_release"] }} stable'
+    state: present
 
-    - name: Update apt cache after adding docker repo
-      ansible.builtin.apt:
-        update_cache: yes
-        force_apt_get: yes
+- name: Update apt cache after adding docker repo
+  ansible.builtin.apt:
+    update_cache: yes
+    force_apt_get: yes
+  become: true
 
-    - name: Install Docker
-      ansible.builtin.apt:
-        name: docker-ce
-        state: latest
+- name: Install Docker
+  ansible.builtin.apt:
+    name: docker-ce
+    state: latest
 
-    - name: Install Docker Compose
-      ansible.builtin.apt:
-        name: docker-compose
-        state: latest
+- name: Install Docker Compose
+  ansible.builtin.apt:
+    name: docker-compose
+    state: latest
 
-    - name: Start Docker service
-      ansible.builtin.service:
-        name: docker
-        state: started
-        enabled: true
+- name: Start Docker service
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
 
-    - name: Log in to ghcr.io
-      community.docker.docker_login:
-        registry: ghcr.io
-        username: theryangeary
-        password: "{{ ghcr_token }}"
+- name: Log in to ghcr.io
+  community.docker.docker_login:
+    registry: ghcr.io
+    username: theryangeary
+    password: "{{ ghcr_token }}"

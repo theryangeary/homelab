@@ -1,8 +1,9 @@
 --- 
 - name: Create service config directory
   file:
-    path: "/opt/stacks/caddy"
+    path: "/opt/stacks/{{ stack_prefix }}caddy"
     state: directory
+  become: true
 
 - name: Get git repository root directory path
   ansible.builtin.shell: git rev-parse --show-toplevel
@@ -12,20 +13,20 @@
 
 - name: Template caddy config file
   ansible.builtin.template:
-    src: "{{ git_root.stdout }}/caddy/Caddyfile.j2"
-    dest: /opt/stacks/caddy/Caddyfile
-  delegate_to: localhost
-  become: false
+    src: "{{ git_root.stdout }}/caddy/conf/Caddyfile.j2"
+    dest: /opt/stacks/{{ stack_prefix }}caddy/Caddyfile
+  become: true
 
 - name: Template stack file
   template:
-    src: stacks/caddy.yml.j2
-    dest: "/opt/stacks/caddy/stack.yml"
+    src: stack.yml.j2
+    dest: "/opt/stacks/{{ stack_prefix }}caddy/stack.yml"
   register: stack_changed
+  become: true
 
 - name: Deploy stack
   docker_stack:
-    name: caddy
+    name: "{{ stack_prefix }}caddy"
     compose:
-      - "/opt/stacks/caddy/stack.yml"
+      - "/opt/stacks/{{ stack_prefix }}caddy/stack.yml"
     state: present
