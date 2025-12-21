@@ -5,16 +5,11 @@
     state: directory
   become: true
 
-- name: Get git repository root directory path
-  ansible.builtin.shell: git rev-parse --show-toplevel
-  register: git_root
-  delegate_to: localhost
-  become: false
-
 - name: Template caddy config file
   ansible.builtin.template:
-    src: "{{ git_root.stdout }}/caddy/conf/Caddyfile.j2"
+    src: Caddyfile.j2
     dest: /opt/stacks/{{ stack_prefix }}caddy/Caddyfile
+  register: caddy_config_result
   become: true
 
 - name: Template stack file
@@ -30,3 +25,12 @@
     compose:
       - "/opt/stacks/{{ stack_prefix }}caddy/stack.yml"
     state: present
+
+- name: Get caddy container ID
+  ansible.builtin.shell: "docker ps --filter 'name={{ stack_prefix }}caddy_caddy' --format '{{ '{{' }}.ID{{ '}}' }}'"
+  register: caddy_container_id
+  changed_when: false
+
+- name: Ensure caddy config gets reloaded with SIGUSR1
+  ansible.builtin.shell: "docker kill -s USR1 {{ caddy_container_id.stdout }}"
+  when: stack_changed.changed or caddy_config_result.changed

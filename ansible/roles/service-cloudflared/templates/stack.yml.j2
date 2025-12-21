@@ -1,0 +1,27 @@
+version: '3'
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:1755-08efe4c10307
+    command: tunnel --no-autoupdate run
+    restart: unless-stopped
+    // todo move to docker secret
+    environment:
+      - TUNNEL_TOKEN={{ cloudflare_tunnel_token }}
+    deploy: 
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 30s
+        failure_action: rollback
+        monitor: 30s
+        order: start-first
+      rollback_config:
+        parallelism: 1
+        delay: 30s
+        monitor: 60s
+    networks:
+      {{ stack_prefix }}cloudflare:
+
+networks:
+  {{ stack_prefix }}cloudflare:
+    external: true

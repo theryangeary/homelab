@@ -1,4 +1,4 @@
-version: '3.3'
+version: '3'
 
 x-common-deploy: &common-deploy
   replicas: 1
@@ -172,9 +172,6 @@ services:
       services:
       cloudflared:
     deploy: *common-deploy
-    ports:
-      - 80:80
-      - 443:443
     volumes:
       - caddy_data:/data
     configs:

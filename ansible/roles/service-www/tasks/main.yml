@@ -1,0 +1,25 @@
+--- 
+- name: Create service config directory
+  file:
+    path: "/opt/stacks/{{ stack_prefix }}www"
+    state: directory
+  become: true
+
+- name: Template stack file
+  template:
+    src: stack.yml.j2
+    dest: "/opt/stacks/{{ stack_prefix }}www/stack.yml"
+  register: stack_changed
+  become: true
+
+- name: Ensure docker image is pulled
+  community.docker.docker_image:
+    name: "ghcr.io/theryangeary/www:{{ www_version }}"
+    source: pull
+
+- name: Deploy stack
+  docker_stack:
+    name: "{{ stack_prefix }}www"
+    compose:
+      - "/opt/stacks/{{ stack_prefix }}www/stack.yml"
+    state: present

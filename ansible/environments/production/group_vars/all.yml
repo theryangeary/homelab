@@ -1,4 +1,5 @@
 ---
 env: prod
 stack_prefix: prod_
-domain_name: ryangeary.dev
+domain_name: next.ryangeary.dev
+cloudflare_tunnel_token: "{{ lookup('bitwarden.secrets.lookup', '815fb77d-1e23-474c-ad58-b3b90186b35b') }}"

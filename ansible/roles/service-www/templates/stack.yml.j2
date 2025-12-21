@@ -1,0 +1,29 @@
+version: '3'
+services:
+  www:
+    image: ghcr.io/theryangeary/www:{{ www_version }}
+    deploy: 
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 30s
+        failure_action: rollback
+        monitor: 30s
+        order: start-first
+      rollback_config:
+        parallelism: 1
+        delay: 30s
+        monitor: 60s
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      {{ stack_prefix }}services:
+
+networks:
+  {{ stack_prefix }}services:
+    external: true

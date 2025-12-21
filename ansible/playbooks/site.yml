@@ -12,8 +12,14 @@
     - role: swarm-networks
       tags: [swarm, infrastructure]
 
+    - role: service-cloudflared
+      tags: [cloudflared, services]
+
     - role: service-caddy
       tags: [caddy, services]
+
+    - role: service-www
+      tags: [www, services]
 
 - hosts: swarm_workers
   roles:
