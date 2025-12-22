@@ -1,0 +1,116 @@
+--- 
+- name: Create service config directory
+  file:
+    path: "/opt/stacks/{{ stack_prefix }}authelia"
+    state: directory
+  become: true
+
+- name: Get git repository root directory path
+  ansible.builtin.shell: git rev-parse --show-toplevel
+  register: git_root
+  delegate_to: localhost
+  become: false
+
+- name: Calculate users database hash
+  ansible.builtin.shell: |
+    echo -n "{{ lookup('file', git_root.stdout + '/authelia/config/users_database.yml') }}" | sha256sum | awk '{print $1}' | cut -c 1-7
+  args:
+    executable: /bin/bash
+  register: users_database_hash
+
+- name: Set ansible fact for users database hash
+  set_fact:
+    authelia_users_database_hash: "{{ users_database_hash.stdout }}"
+
+- name: Create docker authelia users database config
+  community.docker.docker_config:
+    name: authelia_users_{{ authelia_users_database_hash }}
+    state: present
+    data: "{{ lookup('file', git_root.stdout + '/authelia/config/users_database.yml') | b64encode }}"
+    data_is_b64: true
+
+- name: Calculate main configuration hash
+  ansible.builtin.shell: |
+    echo -n "{{ lookup('file', git_root.stdout + '/authelia/config/configuration.yml') }}" | sha256sum | awk '{print $1}' | cut -c 1-7
+  args:
+    executable: /bin/bash
+  register: main_configuration_hash
+
+- name: Set ansible fact for main configuration hash
+  set_fact:
+    authelia_main_configuration_hash: "{{ main_configuration_hash.stdout }}"
+
+- name: Create docker authelia main configuration config
+  community.docker.docker_config:
+    name: authelia_config_{{ authelia_main_configuration_hash }}
+    state: present
+    data: "{{ lookup('file', git_root.stdout + '/authelia/config/configuration.yml') | b64encode }}"
+    data_is_b64: true
+
+- name: Calculate authelia jwt secret hash
+  ansible.builtin.shell: |
+    echo -n "{{ lookup('bitwarden.secrets.lookup', '4eec6601-9aef-47f2-aa2f-b3b1011fb2e3') }}" | sha256sum | awk '{print $1}' | cut -c 1-7
+  args:
+    executable: /bin/bash
+  register: jwt_secret_hash
+
+- name: Set ansible fact for authelia jwt secret hash
+  set_fact:
+    authelia_jwt_secret_hash: "{{ jwt_secret_hash.stdout }}"
+
+- name: Create authelia jwt secret
+  community.docker.docker_secret:
+    name: authelia_jwt_secret_{{ authelia_jwt_secret_hash }}
+    state: present
+    data: "{{ lookup('bitwarden.secrets.lookup', '4eec6601-9aef-47f2-aa2f-b3b1011fb2e3') | b64encode }}"
+    data_is_b64: true
+
+- name: Calculate authelia session secret hash
+  ansible.builtin.shell: |
+    echo -n "{{ lookup('bitwarden.secrets.lookup', '1f98c85e-955a-4835-b275-b3b1011e4e2d') }}" | sha256sum | awk '{print $1}' | cut -c 1-7
+  args:
+    executable: /bin/bash
+  register: session_secret_hash
+
+- name: Set ansible fact for authelia session secret hash
+  set_fact:
+    authelia_session_secret_hash: "{{ session_secret_hash.stdout }}"
+
+- name: Create authelia session secret
+  community.docker.docker_secret:
+    name: authelia_session_secret_{{ authelia_session_secret_hash }}
+    state: present
+    data: "{{ lookup('bitwarden.secrets.lookup', '1f98c85e-955a-4835-b275-b3b1011e4e2d') | b64encode }}"
+    data_is_b64: true
+
+- name: Calculate authelia storage encryption key hash
+  ansible.builtin.shell: |
+    echo -n "{{ lookup('bitwarden.secrets.lookup', '4cca9e94-4946-4359-94c0-b3b1011ef4cd') }}" | sha256sum | awk '{print $1}' | cut -c 1-7
+  args:
+    executable: /bin/bash
+  register: storage_encryption_key_hash
+
+- name: Set ansible fact for authelia storage encryption key hash
+  set_fact:
+    authelia_storage_encryption_key_hash: "{{ storage_encryption_key_hash.stdout }}"
+
+- name: Create authelia storage encryption key secret
+  community.docker.docker_secret:
+    name: authelia_storage_encryption_key_{{ authelia_storage_encryption_key_hash }}
+    state: present
+    data: "{{ lookup('bitwarden.secrets.lookup', '4cca9e94-4946-4359-94c0-b3b1011ef4cd') | b64encode }}"
+    data_is_b64: true
+
+- name: Template stack file
+  template:
+    src: stack.yml.j2
+    dest: "/opt/stacks/{{ stack_prefix }}authelia/stack.yml"
+  register: stack_changed
+  become: true
+
+- name: Deploy stack
+  docker_stack:
+    name: "{{ stack_prefix }}authelia"
+    compose:
+      - "/opt/stacks/{{ stack_prefix }}authelia/stack.yml"
+    state: present

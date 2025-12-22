@@ -21,9 +21,6 @@ services:
     volumes:
       - {{ stack_prefix }}caddy_data:/data
       - /opt/stacks/{{ stack_prefix }}caddy/Caddyfile:/etc/caddy/Caddyfile
-    ports:
-      - 80:80
-      - 443:443
 
 volumes:
   {{ stack_prefix }}caddy_data:

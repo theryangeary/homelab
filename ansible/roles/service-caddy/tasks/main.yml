@@ -25,12 +25,3 @@
     compose:
       - "/opt/stacks/{{ stack_prefix }}caddy/stack.yml"
     state: present
-
-- name: Get caddy container ID
-  ansible.builtin.shell: "docker ps --filter 'name={{ stack_prefix }}caddy_caddy' --format '{{ '{{' }}.ID{{ '}}' }}'"
-  register: caddy_container_id
-  changed_when: false
-
-- name: Ensure caddy config gets reloaded with SIGUSR1
-  ansible.builtin.shell: "docker kill -s USR1 {{ caddy_container_id.stdout }}"
-  when: stack_changed.changed or caddy_config_result.changed

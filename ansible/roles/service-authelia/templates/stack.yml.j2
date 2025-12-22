@@ -1,0 +1,50 @@
+version: '3'
+services:
+  authelia:
+    image: 'docker.io/authelia/authelia:{{ authelia_version }}'
+    restart: 'unless-stopped'
+    deploy: 
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 30s
+        failure_action: rollback
+        monitor: 30s
+        order: start-first
+      rollback_config:
+        parallelism: 1
+        delay: 30s
+        monitor: 60s
+    networks:
+      {{ stack_prefix }}services:
+    environment:
+      AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: '/run/secrets/authelia_jwt_secret_{{ authelia_jwt_secret_hash }}'
+      AUTHELIA_SESSION_SECRET_FILE: '/run/secrets/authelia_session_secret_{{ authelia_session_secret_hash }}'
+      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: '/run/secrets/authelia_storage_encryption_key_{{ authelia_storage_encryption_key_hash }}'
+    configs:
+      - source: authelia_config_{{ authelia_main_configuration_hash }}
+        target: /config/configuration.yml
+      - source: authelia_users_{{ authelia_users_database_hash }}
+        target: /config/users_database.yml
+    secrets:
+      - authelia_jwt_secret_{{ authelia_jwt_secret_hash }}
+      - authelia_session_secret_{{ authelia_session_secret_hash }}
+      - authelia_storage_encryption_key_{{ authelia_storage_encryption_key_hash }}
+
+secrets:
+  authelia_jwt_secret_{{ authelia_jwt_secret_hash }}:
+    external: true
+  authelia_session_secret_{{ authelia_session_secret_hash }}:
+    external: true
+  authelia_storage_encryption_key_{{ authelia_storage_encryption_key_hash }}:
+    external: true
+
+configs:
+  authelia_config_{{ authelia_main_configuration_hash }}:
+    external: true
+  authelia_users_{{ authelia_users_database_hash }}:
+    external: true
+
+networks:
+  {{ stack_prefix }}services:
+    external: true

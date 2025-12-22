@@ -53,20 +53,41 @@
     #     data: "{{ lookup('file', caddy_config_result.dest) | b64encode }}"
     #     data_is_b64: true
 
-    - name: Create docker authelia users database config
-      community.docker.docker_config:
-        name: authelia_users
-        state: present
-        data: "{{ lookup('file', git_root.stdout + '/authelia/config/users_database.yml') | b64encode }}"
-        data_is_b64: true
+    # - name: Create docker authelia users database config
+    #   community.docker.docker_config:
+    #     name: authelia_users
+    #     state: present
+    #     data: "{{ lookup('file', git_root.stdout + '/authelia/config/users_database.yml') | b64encode }}"
+    #     data_is_b64: true
 
-    - name: Create docker authelia main configuration config
-      community.docker.docker_config:
-        name: authelia_config
-        state: present
-        data: "{{ lookup('file', git_root.stdout + '/authelia/config/configuration.yml') | b64encode }}"
-        data_is_b64: true
+    # - name: Create docker authelia main configuration config
+    #   community.docker.docker_config:
+    #     name: authelia_config
+    #     state: present
+    #     data: "{{ lookup('file', git_root.stdout + '/authelia/config/configuration.yml') | b64encode }}"
+    #     data_is_b64: true
 
+
+    # - name: Create authelia jwt secret
+    #   community.docker.docker_secret:
+    #     name: authelia_jwt_secret
+    #     state: present
+    #     data: "{{ lookup('bitwarden.secrets.lookup', '4eec6601-9aef-47f2-aa2f-b3b1011fb2e3') | b64encode }}"
+    #     data_is_b64: true
+
+    # - name: Create authelia session secret
+    #   community.docker.docker_secret:
+    #     name: authelia_session_secret
+    #     state: present
+    #     data: "{{ lookup('bitwarden.secrets.lookup', '1f98c85e-955a-4835-b275-b3b1011e4e2d') | b64encode }}"
+    #     data_is_b64: true
+
+    # - name: Create authelia storage encryption key secret
+    #   community.docker.docker_secret:
+    #     name: authelia_storage_encryption_key
+    #     state: present
+    #     data: "{{ lookup('bitwarden.secrets.lookup', '4cca9e94-4946-4359-94c0-b3b1011ef4cd') | b64encode }}"
+    #     data_is_b64: true
     - name: Create homelab ftp password secret
       community.docker.docker_secret:
         name: homelab_ftp_password
@@ -74,26 +95,6 @@
         data: "{{ lookup('bitwarden.secrets.lookup', '4967fb7b-9209-42f2-87a5-b3b1004608e1') | b64encode }}"
         data_is_b64: true
 
-    - name: Create authelia jwt secret
-      community.docker.docker_secret:
-        name: authelia_jwt_secret
-        state: present
-        data: "{{ lookup('bitwarden.secrets.lookup', '4eec6601-9aef-47f2-aa2f-b3b1011fb2e3') | b64encode }}"
-        data_is_b64: true
-
-    - name: Create authelia session secret
-      community.docker.docker_secret:
-        name: authelia_session_secret
-        state: present
-        data: "{{ lookup('bitwarden.secrets.lookup', '1f98c85e-955a-4835-b275-b3b1011e4e2d') | b64encode }}"
-        data_is_b64: true
-
-    - name: Create authelia storage encryption key secret
-      community.docker.docker_secret:
-        name: authelia_storage_encryption_key
-        state: present
-        data: "{{ lookup('bitwarden.secrets.lookup', '4cca9e94-4946-4359-94c0-b3b1011ef4cd') | b64encode }}"
-        data_is_b64: true
 
     - name: Create webhook secret
       community.docker.docker_secret:

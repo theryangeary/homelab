@@ -21,6 +21,9 @@
     - role: service-www
       tags: [www, services]
 
+    - role: service-authelia
+      tags: [authelia, services]
+
 - hosts: swarm_workers
   roles:
     - role: host-setup

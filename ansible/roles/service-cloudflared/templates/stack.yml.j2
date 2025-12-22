@@ -4,7 +4,7 @@ services:
     image: cloudflare/cloudflared:1755-08efe4c10307
     command: tunnel --no-autoupdate run
     restart: unless-stopped
-    // todo move to docker secret
+    # todo move to docker secret
     environment:
       - TUNNEL_TOKEN={{ cloudflare_tunnel_token }}
     deploy: 
