@@ -1,0 +1,62 @@
+version: '3'
+services:
+  gl:
+    image: ghcr.io/theryangeary/gl:{{ gl_version }}
+    deploy: 
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 30s
+        failure_action: rollback
+        monitor: 30s
+        order: start-first
+      rollback_config:
+        parallelism: 1
+        delay: 30s
+        monitor: 60s
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=sqlite:/data/grocery.db
+      - PORT=3001
+    volumes:
+      - /opt/stacks/{{ stack_prefix }}gl/data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      {{ stack_prefix }}services:
+
+  gldemo:
+    image: ghcr.io/theryangeary/gl:{{ gl_version }}
+    deploy: 
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 30s
+        failure_action: rollback
+        monitor: 30s
+        order: start-first
+      rollback_config:
+        parallelism: 1
+        delay: 30s
+        monitor: 60s
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=sqlite:/app/grocery.db
+      - PORT=3001
+      - GL_DEMO=true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      {{ stack_prefix }}services:
+
+networks:
+  {{ stack_prefix }}services:
+    external: true

@@ -24,6 +24,12 @@
     - role: service-authelia
       tags: [authelia, services]
 
+    - role: service-gl
+      tags: [gl, services]
+
+    - role: service-volume-backup
+      tags: [volume-backup, services]
+
 - hosts: swarm_workers
   roles:
     - role: host-setup

@@ -1,0 +1,31 @@
+--- 
+- name: Create service config directory
+  file:
+    path: "/opt/stacks/{{ stack_prefix }}gl"
+    state: directory
+  become: true
+
+- name: Create gl data directory
+  file:
+    path: "/opt/stacks/{{ stack_prefix }}gl/data"
+    state: directory
+  become: true
+
+- name: Template stack file
+  template:
+    src: stack.yml.j2
+    dest: "/opt/stacks/{{ stack_prefix }}gl/stack.yml"
+  register: stack_changed
+  become: true
+
+- name: Ensure docker image is pulled
+  community.docker.docker_image:
+    name: "ghcr.io/theryangeary/gl:{{ gl_version }}"
+    source: pull
+
+- name: Deploy stack
+  docker_stack:
+    name: "{{ stack_prefix }}gl"
+    compose:
+      - "/opt/stacks/{{ stack_prefix }}gl/stack.yml"
+    state: present
