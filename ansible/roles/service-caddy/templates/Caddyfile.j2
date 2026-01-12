@@ -46,7 +46,7 @@ http://mta-display.{{ domain_name }} http://mtadisplay.{{ domain_name }} {
 }
 
 http://jellyfin.{{ domain_name }} {
-    reverse_proxy http://192.168.0.227:30013
+    reverse_proxy http://{{ jellyfin_host }}:8096
 }
 
 http://*.{{ domain_name }} {

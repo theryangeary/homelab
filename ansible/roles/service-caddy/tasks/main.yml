@@ -25,3 +25,9 @@
     compose:
       - "/opt/stacks/{{ stack_prefix }}caddy/stack.yml"
     state: present
+
+- name: Send signal to force caddy to reload config
+  community.docker.docker_swarm_service:
+    name: "{{ stack_prefix }}caddy_caddy"
+    force_update: "{{ caddy_config_result.changed }}"
+  when: caddy_config_result.changed
