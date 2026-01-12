@@ -1,0 +1,25 @@
+--- 
+- name: Create service config directory
+  file:
+    path: "/opt/stacks/{{ stack_prefix }}volume_backup"
+    state: directory
+  become: true
+
+- name: Template stack file
+  template:
+    src: stack.yml.j2
+    dest: "/opt/stacks/{{ stack_prefix }}volume_backup/stack.yml"
+  register: stack_changed
+  become: true
+
+- name: Ensure docker image is present
+  community.docker.docker_image:
+    name: "ghcr.io/theryangeary/volume_backup:{{ volume_backup_version }}"
+    source: pull
+
+- name: Deploy stack
+  docker_stack:
+    name: "{{ stack_prefix }}volume_backup"
+    compose:
+      - "/opt/stacks/{{ stack_prefix }}volume_backup/stack.yml"
+    state: present
