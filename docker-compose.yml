@@ -14,18 +14,18 @@ x-common-deploy: &common-deploy
     monitor: 60s
 
 services:
-  www:
-    image: ghcr.io/theryangeary/www:main
-    deploy: *common-deploy
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    networks:
-      services:
+  # www:
+  #   image: ghcr.io/theryangeary/www:main
+  #   deploy: *common-deploy
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #     start_period: 30s
+  #   networks:
+  #     services:
 
   mta-display:
     image: ghcr.io/theryangeary/mta-display:main
@@ -45,58 +45,58 @@ services:
       - DATABASE_URL=sqlite:/data/mta-display.db
       - RUST_LOG=info
 
-  gl:
-    image: ghcr.io/theryangeary/gl:v14
-    deploy: *common-deploy
-    restart: unless-stopped
-    environment:
-      - DATABASE_URL=sqlite:/data/grocery.db
-      - PORT=3001
-    volumes:
-      - gl_data:/data
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    networks:
-      services:
+  # gl:
+  #   image: ghcr.io/theryangeary/gl:v14
+  #   deploy: *common-deploy
+  #   restart: unless-stopped
+  #   environment:
+  #     - DATABASE_URL=sqlite:/data/grocery.db
+  #     - PORT=3001
+  #   volumes:
+  #     - gl_data:/data
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #     start_period: 30s
+  #   networks:
+  #     services:
 
-  gldemo:
-    image: ghcr.io/theryangeary/gl:v14
-    deploy: *common-deploy
-    restart: unless-stopped
-    environment:
-      - DATABASE_URL=sqlite:/app/grocery.db
-      - PORT=3001
-      - GL_DEMO=true
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    networks:
-      services:
+  # gldemo:
+  #   image: ghcr.io/theryangeary/gl:v14
+  #   deploy: *common-deploy
+  #   restart: unless-stopped
+  #   environment:
+  #     - DATABASE_URL=sqlite:/app/grocery.db
+  #     - PORT=3001
+  #     - GL_DEMO=true
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #     start_period: 30s
+  #   networks:
+  #     services:
 
-  pathfinder:
-    image: ghcr.io/theryangeary/pathfinder:main
-    deploy: *common-deploy
-    restart: unless-stopped
-    env_file:
-      - ./pathfinder/.env
-    command: ["./cron_entrypoint.sh"]
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    volumes:
-      - pathfinder_data:/data
-    networks:
-      services:
+  # pathfinder:
+  #   image: ghcr.io/theryangeary/pathfinder:main
+  #   deploy: *common-deploy
+  #   restart: unless-stopped
+  #   env_file:
+  #     - ./pathfinder/.env
+  #   command: ["./cron_entrypoint.sh"]
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #     start_period: 30s
+  #   volumes:
+  #     - pathfinder_data:/data
+  #   networks:
+  #     services:
 
   cloudflared:
     image: cloudflare/cloudflared:1755-08efe4c10307
@@ -107,23 +107,23 @@ services:
     networks:
       cloudflared:
 
-  volume_backup:
-    image: ghcr.io/theryangeary/volume_backup:v3
-    build:
-      context: .
-      dockerfile: volume_backup/Dockerfile
-    deploy: *common-deploy
-    restart: 'no'
-    env_file:
-      - .env
-    environment:
-      - FTP_PASSWORD_FILE=/run/secrets/homelab_ftp_password
-    secrets:
-      - homelab_ftp_password
-    volumes:
-      - gl_data:/data/gl
-      - pathfinder_data:/data/pathfinder
-      - mtadisplay_data:/data/mtadisplay
+  # volume_backup:
+  #   image: ghcr.io/theryangeary/volume_backup:v5
+  #   build:
+  #     context: .
+  #     dockerfile: volume_backup/Dockerfile
+  #   deploy: *common-deploy
+  #   restart: 'no'
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - FTP_PASSWORD_FILE=/run/secrets/homelab_ftp_password
+  #   secrets:
+  #     - homelab_ftp_password
+  #   volumes:
+  #     - gl_data:/data/gl
+  #     - pathfinder_data:/data/pathfinder
+  #     - mtadisplay_data:/data/mtadisplay
 
   imageupdatewebhook:
     image: ghcr.io/theryangeary/image_update_webhook:v9
@@ -145,25 +145,25 @@ services:
     networks:
       services:
 
-  authelia:
-    image: 'docker.io/authelia/authelia:latest'
-    restart: 'unless-stopped'
-    deploy: *common-deploy
-    networks:
-      services:
-    environment:
-      AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: '/run/secrets/authelia_jwt_secret'
-      AUTHELIA_SESSION_SECRET_FILE: '/run/secrets/authelia_session_secret'
-      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: '/run/secrets/authelia_storage_encryption_key'
-    configs:
-      - source: authelia_config
-        target: /config/configuration.yml
-      - source: authelia_users
-        target: /config/users_database.yml
-    secrets:
-      - authelia_jwt_secret
-      - authelia_session_secret
-      - authelia_storage_encryption_key
+  # authelia:
+  #   image: 'docker.io/authelia/authelia:latest'
+  #   restart: 'unless-stopped'
+  #   deploy: *common-deploy
+  #   networks:
+  #     services:
+  #   environment:
+  #     AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: '/run/secrets/authelia_jwt_secret'
+  #     AUTHELIA_SESSION_SECRET_FILE: '/run/secrets/authelia_session_secret'
+  #     AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: '/run/secrets/authelia_storage_encryption_key'
+  #   configs:
+  #     - source: authelia_config
+  #       target: /config/configuration.yml
+  #     - source: authelia_users
+  #       target: /config/users_database.yml
+  #   secrets:
+  #     - authelia_jwt_secret
+  #     - authelia_session_secret
+  #     - authelia_storage_encryption_key
 
   caddy:
     image: caddy:2.10

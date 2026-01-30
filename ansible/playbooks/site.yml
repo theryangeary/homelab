@@ -30,6 +30,9 @@
     - role: service-volume-backup
       tags: [volume-backup, services]
 
+    - role: service-pathfinder
+      tags: [pathfinder, services]
+
 - hosts: swarm_workers
   roles:
     - role: host-setup

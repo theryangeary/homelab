@@ -11,7 +11,7 @@ run = 'docker compose build -- '
 
 [tasks.build_containers]
 depends = [
-    'build_container volume_backup',
+    # 'build_cont   ainer volume_backup',
     'build_container imageupdatewebhook'
 ]
 
@@ -27,7 +27,7 @@ docker compose push ${1}
 
 [tasks.push_all]
 depends = [
-    'push volume_backup',
+    # 'push volume_backup',
     'push imageupdatewebhook'
 ]
 

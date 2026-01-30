@@ -1,0 +1,59 @@
+version: '3'
+services:
+  pathfinder:
+    image: ghcr.io/theryangeary/pathfinder:{{ pathfinder_version }}
+    deploy: 
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 30s
+        failure_action: rollback
+        monitor: 30s
+        order: start-first
+      rollback_config:
+        parallelism: 1
+        delay: 30s
+        monitor: 60s
+    restart: unless-stopped
+    environment:
+      BLUESKY_HANDLE: profpathfinder.bsky.social
+      BLUESKY_PASSWORD_FILE: pathfinder_bluesky_password_{{ pathfinder_bluesky_password_hash }}
+      ALLOWED_ORIGINS: https://pathfinder.prof,http://pathfinder.localhost,http://pathfinder.ryangeary.dev,https://pathfinder.ryangeary.dev
+      RUST_LOG: info
+      REFERER_VALIDATION_ENABLED: "true"
+      SESSION_TIMEOUT_MINUTES: 1440
+      RATE_LIMIT_PER_MINUTE: 100
+      SERVER_HOST: 0.0.0.0
+      HTTP_PORT: 8080
+      RATE_LIMIT_SESSION: 10
+      RATE_LIMIT_READ: 200
+      RATE_LIMIT_WRITE: 50
+      RATE_LIMIT_WINDOW: 60
+      COOKIE_MAX_AGE: 31536000
+      REQUEST_TIMEOUT: 30
+      MAX_REQUEST_SIZE: 1048576
+      STRICT_REFERER: "false"
+      HSTS_MAX_AGE: 31536000
+      CORS_MAX_AGE: 300
+      SQLITE_DATABASE_URL: /data/pathfinder.db
+    command: ["./cron_entrypoint.sh"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    volumes:
+      - /opt/stacks/{{ stack_prefix }}pathfinder/data:/data
+    secrets:
+      - pathfinder_bluesky_password_{{ pathfinder_bluesky_password_hash }}
+    networks:
+      {{ stack_prefix }}services:
+
+networks:
+  {{ stack_prefix }}services:
+    external: true
+
+secrets:
+  pathfinder_bluesky_password_{{ pathfinder_bluesky_password_hash }}:
+    external: true

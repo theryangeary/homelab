@@ -1,0 +1,49 @@
+--- 
+- name: Create service config directory
+  file:
+    path: "/opt/stacks/{{ stack_prefix }}pathfinder"
+    state: directory
+  become: true
+
+- name: Create pathfinder data directory
+  file:
+    path: "/opt/stacks/{{ stack_prefix }}pathfinder/data"
+    state: directory
+  become: true
+
+- name: Calculate bluesky password hash
+  ansible.builtin.shell: |
+    echo -n "{{ lookup('bitwarden.secrets.lookup', 'bb0b83d9-9893-45be-b930-b3e20178725e') }}" | sha256sum | awk '{print $1}' | cut -c 1-7
+  args:
+    executable: /bin/bash
+  register: pathfinder_bluesky_password_hash
+
+- name: Set ansible fact for bluesky password hash
+  set_fact:
+    pathfinder_bluesky_password_hash: "{{ pathfinder_bluesky_password_hash.stdout }}"
+
+- name: Create bluesky password secret
+  community.docker.docker_secret:
+    name: pathfinder_bluesky_password_{{ pathfinder_bluesky_password_hash }}
+    state: present
+    data: "{{ lookup('bitwarden.secrets.lookup', 'bb0b83d9-9893-45be-b930-b3e20178725e') | b64encode }}"
+    data_is_b64: true
+
+- name: Template stack file
+  template:
+    src: stack.yml.j2
+    dest: "/opt/stacks/{{ stack_prefix }}pathfinder/stack.yml"
+  register: stack_changed
+  become: true
+
+- name: Ensure docker image is pulled
+  community.docker.docker_image:
+    name: "ghcr.io/theryangeary/pathfinder:{{ pathfinder_version }}"
+    source: pull
+
+- name: Deploy stack
+  docker_stack:
+    name: "{{ stack_prefix }}pathfinder"
+    compose:
+      - "/opt/stacks/{{ stack_prefix }}pathfinder/stack.yml"
+    state: present
