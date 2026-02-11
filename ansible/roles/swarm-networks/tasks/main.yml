@@ -9,3 +9,4 @@
     - cloudflare
     - services
   when: inventory_hostname == groups['swarm_managers'][0]
+  become: true

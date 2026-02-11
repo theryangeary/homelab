@@ -16,6 +16,7 @@
   community.docker.docker_image:
     name: "ghcr.io/theryangeary/www:{{ www_version }}"
     source: pull
+  become: true
 
 - name: Deploy stack
   docker_stack:
@@ -23,3 +24,4 @@
     compose:
       - "/opt/stacks/{{ stack_prefix }}www/stack.yml"
     state: present
+  become: true

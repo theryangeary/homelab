@@ -5,12 +5,12 @@
     cache_valid_time: 86400
   become: true
 
-- name: Ensure NTP is installed.
-  ansible.builtin.apt: name=ntp state=present
+- name: Ensure timesyncd is installed.
+  ansible.builtin.apt: name=systemd-timesyncd state=present
   become: true
 
-- name: Ensure NTP is running.
-  ansible.builtin.service: name=ntp state=started enabled=yes
+- name: Ensure timesyncd is running.
+  ansible.builtin.service: name=systemd-timesyncd state=started enabled=yes
 
 - name: Ensure tailscale is installed.
   include_role:
@@ -18,9 +18,3 @@
   vars:
     state: present
     tailscale_authkey: "{{ tailscale_authkey_secret }}"
-
-- name: Log in to ghcr.io
-  community.docker.docker_login:
-    registry: ghcr.io
-    username: theryangeary
-    password: "{{ ghcr_token }}"

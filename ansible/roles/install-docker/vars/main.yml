@@ -5,3 +5,5 @@ docker_arch_map:
   aarch64: arm64
   armv7l: armhf
   armv6l: armhf
+
+ghcr_token: "{{ lookup('bitwarden.secrets.lookup', 'a11c7900-ee0b-4c0d-8a38-b3ad00209876') }}"

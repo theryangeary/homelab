@@ -28,6 +28,7 @@
     state: present
     data: "{{ lookup('bitwarden.secrets.lookup', 'bb0b83d9-9893-45be-b930-b3e20178725e') | b64encode }}"
     data_is_b64: true
+  become: true
 
 - name: Template stack file
   template:
@@ -40,6 +41,7 @@
   community.docker.docker_image:
     name: "ghcr.io/theryangeary/pathfinder:{{ pathfinder_version }}"
     source: pull
+  become: true
 
 - name: Deploy stack
   docker_stack:
@@ -47,3 +49,4 @@
     compose:
       - "/opt/stacks/{{ stack_prefix }}pathfinder/stack.yml"
     state: present
+  become: true

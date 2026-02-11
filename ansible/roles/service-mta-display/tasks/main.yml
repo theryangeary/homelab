@@ -1,33 +1,33 @@
 --- 
 - name: Create service config directory
   file:
-    path: "/opt/stacks/{{ stack_prefix }}gl"
+    path: "/opt/stacks/{{ stack_prefix }}mtadisplay"
     state: directory
   become: true
 
-- name: Create gl data directory
+- name: Create mtadisplay data directory
   file:
-    path: "/opt/stacks/{{ stack_prefix }}gl/data"
+    path: "/opt/stacks/{{ stack_prefix }}mtadisplay/data"
     state: directory
   become: true
 
 - name: Template stack file
   template:
     src: stack.yml.j2
-    dest: "/opt/stacks/{{ stack_prefix }}gl/stack.yml"
+    dest: "/opt/stacks/{{ stack_prefix }}mtadisplay/stack.yml"
   register: stack_changed
   become: true
 
 - name: Ensure docker image is pulled
   community.docker.docker_image:
-    name: "ghcr.io/theryangeary/gl:{{ gl_version }}"
+    name: "ghcr.io/theryangeary/mta-display:{{ mtadisplay_version }}"
     source: pull
   become: true
 
 - name: Deploy stack
   docker_stack:
-    name: "{{ stack_prefix }}gl"
+    name: "{{ stack_prefix }}mtadisplay"
     compose:
-      - "/opt/stacks/{{ stack_prefix }}gl/stack.yml"
+      - "/opt/stacks/{{ stack_prefix }}mtadisplay/stack.yml"
     state: present
   become: true

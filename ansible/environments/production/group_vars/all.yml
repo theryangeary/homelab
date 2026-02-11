@@ -6,3 +6,4 @@ cloudflare_tunnel_token: "{{ lookup('bitwarden.secrets.lookup', '815fb77d-1e23-4
 ftp_host: 192.168.0.227
 ftp_username: homelab
 jellyfin_host: 192.168.0.227
+homelabvm1_become_password: "{{ lookup('bitwarden.secrets.lookup', 'bdc8105d-be52-4c25-8148-b3ee0001b655') }}"

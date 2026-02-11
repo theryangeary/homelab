@@ -27,11 +27,11 @@
     - role: service-gl
       tags: [gl, services]
 
-    - role: service-volume-backup
-      tags: [volume-backup, services]
-
     - role: service-pathfinder
       tags: [pathfinder, services]
+
+    - role: service-mta-display
+      tags: [mtadisplay, services]
 
 - hosts: swarm_workers
   roles:

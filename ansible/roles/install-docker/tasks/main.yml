@@ -18,15 +18,28 @@
     state: present
   become: true
 
-- name: Add Docker's official GPG key
-  ansible.builtin.apt_key:
-    url: https://download.docker.com/linux/debian/gpg
-    state: present
+# - name: Add Docker's official GPG key
+#   ansible.builtin.apt_key:
+#     url: https://download.docker.com/linux/debian/gpg
+#     state: present
 
-- name: Add Docker repository
-  ansible.builtin.apt_repository:
-    repo: 'deb [arch={{ docker_arch }}] https://download.docker.com/linux/{{ ansible_facts["distribution"] | lower }} {{ ansible_facts["distribution_release"] }} stable'
+# - name: Add Docker repository
+#   ansible.builtin.apt_repository:
+#     repo: 'deb [arch={{ docker_arch }}] https://download.docker.com/linux/{{ ansible_facts["distribution"] | lower }} {{ ansible_facts["distribution_release"] }} stable'
+#     state: present
+
+- name: Add docker deb822
+  deb822_repository:
+    name: docker
+    types: deb
+    uris: "https://download.docker.com/linux/{{ ansible_facts['distribution'] | lower }}"
+    suites: "{{ ansible_facts['distribution_release'] }}"
+    components: stable
+    architectures: "{{ docker_arch }}"
     state: present
+    signed_by: "https://download.docker.com/linux/debian/gpg"
+  become: true
+
 
 - name: Update apt cache after adding docker repo
   ansible.builtin.apt:
@@ -38,11 +51,23 @@
   ansible.builtin.apt:
     name: docker-ce
     state: latest
+  become: true
 
-- name: Install Docker Compose
+# - name: Install Docker Compose
+#   ansible.builtin.apt:
+#     name: docker-compose
+#     state: latest
+#   become: true
+
+- name: Install Docker python module
   ansible.builtin.apt:
-    name: docker-compose
-    state: latest
+    name: python3-docker
+  become: true
+
+- name: Install jsondiff
+  ansible.builtin.apt:
+    name: python3-jsondiff
+  become: true
 
 - name: Start Docker service
   ansible.builtin.service:
@@ -55,3 +80,4 @@
     registry: ghcr.io
     username: theryangeary
     password: "{{ ghcr_token }}"
+  become: true
