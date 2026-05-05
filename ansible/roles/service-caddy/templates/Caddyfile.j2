@@ -31,10 +31,6 @@ http://gldemo.{{ domain_name }} {
     reverse_proxy http://gldemo:3001
 }
 
-http://webhook.{{ domain_name }} http://webhooks.{{ domain_name }} {
-    reverse_proxy http://imageupdatewebhook:8080
-}
-
 http://mta-display.{{ domain_name }} http://mtadisplay.{{ domain_name }} {
     reverse_proxy http://mta-display:3000
 
@@ -47,6 +43,10 @@ http://mta-display.{{ domain_name }} http://mtadisplay.{{ domain_name }} {
 
 http://jellyfin.{{ domain_name }} {
     reverse_proxy http://{{ jellyfin_host }}:8096
+}
+
+http://ntfy.{{ domain_name }} {
+    reverse_proxy http://ntfy:80
 }
 
 http://*.{{ domain_name }} {

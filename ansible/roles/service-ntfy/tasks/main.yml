@@ -1,0 +1,34 @@
+--- 
+- name: Create service config directory
+  file:
+    path: "/opt/stacks/{{ stack_prefix }}ntfy/data"
+    state: directory
+  become: true
+
+- name: Template ntfy config file
+  ansible.builtin.template:
+    src: server.yml.j2
+    dest: /opt/stacks/{{ stack_prefix }}ntfy/data/server.yml
+  become: true
+
+- name: Template stack file
+  template:
+    src: stack.yml.j2
+    dest: "/opt/stacks/{{ stack_prefix }}ntfy/stack.yml"
+  register: stack_changed
+  become: true
+
+- name: Ensure docker image is pulled
+  community.docker.docker_image:
+    name: "binwiederhier/ntfy:{{ ntfy_version }}"
+    source: pull
+    force_source: true
+  become: true
+
+- name: Deploy stack
+  docker_stack:
+    name: "{{ stack_prefix }}ntfy"
+    compose:
+      - "/opt/stacks/{{ stack_prefix }}ntfy/stack.yml"
+    state: present
+  become: true

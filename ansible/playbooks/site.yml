@@ -33,6 +33,9 @@
     - role: service-mta-display
       tags: [mtadisplay, services]
 
+    - role: service-ntfy
+      tags: [ntfy, services]
+
 - hosts: swarm_workers
   roles:
     - role: host-setup
