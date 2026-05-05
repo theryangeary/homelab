@@ -27,9 +27,8 @@
     state: present
   become: true
 
-- name: Send signal to force caddy to reload config
-  community.docker.docker_swarm_service:
-    name: "{{ stack_prefix }}caddy_caddy"
-    force_update: true
-    image: "caddy:{{ caddy_version }}"
+- name: Send shell command to force caddy to reload config
+  ansible.builtin.shell:
+    cmd: "docker service update --force {{ stack_prefix }}caddy_caddy"
+  when: caddy_config_result.changed
   become: true

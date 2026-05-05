@@ -24,8 +24,6 @@ services:
     init: true # needed, if healthcheck is used. Prevents zombie processes
     networks:
       {{ stack_prefix }}services:
-    ports:
-      - 80:80
     volumes:
       - /opt/stacks/{{ stack_prefix }}ntfy/data:/etc/ntfy
     environment:

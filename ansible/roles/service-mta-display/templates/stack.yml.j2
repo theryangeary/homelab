@@ -28,6 +28,9 @@ services:
     environment:
       - DATABASE_URL=sqlite:/data/mta-display.db
       - RUST_LOG=info
+      - NTFY_URL=http://ntfy:80
+      - NTFY_TOPIC=mta-display-gallery-submission
+      - NTFY_TOKEN=abcd
 
 networks:
   {{ stack_prefix }}services:
