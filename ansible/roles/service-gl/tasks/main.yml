@@ -22,6 +22,7 @@
   community.docker.docker_image:
     name: "ghcr.io/theryangeary/gl:{{ gl_version }}"
     source: pull
+    force_source: true
   become: true
 
 - name: Deploy stack

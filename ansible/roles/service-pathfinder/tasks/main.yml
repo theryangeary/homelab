@@ -41,6 +41,7 @@
   community.docker.docker_image:
     name: "ghcr.io/theryangeary/pathfinder:{{ pathfinder_version }}"
     source: pull
+    force_source: true
   become: true
 
 - name: Deploy stack

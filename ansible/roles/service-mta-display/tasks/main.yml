@@ -22,6 +22,7 @@
   community.docker.docker_image:
     name: "ghcr.io/theryangeary/mta-display:{{ mtadisplay_version }}"
     source: pull
+    force_source: true
   become: true
 
 - name: Deploy stack
@@ -30,4 +31,5 @@
     compose:
       - "/opt/stacks/{{ stack_prefix }}mtadisplay/stack.yml"
     state: present
+    detach: false
   become: true

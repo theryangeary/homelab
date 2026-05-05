@@ -16,6 +16,7 @@
   community.docker.docker_image:
     name: "ghcr.io/theryangeary/www:{{ www_version }}"
     source: pull
+    force_source: true
   become: true
 
 - name: Deploy stack
