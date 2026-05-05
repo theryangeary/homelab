@@ -18,3 +18,7 @@
   vars:
     state: present
     tailscale_authkey: "{{ tailscale_authkey_secret }}"
+
+- name: Ensure sqlite is installed for debugging.
+  ansible.builtin.apt: name=sqlite3 state=present
+  become: true
