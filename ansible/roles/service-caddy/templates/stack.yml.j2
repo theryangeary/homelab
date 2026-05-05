@@ -1,7 +1,7 @@
 version: '3'
 services:
   caddy:
-    image: caddy:2.10
+    image: caddy:{{ caddy_version }}
     restart: 'unless-stopped'
     networks:
       {{ stack_prefix }}services:
