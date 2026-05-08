@@ -1,7 +1,7 @@
 - hosts: swarm_managers
   roles:
     - role: host-setup
-      tags: [infrastructure]
+      tags: [host-setup, infrastructure]
 
     - role: install-docker
       tags: [docker, infrastructure]
