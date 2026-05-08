@@ -1,8 +1,9 @@
-# TODO : Add staging inventory
-# all:
-#   hosts:
-#     raspberrypi1.local:
-#   children:
-#     swarm_managers:
-#       hosts:
-#         raspberrypi1.local:
+all:
+  hosts:
+    192.168.0.197:
+      ansible_port: 22766
+      ansible_become_password: "{{ become_password }}"
+  children:
+    swarm_managers:
+      hosts:
+        192.168.0.197:
