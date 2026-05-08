@@ -23,7 +23,7 @@ services:
       start_period: 40s
     init: true # needed, if healthcheck is used. Prevents zombie processes
     networks:
-      {{ stack_prefix }}services:
+      {{ stack_prefix }}services_internal:
     volumes:
       - /opt/stacks/{{ stack_prefix }}ntfy/data:/etc/ntfy
     environment:
@@ -32,5 +32,5 @@ services:
     command: serve
 
 networks:
-  {{ stack_prefix }}services:
+  {{ stack_prefix }}services_internal:
     external: true

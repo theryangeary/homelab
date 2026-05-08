@@ -18,6 +18,9 @@
     - role: service-caddy
       tags: [caddy, services]
 
+    - role: service-caddy_internal
+      tags: [caddy, services]
+
     - role: service-www
       tags: [www, services]
 

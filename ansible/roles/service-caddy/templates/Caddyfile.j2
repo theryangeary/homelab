@@ -41,14 +41,6 @@ http://mta-display.{{ domain_name }} http://mtadisplay.{{ domain_name }} {
     }
 }
 
-http://jellyfin.{{ domain_name }} {
-    reverse_proxy http://{{ jellyfin_host }}:8096
-}
-
-http://ntfy.{{ domain_name }} {
-    reverse_proxy http://ntfy:80
-}
-
 http://*.{{ domain_name }} {
     redir https://www.{{ domain_name }}{uri}
 }

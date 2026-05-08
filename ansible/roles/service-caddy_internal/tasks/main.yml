@@ -1,0 +1,32 @@
+- name: Create caddy_internal config directory
+  file:
+    path: "/opt/stacks/{{ stack_prefix }}caddy_internal"
+    state: directory
+  become: true
+
+- name: Template Caddyfile
+  ansible.builtin.template:
+    src: Caddyfile.j2
+    dest: /opt/stacks/{{ stack_prefix }}caddy_internal/Caddyfile
+  register: caddy_internal_config
+  become: true
+
+- name: Template stack file
+  template:
+    src: stack.yml.j2
+    dest: "/opt/stacks/{{ stack_prefix }}caddy_internal/stack.yml"
+  become: true
+
+- name: Deploy caddy_internal stack
+  docker_stack:
+    name: "{{ stack_prefix }}caddy_internal"
+    compose:
+      - "/opt/stacks/{{ stack_prefix }}caddy_internal/stack.yml"
+    state: present
+  become: true
+
+- name: Force caddy_internal reload on config change
+  ansible.builtin.shell:
+    cmd: "docker service update --force {{ stack_prefix }}caddy_internal_caddy"
+  when: caddy_internal_config.changed
+  become: true

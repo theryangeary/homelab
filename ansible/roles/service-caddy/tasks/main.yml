@@ -1,4 +1,4 @@
---- 
+---
 - name: Create service config directory
   file:
     path: "/opt/stacks/{{ stack_prefix }}caddy"

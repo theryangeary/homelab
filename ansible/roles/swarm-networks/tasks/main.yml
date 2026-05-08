@@ -8,5 +8,6 @@
   loop:
     - cloudflare
     - services
+    - services_internal
   when: inventory_hostname == groups['swarm_managers'][0]
   become: true

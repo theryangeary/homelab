@@ -3,9 +3,8 @@ services:
   caddy:
     image: caddy:{{ caddy_version }}
     restart: 'unless-stopped'
-    networks:
-      {{ stack_prefix }}services:
-      {{ stack_prefix }}cloudflare:
+    ports:
+      - "80:80"
     deploy:
       replicas: 1
       update_config:
@@ -19,14 +18,14 @@ services:
         delay: 30s
         monitor: 60s
     volumes:
-      - {{ stack_prefix }}caddy_data:/data
-      - /opt/stacks/{{ stack_prefix }}caddy/Caddyfile:/etc/caddy/Caddyfile
+      - {{ stack_prefix }}caddy_internal_data:/data
+      - /opt/stacks/{{ stack_prefix }}caddy_internal/Caddyfile:/etc/caddy/Caddyfile
+    networks:
+      {{ stack_prefix }}services_internal:
 
 volumes:
-  {{ stack_prefix }}caddy_data:
+  {{ stack_prefix }}caddy_internal_data:
 
 networks:
-  {{ stack_prefix }}services:
-    external: true
-  {{ stack_prefix }}cloudflare:
+  {{ stack_prefix }}services_internal:
     external: true

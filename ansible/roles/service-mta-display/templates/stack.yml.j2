@@ -23,6 +23,7 @@ services:
       start_period: 30s
     networks:
       {{ stack_prefix }}services:
+      {{ stack_prefix }}services_internal:
     volumes:
       - /opt/stacks/{{ stack_prefix }}mtadisplay/data:/data
     environment:
@@ -34,4 +35,6 @@ services:
 
 networks:
   {{ stack_prefix }}services:
+    external: true
+  {{ stack_prefix }}services_internal:
     external: true

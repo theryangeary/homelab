@@ -1,0 +1,14 @@
+{
+    servers {
+        trusted_proxies static private_ranges
+    }
+    auto_https off
+}
+
+http://jellyfin.{{ domain_name }} {
+    reverse_proxy http://truenas.home.arpa:8096
+}
+
+http://ntfy.{{ domain_name }} {
+    reverse_proxy http://ntfy:80
+}
