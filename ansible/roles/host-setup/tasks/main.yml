@@ -12,13 +12,13 @@
 - name: Ensure timesyncd is running.
   ansible.builtin.service: name=systemd-timesyncd state=started enabled=yes
 
+- name: Ensure sqlite is installed for debugging.
+  ansible.builtin.apt: name=sqlite3 state=present
+  become: true
+
 - name: Ensure tailscale is installed.
   include_role:
     name: artis3n.tailscale.machine
   vars:
     state: present
     tailscale_authkey: "{{ tailscale_authkey_secret }}"
-
-- name: Ensure sqlite is installed for debugging.
-  ansible.builtin.apt: name=sqlite3 state=present
-  become: true

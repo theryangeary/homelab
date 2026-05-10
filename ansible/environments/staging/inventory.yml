@@ -1,9 +1,9 @@
 all:
   hosts:
-    192.168.0.197:
-      ansible_port: 22766
+    192.168.0.196:
+      ansible_port: "{{ ssh_port }}"
       ansible_become_password: "{{ become_password }}"
   children:
     swarm_managers:
       hosts:
-        192.168.0.197:
+        192.168.0.196:

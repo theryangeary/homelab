@@ -1,4 +1,7 @@
 ---
+roles:
+  - name: geerlingguy.security
+
 collections:
   - name: artis3n.tailscale
   - name: bitwarden.secrets

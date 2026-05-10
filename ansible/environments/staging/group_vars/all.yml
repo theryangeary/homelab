@@ -5,3 +5,4 @@ domain_name: ryangeary.dev
 cloudflare_tunnel_token: "{{ lookup('bitwarden.secrets.lookup', '55ff931c-7348-44a9-ba6d-b444013652da') }}"
 jellyfin_host: 192.168.0.227
 become_password: "{{ lookup('bitwarden.secrets.lookup', 'ca807c54-f1fe-4505-abae-b44401369022') }}"
+ssh_port: 22766

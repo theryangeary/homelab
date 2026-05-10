@@ -1,0 +1,6 @@
+security_ssh_port: 22766
+security_ssh_allowed_users:
+  - ryan
+security_sudoers_passworded:
+  - ryan
+security_autoupdate_mail_to: "{{ lookup('env', 'MAILTO') }}"
