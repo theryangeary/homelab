@@ -1,6 +1,7 @@
 ---
 roles:
   - name: geerlingguy.security
+  - name: geerlingguy.firewall
 
 collections:
   - name: artis3n.tailscale

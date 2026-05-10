@@ -2,8 +2,11 @@
   vars_files:
     - vars/main.yml
   roles:
-    - geerlingguy.security
-  become: true
+    - role: geerlingguy.security
+      become: true
+      
+    - role: geerlingguy.firewall
+      become: true
 
 - hosts: swarm_managers
   roles:
