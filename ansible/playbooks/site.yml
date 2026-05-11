@@ -44,7 +44,7 @@
       tags: [pathfinder, services]
 
     - role: service-mta-display
-      tags: [mtadisplay, services]
+      tags: [mtadisplay, mta-display, services]
 
     - role: service-ntfy
       tags: [ntfy, services]
