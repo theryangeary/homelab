@@ -6,19 +6,19 @@
     auto_https off
 }
 
-http://auth.{{ domain_name }} {
+http://auth{{ optional_staging_suffix }}.{{ domain_name }} {
     reverse_proxy http://authelia:9091
 }
 
-http://www.{{ domain_name }}, http://{{ domain_name }} {
+http://www{{ optional_staging_suffix }}.{{ domain_name }}, http://{{ domain_name }} {
     reverse_proxy http://www:3000
 }
 
-http://pathfinder.prof, http://pathfinder.{{ domain_name }} {
+http://pathfinder.prof, http://pathfindery{{ optional_staging_suffix }}.{{ domain_name }} {
     reverse_proxy http://pathfinder:8080
 }
 
-http://gl.{{ domain_name }} {
+http://gl{{ optional_staging_suffix }}.{{ domain_name }} {
     forward_auth http://authelia:9091 {
         uri /api/authz/forward-auth
         copy_headers Remote-User Remote-Groups Remote-Email Remote-Name
@@ -27,11 +27,11 @@ http://gl.{{ domain_name }} {
     reverse_proxy http://gl:3001
 }
 
-http://gldemo.{{ domain_name }} {
+http://gldemo{{ optional_staging_suffix }}.{{ domain_name }} {
     reverse_proxy http://gldemo:3001
 }
 
-http://mta-display.{{ domain_name }} http://mtadisplay.{{ domain_name }} {
+http://mta-display{{ optional_staging_suffix }}.{{ domain_name }} http://mtadisplay{{ optional_staging_suffix }}.{{ domain_name }} {
     reverse_proxy http://mta-display:3000
 
     @protected path /gallery/review
