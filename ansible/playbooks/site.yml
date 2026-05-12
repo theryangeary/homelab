@@ -1,21 +1,34 @@
 - hosts: all
   vars_files:
     - vars/main.yml
+    - vars/security.yml
+    - vars/firewall.yml
   roles:
     - role: geerlingguy.security
       become: true
       
     - role: geerlingguy.firewall
       become: true
+    
+    - role: universal-packages
+      tags: [host-setup, infrastructure]
 
-- hosts: swarm_managers
-  roles:
-    - role: host-setup
+    - role: create-service-users-groups
       tags: [host-setup, infrastructure]
 
     - role: install-docker
       tags: [docker, infrastructure]
 
+    - role: artis3n.tailscale.machine
+      tags: [tailscale, infrastructure]
+      vars:
+        state: present
+        tailscale_authkey: "{{ tailscale_authkey_secret }}"
+
+- hosts: swarm_managers
+  vars_files:
+    - vars/main.yml
+  roles:
     - role: init-swarm
       tags: [swarm, infrastructure]
 
@@ -45,12 +58,8 @@
 
     - role: service-mta-display
       tags: [mtadisplay, mta-display, services]
+      vars:
+        mtadisplay_service_account: "{{ service_accounts.mtadisplay }}"
 
     - role: service-ntfy
       tags: [ntfy, services]
-
-- hosts: swarm_workers
-  roles:
-    - role: host-setup
-    - role: install-docker
-      tags: [docker]
