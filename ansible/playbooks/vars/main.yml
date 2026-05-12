@@ -2,6 +2,9 @@ http_port: 80
 
 # Service user and group definitions. these are used to do ACL for data directories mounted to the host
 service_accounts:
+  app:
+    uid: 2000
+    gid: 2000
   mtadisplay:
     uid: 2001
     gid: 2001

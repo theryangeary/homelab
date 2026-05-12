@@ -2,6 +2,7 @@ version: '3'
 services:
   gl:
     image: ghcr.io/theryangeary/gl:{{ gl_version }}
+    user: "{{ service_account.uid }}:{{ service_account.gid }}"
     deploy: 
       replicas: 1
       update_config:

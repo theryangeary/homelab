@@ -2,7 +2,7 @@ version: '3'
 services:
   mta-display:
     image: ghcr.io/theryangeary/mta-display:{{ mtadisplay_version }}
-    user: "{{ mtadisplay_service_account.uid }}:{{ mtadisplay_service_account.gid }}"
+    user: "{{ service_account.uid }}:{{ service_account.gid }}"
     deploy: 
       replicas: 1
       update_config:

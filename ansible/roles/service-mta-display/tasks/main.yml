@@ -8,8 +8,8 @@
 - name: Create mtadisplay data directory
   file:
     path: "/opt/stacks/{{ stack_prefix }}mtadisplay/data"
-    owner: "{{ mtadisplay_service_account.uid }}"
-    group: "{{ mtadisplay_service_account.gid }}"
+    owner: "{{ service_account.uid }}"
+    group: "{{ service_account.gid }}"
     mode: '0750'
     state: directory
     recurse: true

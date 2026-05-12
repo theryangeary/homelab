@@ -37,21 +37,31 @@
 
     - role: service-cloudflared
       tags: [cloudflared, services]
+      vars:
+        service_account: "{{ service_accounts.app }}"
 
     - role: service-caddy
       tags: [caddy, services]
+      vars:
+        service_account: "{{ service_accounts.app }}"
 
     - role: service-caddy_internal
       tags: [caddy, services]
+      vars:
+        service_account: "{{ service_accounts.app }}"
 
     - role: service-www
       tags: [www, services]
 
     - role: service-authelia
       tags: [authelia, services]
+      vars:
+        service_account: "{{ service_accounts.app }}"
 
     - role: service-gl
       tags: [gl, services]
+      vars:
+        service_account: "{{ service_accounts.gl }}"
 
     - role: service-pathfinder
       tags: [pathfinder, services]
@@ -59,7 +69,7 @@
     - role: service-mta-display
       tags: [mtadisplay, mta-display, services]
       vars:
-        mtadisplay_service_account: "{{ service_accounts.mtadisplay }}"
+        service_account: "{{ service_accounts.mtadisplay }}"
 
     - role: service-ntfy
       tags: [ntfy, services]

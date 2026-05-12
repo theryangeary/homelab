@@ -2,6 +2,7 @@ version: '3'
 services:
   caddy:
     image: caddy:{{ caddy_version }}
+    user: "{{ service_account.uid }}:{{ service_account.gid }}"
     restart: 'unless-stopped'
     networks:
       {{ stack_prefix }}services:

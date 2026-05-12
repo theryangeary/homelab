@@ -2,6 +2,7 @@ version: '3'
 services:
   cloudflared:
     image: cloudflare/cloudflared:1818-66587173e2cd
+    user: "{{ service_account.uid }}:{{ service_account.gid }}"
     command: tunnel --no-autoupdate run
     restart: unless-stopped
     # todo move to docker secret
