@@ -13,7 +13,7 @@
 
 - name: Calculate users database hash
   ansible.builtin.shell: |
-    echo -n "{{ lookup('file', git_root.stdout + '/authelia/config/users_database.yml') }}" | sha256sum | awk '{print $1}' | cut -c 1-7
+    echo -n "{{ authelia_users_database }}" | sha256sum | awk '{print $1}' | cut -c 1-7
   args:
     executable: /bin/bash
   register: users_database_hash
@@ -26,13 +26,13 @@
   community.docker.docker_config:
     name: authelia_users_{{ authelia_users_database_hash }}
     state: present
-    data: "{{ lookup('file', git_root.stdout + '/authelia/config/users_database.yml') | b64encode }}"
+    data: "{{ authelia_users_database | b64encode }}"
     data_is_b64: true
   become: true
 
 - name: Calculate main configuration hash
   ansible.builtin.shell: |
-    echo -n "{{ lookup('file', git_root.stdout + '/authelia/config/configuration.yml') }}" | sha256sum | awk '{print $1}' | cut -c 1-7
+    echo -n "{{ lookup('template', 'configuration.yml.j2') }}" | sha256sum | awk '{print $1}' | cut -c 1-7
   args:
     executable: /bin/bash
   register: main_configuration_hash
@@ -41,11 +41,11 @@
   set_fact:
     authelia_main_configuration_hash: "{{ main_configuration_hash.stdout }}"
 
-- name: Create docker authelia main configuration config
+- name: Create docker authelia main configuration config from template
   community.docker.docker_config:
     name: authelia_config_{{ authelia_main_configuration_hash }}
     state: present
-    data: "{{ lookup('file', git_root.stdout + '/authelia/config/configuration.yml') | b64encode }}"
+    data: "{{ lookup('template', 'configuration.yml.j2') | b64encode }}"
     data_is_b64: true
   become: true
 

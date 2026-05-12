@@ -14,7 +14,7 @@ http://www{{ optional_staging_suffix }}.{{ domain_name }}, http://{{ domain_name
     reverse_proxy http://www:3000
 }
 
-http://pathfinder.prof, http://pathfindery{{ optional_staging_suffix }}.{{ domain_name }} {
+http://pathfinder.prof, http://pathfinder{{ optional_staging_suffix }}.{{ domain_name }} {
     reverse_proxy http://pathfinder:8080
 }
 
