@@ -1,11 +1,15 @@
 http_port: 80
-security_ssh_port: 22766
-security_ssh_allowed_users:
-  - ryan
-security_sudoers_passworded:
-  - ryan
-security_autoupdate_mail_to: "{{ lookup('env', 'MAILTO') }}"
-firewall_flush_rules_and_chains: false
-firewall_allowed_tcp_ports:
-  - "{{ security_ssh_port }}"
-  - "{{ http_port}}"
+
+# Service user and group definitions. these are used to do ACL for data directories mounted to the host
+service_accounts:
+  mtadisplay:
+    uid: 2001
+    gid: 2001
+  gl:
+    uid: 2002
+    gid: 2002
+  pathfinder:
+    uid: 2003
+    gid: 2003
+
+tailscale_authkey_secret: "{{ lookup('bitwarden.secrets.lookup', '83613b90-a61d-4426-9bbe-b3ad00210afd') }}"
