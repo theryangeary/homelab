@@ -8,7 +8,11 @@
 - name: Create pathfinder data directory
   file:
     path: "/opt/stacks/{{ stack_prefix }}pathfinder/data"
+    owner: "{{ service_account.uid }}"
+    group: "{{ service_account.gid }}"
+    mode: '0750'
     state: directory
+    recurse: true
   become: true
 
 - name: Calculate bluesky password hash

@@ -2,6 +2,7 @@ version: '3'
 services:
   pathfinder:
     image: ghcr.io/theryangeary/pathfinder:{{ pathfinder_version }}
+    user: "{{ service_account.uid }}:{{ service_account.gid }}"
     deploy: 
       replicas: 1
       update_config:

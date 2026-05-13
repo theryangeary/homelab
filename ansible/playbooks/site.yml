@@ -65,6 +65,8 @@
 
     - role: service-pathfinder
       tags: [pathfinder, services]
+      vars:
+        service_account: "{{ service_accounts.pathfinder }}"
 
     - role: service-mta-display
       tags: [mtadisplay, mta-display, services]
