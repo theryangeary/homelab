@@ -16,3 +16,7 @@ service_accounts:
     gid: 2003
 
 tailscale_authkey_secret: "{{ lookup('bitwarden.secrets.lookup', '83613b90-a61d-4426-9bbe-b3ad00210afd') }}"
+
+# bind9 ip should be the ip of the swarm manager from inventory
+bind9_ip: "{{ hostvars[groups['swarm_managers'][0]]['ansible_default_ipv4']['address'] }}"
+jellyfin_ip: 192.168.0.227

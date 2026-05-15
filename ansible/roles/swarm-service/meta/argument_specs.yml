@@ -1,0 +1,38 @@
+---
+argument_specs:
+  main:
+    short_description: "Deploy a service to the swarm"
+    description:
+      - This role deploys a service to the swarm using a docker stack deploy command.
+      - The service is defined in a stack.yml.j2 file.
+    options:
+      swarm_service_name:
+        description: "The name of the service to deploy. This partially defines the docker stack name."
+        required: true
+        type: str
+      swarm_service_environment:
+        description: "The environment to deploy the service to. This partially defines the docker stack name."
+        choices: ["prod", "stg"]
+        required: true
+        type: str
+      swarm_service_user:
+        description: "The user to deploy the service as. This is used to set permissions on the stack configuration files."
+        required: true
+        type: str
+      swarm_service_stack_config_template:
+        description: "The path to the stack configuration template file. This is a jinja2 template that will be rendered with the variables defined in the role and the playbook."
+        required: true
+        type: str
+      swarm_service_create_data_directory:
+        description: "Whether to create a data directory for the service. This is used to store any persistent data for the service."
+        type: bool
+        default: false
+        required: false
+      swarm_service_data_directory_mode:
+        description: "The permissions mode to set on the data directory if it is created. This should be a string representation of an octal number, e.g. '0750'."
+        type: str
+        default: '0750'
+      swarm_service_images:
+        description: "The names of the docker images to pull for the service. This should include the repository and tag, e.g. 'ghcr.io/user/myimage:latest'."
+        required: true
+        type: list

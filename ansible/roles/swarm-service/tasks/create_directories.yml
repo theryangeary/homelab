@@ -1,0 +1,21 @@
+---
+- name: Register swarm_service_namespaced_name fact
+  set_fact:
+    swarm_service_namespaced_name: "{{ swarm_service_environment }}_{{ swarm_service_name }}"
+
+- name: Create service config directory
+  file:
+    path: "/opt/stacks/{{ swarm_service_namespaced_name }}"
+    state: directory
+  become: true
+
+- name: Create {{ swarm_service_namespaced_name }} data directory
+  file:
+    path: "/opt/stacks/{{ swarm_service_namespaced_name }}/data"
+    owner: "{{ swarm_service_user.uid }}"
+    group: "{{ swarm_service_user.gid }}"
+    mode: "{{ swarm_service_data_directory_mode }}"
+    state: directory
+    recurse: true
+  become: true
+  when: swarm_service_create_data_directory

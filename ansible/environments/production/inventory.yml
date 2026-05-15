@@ -7,3 +7,6 @@ all:
     swarm_managers:
       hosts:
         192.168.0.238:
+    dns:
+      hosts:
+        192.168.0.238:

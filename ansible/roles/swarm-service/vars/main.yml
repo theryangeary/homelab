@@ -1,0 +1,2 @@
+swarm_service_namespaced_name: "{{ swarm_service_environment }}_{{ swarm_service_name }}"
+swarm_service_create_data_directory: false

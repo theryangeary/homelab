@@ -1,0 +1,24 @@
+---
+- name: Template stack file
+  template:
+    src: "{{ swarm_service_stack_config_template }}"
+    dest: "/opt/stacks/{{ swarm_service_namespaced_name }}/stack.yml"
+  register: stack_changed
+  become: true
+
+- name: Ensure docker {{ swarm_service_name }} images are pulled
+  community.docker.docker_image:
+    name: "{{ item }}"
+    source: pull
+    force_source: true
+  loop: "{{ swarm_service_images | default([]) }}"
+  when: swarm_service_images is defined and swarm_service_images | length > 0
+  become: true
+
+- name: Deploy stack
+  docker_stack:
+    name: "{{ swarm_service_namespaced_name }}"
+    compose:
+      - "/opt/stacks/{{ swarm_service_namespaced_name }}/stack.yml"
+    state: present
+  become: true
