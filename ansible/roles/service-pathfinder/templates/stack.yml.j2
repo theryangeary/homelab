@@ -19,7 +19,7 @@ services:
     environment:
       BLUESKY_HANDLE: profpathfinder.bsky.social
       BLUESKY_PASSWORD_FILE: pathfinder_bluesky_password_{{ pathfinder_bluesky_password_hash }}
-      ALLOWED_ORIGINS: https://pathfinder.prof,http://pathfinder.localhost,http://pathfinder.ryangeary.dev,https://pathfinder.ryangeary.dev
+      ALLOWED_ORIGINS: https://pathfinder.prof,http://pathfinder.localhost,http://pathfinder{{ optional_staging_suffix }}.ryangeary.dev,https://pathfinder{{ optional_staging_suffix }}.ryangeary.dev
       RUST_LOG: info
       REFERER_VALIDATION_ENABLED: "true"
       SESSION_TIMEOUT_MINUTES: 1440
