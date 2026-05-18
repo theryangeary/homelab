@@ -1,0 +1,26 @@
+// base named.conf file
+// Recommended that you always maintain a change log in this file as shown here
+// options clause defining the server-wide properties
+options {
+  // all relative paths use this directory as a base
+  directory "/var/cache/bind";
+  // version statement for security to avoid hacking known weaknesses
+  // if the real version number is revealed
+  version "not currently available";
+
+  forwarders {
+    1.1.1.1;
+    1.0.0.1;
+  };
+  forward only;
+  
+  listen-on { any; };
+  listen-on-v6 { any; };
+};
+
+// Domain zones
+zone ryangeary.dev IN {
+  type master;
+  file "/etc/bind/ryangeary.dev.zone";
+};
+

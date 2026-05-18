@@ -1,0 +1,16 @@
+---
+- name: Restart bind9
+  ansible.builtin.service:
+    name: bind9
+    state: restarted
+  become: true
+
+- name: Reload bind9
+  ansible.builtin.service:
+    name: bind9
+    state: reloaded
+  become: true
+
+- name: Check bind9 config
+  ansible.builtin.command: named-checkconf
+  changed_when: false

@@ -1,0 +1,15 @@
+$TTL 2d  
+$ORIGIN ryangeary.dev. 
+@         IN      SOA   ns.ryangeary.dev. admin.ryangeary.dev. (
+                                2026051500
+                                43200
+                                900
+                                345600
+                                7200
+)
+                        NS     ns.ryangeary.dev.
+
+           IN      NS      ns.ryangeary.dev.
+
+ns        IN      A       {{ bind9_ip }}
+jellyfin    IN      A       {{ jellyfin_ip }}
