@@ -1,0 +1,17 @@
+$TTL 2d  
+$ORIGIN home.arpa. 
+@         IN      SOA   ns.home.arpa. admin.home.arpa. (
+                                {{ ansible_facts['date_time']['epoch'] }} ; serial
+                                43200 ; refresh
+                                900 ; retry
+                                345600 ; expire
+                                7200 ; minimum
+)
+                        NS     ns.home.arpa.
+
+           IN      NS      ns.home.arpa.
+
+ns        IN      A       {{ bind9_ip }}
+truenas   IN      A       {{ truenas_ip }}
+jellyfin    IN      A       {{ jellyfin_ip }}
+ntfy       IN      A       {{ internal_services_ip }}

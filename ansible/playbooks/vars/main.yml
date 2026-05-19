@@ -19,5 +19,8 @@ service_accounts:
 tailscale_authkey_secret: "{{ lookup('bitwarden.secrets.lookup', '83613b90-a61d-4426-9bbe-b3ad00210afd') }}"
 
 # bind9 ip should be the ip of the swarm manager from inventory
-bind9_ip: "{{ hostvars[groups['swarm_managers'][0]]['ansible_default_ipv4']['address'] }}"
-jellyfin_ip: 192.168.0.227
+bind9_ip: "{{ hostvars[groups['swarm_managers'][0]]['ansible_facts']['default_ipv4']['address'] }}"
+# internal docker services will be on the same ip as bind9 as long as homelab is a single host
+internal_services_ip: "{{ bind9_ip }}"
+truenas_ip: 192.168.0.227
+jellyfin_ip: "{{ truenas_ip }}"

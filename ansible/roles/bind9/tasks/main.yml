@@ -22,8 +22,8 @@
 
 - name: Deploy BIND9 zone files per domain.
   ansible.builtin.template:
-    src: "templates/ryangeary.dev.zone.j2"
-    dest: "/etc/bind/ryangeary.dev.zone"
+    src: "templates/home.arpa.zone.j2"
+    dest: "/etc/bind/home.arpa.zone"
     owner: bind
     group: bind
     mode: 0644
@@ -38,3 +38,39 @@
     state: started
     enabled: true
   become: true
+
+- name: Run handlers before testing to ensure any configuration changes are applied.
+  ansible.builtin.meta: flush_handlers
+
+- name: Test that truenas is resolvable from the bind9 server.
+  ansible.builtin.command: "dig +short @{{ bind9_ip }} truenas.home.arpa"
+  register: dig_truenas
+  changed_when: false
+
+- name: Assert that truenas resolves to the correct IP.
+  ansible.builtin.assert:
+    that:
+      - dig_truenas.stdout == truenas_ip
+    fail_msg: "DNS resolution for truenas.home.arpa did not return the expected IP address."
+
+- name: Test that jellyfin is resolvable from the bind9 server.
+  ansible.builtin.command: "dig +short @{{ bind9_ip }} jellyfin.home.arpa"
+  register: dig_jellyfin
+  changed_when: false
+
+- name: Assert that jellyfin resolves to the correct IP.
+  ansible.builtin.assert:
+    that:
+      - dig_jellyfin.stdout == jellyfin_ip
+    fail_msg: "DNS resolution for jellyfin.home.arpa did not return the expected IP address."
+
+- name: Test that gl is resolvable from (through) the bind9 server.
+  ansible.builtin.shell: "dig +short @{{ bind9_ip }} gl.{{ domain_name }} | head -n 1"
+  register: dig_gl
+  changed_when: false
+
+- name: Assert that gl resolves to the correct IP.
+  ansible.builtin.assert:
+    that:
+      - dig_gl.stdout == "172.67.163.236"
+    fail_msg: "DNS resolution for gl.{{ domain_name }} did not return the expected IP address. This public IP address may change from time to time, but as long as it resolves to some public ip address and gl is reachable, it is likely not an issue and this test may need updating. (Returned: {{ dig_gl.stdout }})"
