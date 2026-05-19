@@ -1,4 +1,7 @@
-firewall_flush_rules_and_chains: false
 firewall_allowed_tcp_ports:
   - "{{ security_ssh_port }}"
   - "{{ http_port}}"
+  - "{{ dns_port }}"
+
+firewall_allowed_udp_ports:
+  - "{{ dns_port }}"

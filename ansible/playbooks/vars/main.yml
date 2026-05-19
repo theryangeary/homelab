@@ -1,4 +1,5 @@
 http_port: 80
+dns_port: 53
 
 # Service user and group definitions. these are used to do ACL for data directories mounted to the host
 service_accounts:
