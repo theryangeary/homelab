@@ -13,6 +13,6 @@ $ORIGIN home.arpa.
 
 ns        IN      A       {{ bind9_ip }}
 truenas   IN      A       {{ truenas_ip }}
-# jellyfin goes to internal services to get reverse proxied by caddy
 jellyfin    IN      A       {{ internal_services_ip }}
 ntfy       IN      A       {{ internal_services_ip }}
+lyrion  IN  A   {{ internal_services_ip }}
