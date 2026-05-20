@@ -1,4 +1,5 @@
 http_port: 80
+https_port: 443
 dns_port: 53
 
 # Service user and group definitions. these are used to do ACL for data directories mounted to the host
@@ -23,4 +24,3 @@ bind9_ip: "{{ hostvars[groups['swarm_managers'][0]]['ansible_facts']['default_ip
 # internal docker services will be on the same ip as bind9 as long as homelab is a single host
 internal_services_ip: "{{ bind9_ip }}"
 truenas_ip: 192.168.0.227
-jellyfin_ip: "{{ truenas_ip }}"

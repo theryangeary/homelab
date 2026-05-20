@@ -5,10 +5,15 @@
     auto_https off
 }
 
-http://jellyfin.{{ domain_name }} {
-    reverse_proxy http://truenas.home.arpa:8096
+http://jellyfin.{{ local_domain_name }} {
+    reverse_proxy truenas.{{ local_domain_name }}:8096 {
+        header_up Host jellyfin.{{ local_domain_name }}
+        header_up X-Forwarded-Host {host}
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-For {remote}
+    }
 }
 
-http://ntfy.{{ domain_name }} {
+http://ntfy.{{ local_domain_name }} {
     reverse_proxy http://ntfy:80
 }

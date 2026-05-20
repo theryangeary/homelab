@@ -1,9 +1,9 @@
 ---
 env: prod
 stack_prefix: prod_
-domain_name: ryangeary.dev
+public_domain_name: ryangeary.dev
+local_domain_name: home.arpa
 cloudflare_tunnel_token: "{{ lookup('bitwarden.secrets.lookup', '815fb77d-1e23-474c-ad58-b3b90186b35b') }}"
-jellyfin_host: 192.168.0.227
 become_password: "{{ lookup('bitwarden.secrets.lookup', 'bdc8105d-be52-4c25-8148-b3ee0001b655') }}"
 ssh_port: 22766
 optional_staging_suffix: ""

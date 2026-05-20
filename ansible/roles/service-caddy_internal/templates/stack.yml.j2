@@ -4,7 +4,8 @@ services:
     image: caddy:{{ caddy_version }}
     restart: 'unless-stopped'
     ports:
-      - "80:80"
+      - 80:80
+      - 443:443
     deploy:
       replicas: 1
       update_config:

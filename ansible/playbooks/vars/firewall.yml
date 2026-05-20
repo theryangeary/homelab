@@ -1,6 +1,7 @@
 firewall_allowed_tcp_ports:
   - "{{ security_ssh_port }}"
   - "{{ http_port}}"
+  - "{{ https_port }}"
   - "{{ dns_port }}"
 
 firewall_allowed_udp_ports:

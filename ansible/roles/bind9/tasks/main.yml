@@ -61,16 +61,16 @@
 - name: Assert that jellyfin resolves to the correct IP.
   ansible.builtin.assert:
     that:
-      - dig_jellyfin.stdout == jellyfin_ip
+      - dig_jellyfin.stdout == internal_services_ip
     fail_msg: "DNS resolution for jellyfin.home.arpa did not return the expected IP address."
 
 - name: Test that gl is resolvable from (through) the bind9 server.
-  ansible.builtin.shell: "dig +short @{{ bind9_ip }} gl.{{ domain_name }} | head -n 1"
+  ansible.builtin.shell: "dig +short @{{ bind9_ip }} gl.{{ public_domain_name }} | wc -l"
   register: dig_gl
   changed_when: false
 
 - name: Assert that gl resolves to the correct IP.
   ansible.builtin.assert:
     that:
-      - dig_gl.stdout == "172.67.163.236"
-    fail_msg: "DNS resolution for gl.{{ domain_name }} did not return the expected IP address. This public IP address may change from time to time, but as long as it resolves to some public ip address and gl is reachable, it is likely not an issue and this test may need updating. (Returned: {{ dig_gl.stdout }})"
+      - dig_gl.stdout | int >= 1
+    fail_msg: "DNS resolution for gl.{{ public_domain_name }} did not return the expected IP address. This public IP address may change from time to time, but as long as it resolves to some public ip address and gl is reachable, it is likely not an issue and this test may need updating. (Returned: {{ dig_gl.stdout }})"
