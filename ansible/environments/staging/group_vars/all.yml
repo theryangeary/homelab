@@ -2,7 +2,7 @@
 env: stg
 stack_prefix: stg_
 public_domain_name: ryangeary.dev
-local_domain_name: home.arpa
+local_domain_name: staging.home.arpa
 cloudflare_tunnel_token: "{{ lookup('bitwarden.secrets.lookup', '55ff931c-7348-44a9-ba6d-b444013652da') }}"
 become_password: "{{ lookup('bitwarden.secrets.lookup', 'ca807c54-f1fe-4505-abae-b44401369022') }}"
 ssh_port: 22766
