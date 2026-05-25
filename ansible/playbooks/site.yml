@@ -7,11 +7,11 @@
     - role: geerlingguy.security
       become: true
       tags: [host-setup, security]
-      
+
     - role: geerlingguy.firewall
       become: true
       tags: [host-setup, security]
-    
+
     - role: universal-packages
       tags: [host-setup, infrastructure]
 
@@ -58,9 +58,6 @@
       tags: [caddy, services]
       vars:
         service_account: "{{ service_accounts.app }}"
-
-    - role: service-www
-      tags: [www, services]
 
     - role: service-authelia
       tags: [authelia, services]
