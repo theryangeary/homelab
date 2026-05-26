@@ -21,6 +21,15 @@ tailscale_authkey_secret: "{{ lookup('bitwarden.secrets.lookup', '83613b90-a61d-
 
 # bind9 ip should be the ip of the swarm manager from inventory
 bind9_ip: "{{ hostvars[groups['swarm_managers'][0]]['ansible_facts']['default_ipv4']['address'] }}"
+
+# for staging environment where bind9 is running on a different host than the swarm manager, we need to specify the staging bind9 ip separately
+staging_inventory: "{{ lookup('file', '../environments/staging/inventory.yml') | from_yaml }}"
+staging_bind9_ip: "{{ staging_inventory.all.hosts['labstg1'].ansible_host }}"
+
 # internal docker services will be on the same ip as bind9 as long as homelab is a single host
 internal_services_ip: "{{ bind9_ip }}"
 truenas_ip: 192.168.0.227
+
+local_domain_names:
+  prod: "home.arpa"
+  stg: "staging.home.arpa"

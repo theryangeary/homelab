@@ -19,8 +19,15 @@ options {
 };
 
 // Domain zones
-zone home.arpa IN {
+zone {{ local_domain_name }} IN {
   type master;
-  file "/etc/bind/home.arpa.zone";
+  file "/etc/bind/{{ local_domain_name }}.zone";
 };
 
+{% if env == 'prod' %}
+zone "{{ local_domain_names['stg'] }}" IN {
+  type forward;
+  forwarders { {{ staging_bind9_ip }} ; };
+  forward only;
+};
+{% endif %}
