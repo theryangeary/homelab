@@ -6,3 +6,5 @@ firewall_allowed_tcp_ports:
 
 firewall_allowed_udp_ports:
   - "{{ dns_port }}"
+
+firewall_flush_rules_and_chains: false
