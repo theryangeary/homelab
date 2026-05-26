@@ -1,12 +1,14 @@
 all:
   hosts:
-    192.168.0.196:
+    labstg1:
+      ansible_host: 192.168.0.196
+      ip_address: 192.168.0.196
       ansible_port: "{{ ssh_port }}"
       ansible_become_password: "{{ become_password }}"
   children:
     swarm_managers:
       hosts:
-        192.168.0.196:
+        labstg1:
     dns:
       hosts:
-        192.168.0.196:
+        labstg1:
