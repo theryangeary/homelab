@@ -81,3 +81,21 @@
     username: theryangeary
     password: "{{ ghcr_token }}"
   become: true
+
+- name: Configure Docker daemon to use host DNS
+  ansible.builtin.copy:
+    dest: /etc/docker/daemon.json
+    content: |
+      {
+        "dns": ["{{ bind9_ip }}"],
+        "log-driver": "json-file",
+        "log-opts": {
+          "max-size": "10m",
+          "max-file": "3"
+        }
+      }
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart Docker
+  become: true

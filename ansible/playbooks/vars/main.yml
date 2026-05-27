@@ -28,7 +28,7 @@ staging_bind9_ip: "{{ staging_inventory.all.hosts['labstg1'].ansible_host }}"
 
 # internal docker services will be on the same ip as bind9 as long as homelab is a single host
 internal_services_ip: "{{ bind9_ip }}"
-truenas_ip: 192.168.0.227
+truenas_ip: 192.168.0.228
 
 local_domain_names:
   prod: "home.arpa"
