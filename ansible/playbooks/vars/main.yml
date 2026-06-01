@@ -33,3 +33,10 @@ truenas_ip: 192.168.0.228
 local_domain_names:
   prod: "home.arpa"
   stg: "staging.home.arpa"
+
+labprd1_ip_tailscale: 100.96.166.18
+labstg1_ip_tailscale: 100.69.45.103
+bind9_ip_tailscale: "{{ labprd1_ip_tailscale }}"
+staging_bind9_ip_tailscale: "{{ labstg1_ip_tailscale }}"
+internal_services_ip_tailscale: "{{ labprd1_ip_tailscale }}"
+truenas_ip_tailscale: 100.64.49.52

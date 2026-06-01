@@ -1,0 +1,30 @@
+$TTL 2d
+$ORIGIN {{ local_domain_name }}.
+@         IN      SOA   ns.{{ local_domain_name }}. admin.{{ local_domain_name }}. (
+                                {{ ansible_facts['date_time']['epoch'] }} ; serial
+                                43200 ; refresh
+                                900 ; retry
+                                345600 ; expire
+                                7200 ; minimum
+)
+                        NS     ns.{{ local_domain_name }}.
+
+           IN      NS      ns.{{ local_domain_name }}.
+
+ns        IN      A       {{ bind9_ip_tailscale }}
+truenas   IN      A       {{ truenas_ip_tailscale }}
+{{ ansible_facts['hostname'] }} IN A {{ labprd1_ip_tailscale if env == 'prod' else labstg1_ip_tailscale }}
+jellyfin    IN      CNAME   {{ ansible_facts['hostname'] }}.{{ local_domain_name }}.
+ntfy       IN      CNAME   {{ ansible_facts['hostname'] }}.{{ local_domain_name }}.
+lyrion  IN  CNAME   {{ ansible_facts['hostname'] }}.{{ local_domain_name }}.
+
+{% if env == 'prod' %}
+; this says "when looking for ns1staging, go to this domain"
+ns1staging IN A {{ staging_bind9_ip_tailscale }}
+
+; this says "when requesting something from staging.localdomain, ask ns1staging, as defined above"
+; then the client will rerequest to the staging bind server.
+$ORIGIN {{ local_domain_names['stg'] }}.
+$TTL 2d
+@ IN NS ns1staging.{{ local_domain_name }}.
+{% endif %}
