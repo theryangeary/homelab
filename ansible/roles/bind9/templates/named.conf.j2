@@ -1,4 +1,15 @@
 // base named.conf file
+
+acl "tailscale" {
+  100.64.0.0/10;
+};
+
+acl "localnet" {
+  192.168.0.0/16;
+  172.18.0.0/16;
+  127.0.0.0/8;
+};
+
 // Recommended that you always maintain a change log in this file as shown here
 // options clause defining the server-wide properties
 options {
@@ -18,16 +29,48 @@ options {
   listen-on-v6 { any; };
 };
 
-// Domain zones
-zone {{ local_domain_name }} IN {
-  type master;
-  file "/etc/bind/{{ local_domain_name }}.zone";
+// --- LAN clients ---
+view "internal" {
+  match-clients { "localnet"; };
+  recursion yes;
+
+  // Domain zones
+  zone {{ local_domain_name }} IN {
+    type master;
+    file "/etc/bind/{{ local_domain_name }}.zone";
+  };
+
+  {% if env == 'prod' %}
+  zone "{{ local_domain_names['stg'] }}" IN {
+    type forward;
+    forwarders { {{ staging_bind9_ip }} ; };
+    forward only;
+  };
+  {% endif %}
 };
 
-{% if env == 'prod' %}
-zone "{{ local_domain_names['stg'] }}" IN {
-  type forward;
-  forwarders { {{ staging_bind9_ip }} ; };
-  forward only;
+
+// --- Tailscale clients ---
+view "tailscale" {
+  match-clients { "tailscale"; };
+  recursion yes;
+
+  zone {{ local_domain_name }} IN {
+    type master;
+    file "/etc/bind/{{ local_domain_name }}.tailscale.zone";
+  };
+
+  {% if env == 'prod' %}
+  zone "{{ local_domain_names['stg'] }}" IN {
+    type forward;
+    forwarders { {{ staging_bind9_ip }} ; }; // possibly this should be the tailscale IP of the staging bind server?
+    forward only;
+  };
+  {% endif %}
 };
-{% endif %}
+
+// --- Everyone else (no internal zones exposed) ---
+view "external" {
+  match-clients { any; };
+  recursion no;
+};
