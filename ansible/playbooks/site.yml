@@ -26,6 +26,7 @@
       vars:
         state: present
         tailscale_authkey: "{{ tailscale_authkey_secret }}"
+        tailscale_args: "--accept-dns=false"
 
 - hosts: dns
   vars_files:
