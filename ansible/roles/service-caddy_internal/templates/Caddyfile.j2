@@ -2,10 +2,8 @@
     servers {
         trusted_proxies static private_ranges
     }
-    auto_https off
 }
-
-http://jellyfin.{{ local_domain_name }} {
+jellyfin.{{ local_domain_name }} {
     reverse_proxy truenas.{{ local_domain_name }}:8096 {
         header_up Host jellyfin.{{ local_domain_name }}
         header_up X-Forwarded-Host {host}
@@ -14,7 +12,7 @@ http://jellyfin.{{ local_domain_name }} {
     }
 }
 
-http://lyrion.{{ local_domain_name }} {
+lyrion.{{ local_domain_name }} {
     reverse_proxy truenas.{{ local_domain_name }}:31101 {
         header_up Host lyrion.{{ local_domain_name }}
         header_up X-Forwarded-Host {host}
@@ -23,6 +21,10 @@ http://lyrion.{{ local_domain_name }} {
     }
 }
 
-http://ntfy.{{ local_domain_name }} {
+ntfy.{{ local_domain_name }} {
     reverse_proxy http://ntfy:80
+}
+
+vikunja.{{ local_domain_name }} {
+    reverse_proxy http://vikunja:3456
 }

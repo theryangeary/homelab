@@ -19,3 +19,14 @@
     recurse: true
   become: true
   when: swarm_service_create_data_directory
+
+- name: Create {{ swarm_service_namespaced_name }} data subdirectories
+  file:
+    path: "/opt/stacks/{{ swarm_service_namespaced_name }}/data/{{ item.name }}"
+    owner: "{{ swarm_service_user.uid }}"
+    group: "{{ swarm_service_user.gid }}"
+    mode: "{{ item.mode | default(swarm_service_data_directory_mode) }}"
+    state: directory
+  with_items: "{{ swarm_service_data_subdirectories }}"
+  become: true
+  when: swarm_service_create_data_directory

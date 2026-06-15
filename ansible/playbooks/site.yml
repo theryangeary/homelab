@@ -82,3 +82,20 @@
 
     - role: service-ntfy
       tags: [ntfy, services]
+
+    - role: swarm-service
+      tags: [vikunja, services]
+      vars:
+        swarm_service_name: "vikunja"
+        swarm_service_environment: "{{ env }}"
+        swarm_service_user: "{{ service_accounts.app }}"
+        swarm_service_stack_config_template: "stacks/vikunja.yml.j2"
+        swarm_service_create_data_directory: true
+        swarm_service_data_directory_mode: '750'
+        swarm_service_images:
+          - "vikunja/vikunja:2.3"
+        swarm_service_data_subdirectories:
+          - name: "db"
+            mode: '750'
+          - name: "files"
+            mode: '750'

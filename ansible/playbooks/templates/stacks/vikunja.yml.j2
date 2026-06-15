@@ -1,0 +1,31 @@
+services:
+  vikunja:
+    image: "{{ swarm_service_images[0] }}"
+    user: "{{ swarm_service_user.uid }}:{{ swarm_service_user.gid }}"
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 30s
+        failure_action: rollback
+        monitor: 30s
+        order: start-first
+      rollback_config:
+        parallelism: 1
+        delay: 30s
+        monitor: 60s
+    restart: unless-stopped
+    environment:
+      VIKUNJA_SERVICE_PUBLICURL: http://{{ local_domain_name }}:3456/
+      VIKUNJA_DATABASE_PATH: /db/vikunja.db
+    ports:
+      - 3456:3456
+    volumes:
+      - /opt/stacks/{{ stack_prefix }}vikunja/data/db:/db
+      - /opt/stacks/{{ stack_prefix }}vikunja/data/files:/app/vikunja/files
+    networks:
+      {{ stack_prefix }}services_internal:
+
+networks:
+  {{ stack_prefix }}services_internal:
+    external: true

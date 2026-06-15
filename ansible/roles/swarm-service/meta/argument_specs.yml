@@ -32,6 +32,10 @@ argument_specs:
         description: "The permissions mode to set on the data directory if it is created. This should be a string representation of an octal number, e.g. '0750'."
         type: str
         default: '0750'
+      swarm_service_data_subdirectories:
+        description: "A list of subdirectories to create within the data directory. Each item should be a dictionary with a 'name' key and an optional 'mode' key. The 'mode' key should be a string representation of an octal number, e.g. '0750'. If the 'mode' key is not provided, the value of swarm_service_data_directory_mode will be used."
+        type: list
+        default: []
       swarm_service_images:
         description: "The names of the docker images to pull for the service. This should include the repository and tag, e.g. 'ghcr.io/user/myimage:latest'."
         required: true

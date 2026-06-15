@@ -17,6 +17,7 @@ truenas   IN      A       {{ truenas_ip_tailscale }}
 jellyfin    IN      CNAME   {{ ansible_facts['hostname'] }}.{{ local_domain_name }}.
 ntfy       IN      CNAME   {{ ansible_facts['hostname'] }}.{{ local_domain_name }}.
 lyrion  IN  CNAME   {{ ansible_facts['hostname'] }}.{{ local_domain_name }}.
+vikunja  IN  CNAME   {{ ansible_facts['hostname'] }}.{{ local_domain_name }}.
 
 {% if env == 'prod' %}
 ; this says "when looking for ns1staging, go to this domain"
