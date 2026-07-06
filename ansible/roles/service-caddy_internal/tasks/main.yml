@@ -1,8 +1,53 @@
+- name: Calculate cf_api_token hash
+  ansible.builtin.shell: |
+    echo -n "{{ cf_api_token }}" | sha256sum | awk '{print $1}' | cut -c 1-7
+  args:
+    executable: /bin/bash
+  register: cf_api_token_hash
+
+- name: Set ansible fact for cf_api_token hash
+  set_fact:
+    cf_api_token_hash: "{{ cf_api_token_hash.stdout }}"
+
+- name: Create Cloudflare API token secret with hash
+  community.docker.docker_secret:
+    name: "{{ stack_prefix }}cf_api_token_{{ cf_api_token_hash }}"
+    data: "{{ cf_api_token }}"
+    state: present
+  become: true
+
 - name: Create caddy_internal config directory
   file:
     path: "/opt/stacks/{{ stack_prefix }}caddy_internal"
     state: directory
   become: true
+
+- name: Template entrypoint script
+  ansible.builtin.template:
+    src: entrypoint.sh.j2
+    dest: /opt/stacks/{{ stack_prefix }}caddy_internal/entrypoint.sh
+    mode: '0755'
+  become: true
+
+- name: Template Dockerfile
+  ansible.builtin.template:
+    src: Dockerfile.j2
+    dest: /opt/stacks/{{ stack_prefix }}caddy_internal/Dockerfile
+  register: dockerfile_changed
+  become: true
+
+- name: Build caddy-internal image
+  community.docker.docker_image:
+    name: caddy-internal
+    tag: "{{ caddy_version }}"
+    build:
+      path: /opt/stacks/{{ stack_prefix }}caddy_internal
+      dockerfile: Dockerfile
+      network: host
+    source: build
+    state: present
+  become: true
+  when: dockerfile_changed.changed
 
 - name: Template Caddyfile
   ansible.builtin.template:
@@ -12,7 +57,7 @@
   become: true
 
 - name: Template stack file
-  template:
+  ansible.builtin.template:
     src: stack.yml.j2
     dest: "/opt/stacks/{{ stack_prefix }}caddy_internal/stack.yml"
   become: true

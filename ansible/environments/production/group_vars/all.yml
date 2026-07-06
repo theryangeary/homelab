@@ -2,8 +2,10 @@
 env: prod
 stack_prefix: prod_
 public_domain_name: ryangeary.dev
-local_domain_name: internal
+local_domain_name: "ryangeary.dev"
+caddy_domain: "ryangeary.dev"
 cloudflare_tunnel_token: "{{ lookup('bitwarden.secrets.lookup', '815fb77d-1e23-474c-ad58-b3b90186b35b') }}"
 become_password: "{{ lookup('bitwarden.secrets.lookup', 'bdc8105d-be52-4c25-8148-b3ee0001b655') }}"
+acme_server: letsencrypt
 ssh_port: 22766
-optional_staging_suffix: ""
+cf_api_token: "{{ lookup('bitwarden.secrets.lookup', 'b1f16d96-b31c-45ee-98f1-b47900ebb59f') }}"

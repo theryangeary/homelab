@@ -3,28 +3,62 @@
         trusted_proxies static private_ranges
     }
 }
-jellyfin.{{ local_domain_name }} {
-    reverse_proxy truenas.{{ local_domain_name }}:8096 {
-        header_up Host jellyfin.{{ local_domain_name }}
-        header_up X-Forwarded-Host {host}
-        header_up X-Forwarded-Proto {scheme}
-        header_up X-Forwarded-For {remote}
+
+(tls_cert) {
+    tls /certs/fullchain.pem /certs/privkey.pem
+}
+
+vikunja.{{ caddy_domain }} {
+    import tls_cert
+    @allowed remote_ip 192.168.0.0/16 100.64.0.0/10
+    handle @allowed {
+        reverse_proxy http://vikunja:3456
     }
+    respond "Access denied" 403
 }
 
-lyrion.{{ local_domain_name }} {
-    reverse_proxy truenas.{{ local_domain_name }}:31101 {
-        header_up Host lyrion.{{ local_domain_name }}
-        header_up X-Forwarded-Host {host}
-        header_up X-Forwarded-Proto {scheme}
-        header_up X-Forwarded-For {remote}
+ntfy.{{ caddy_domain }} {
+    import tls_cert
+    @allowed remote_ip 192.168.0.0/16 100.64.0.0/10
+    handle @allowed {
+        reverse_proxy http://ntfy:80
     }
+    respond "Access denied" 403
 }
 
-ntfy.{{ local_domain_name }} {
-    reverse_proxy http://ntfy:80
+jellyfin.{{ caddy_domain }} {
+    import tls_cert
+    @allowed remote_ip 192.168.0.0/16 100.64.0.0/10
+    handle @allowed {
+        reverse_proxy truenas.{{ caddy_domain }}:8096 {
+            header_up Host jellyfin.{{ caddy_domain }}
+            header_up X-Forwarded-Host {host}
+            header_up X-Forwarded-Proto {scheme}
+            header_up X-Forwarded-For {remote}
+        }
+    }
+    respond "Access denied" 403
 }
 
-vikunja.{{ local_domain_name }} {
-    reverse_proxy http://vikunja:3456
+lyrion.{{ caddy_domain }} {
+    import tls_cert
+    @allowed remote_ip 192.168.0.0/16 100.64.0.0/10
+    handle @allowed {
+        reverse_proxy truenas.{{ caddy_domain }}:31101 {
+            header_up Host lyrion.{{ caddy_domain }}
+            header_up X-Forwarded-Host {host}
+            header_up X-Forwarded-Proto {scheme}
+            header_up X-Forwarded-For {remote}
+        }
+    }
+    respond "Access denied" 403
+}
+
+*.{{ caddy_domain }} {
+    import tls_cert
+    @allowed remote_ip 192.168.0.0/16 100.64.0.0/10
+    handle @allowed {
+        reverse_proxy http://caddy:80
+    }
+    respond "Access denied" 403
 }

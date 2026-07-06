@@ -7,6 +7,9 @@ services:
     networks:
       {{ stack_prefix }}services:
       {{ stack_prefix }}cloudflare:
+      {{ stack_prefix }}caddy_link:
+        aliases:
+          - public_caddy
     deploy:
       replicas: 1
       update_config:
@@ -30,4 +33,6 @@ networks:
   {{ stack_prefix }}services:
     external: true
   {{ stack_prefix }}cloudflare:
+    external: true
+  {{ stack_prefix }}caddy_link:
     external: true

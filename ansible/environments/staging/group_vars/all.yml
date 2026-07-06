@@ -2,8 +2,10 @@
 env: stg
 stack_prefix: stg_
 public_domain_name: ryangeary.dev
-local_domain_name: staging.internal
+local_domain_name: "staging.ryangeary.dev"
+caddy_domain: "staging.ryangeary.dev"
 cloudflare_tunnel_token: "{{ lookup('bitwarden.secrets.lookup', '55ff931c-7348-44a9-ba6d-b444013652da') }}"
 become_password: "{{ lookup('bitwarden.secrets.lookup', 'ca807c54-f1fe-4505-abae-b44401369022') }}"
+acme_server: letsencrypt_test
 ssh_port: 22766
-optional_staging_suffix: "-staging"
+cf_api_token: "{{ lookup('bitwarden.secrets.lookup', 'b1f16d96-b31c-45ee-98f1-b47900ebb59f') }}"

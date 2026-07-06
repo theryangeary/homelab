@@ -1,8 +1,8 @@
 version: '3'
 services:
   caddy:
-    image: caddy:{{ caddy_version }}
-    restart: 'unless-stopped'
+    image: caddy-internal:{{ caddy_version }}
+    restart: 'no'
     ports:
       - 80:80
       - 443:443
@@ -20,13 +20,25 @@ services:
         monitor: 60s
     volumes:
       - {{ stack_prefix }}caddy_internal_data:/data
+      - {{ stack_prefix }}caddy_internal_certs:/certs
       - /opt/stacks/{{ stack_prefix }}caddy_internal/Caddyfile:/etc/caddy/Caddyfile
+      - /opt/stacks/{{ stack_prefix }}caddy_internal/entrypoint.sh:/entrypoint.sh
     networks:
       {{ stack_prefix }}services_internal:
+      {{ stack_prefix }}caddy_link:
+    secrets:
+      - {{ stack_prefix }}cf_api_token_{{ cf_api_token_hash }}
 
 volumes:
   {{ stack_prefix }}caddy_internal_data:
+  {{ stack_prefix }}caddy_internal_certs:
 
 networks:
   {{ stack_prefix }}services_internal:
+    external: true
+  {{ stack_prefix }}caddy_link:
+    external: true
+
+secrets:
+  {{ stack_prefix }}cf_api_token_{{ cf_api_token_hash }}:
     external: true

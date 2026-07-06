@@ -1,0 +1,11 @@
+FROM caddy:2-alpine
+
+RUN apk add --no-cache curl openssl && \
+    curl https://get.acme.sh | sh && \
+    ln -s /root/.acme.sh/acme.sh /usr/local/bin/acme.sh
+
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+EXPOSE 80 443 443/udp
+ENTRYPOINT ["/entrypoint.sh"]

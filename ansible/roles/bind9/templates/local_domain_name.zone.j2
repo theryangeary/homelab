@@ -18,13 +18,12 @@ jellyfin    IN      CNAME   {{ ansible_facts['hostname'] }}.{{ local_domain_name
 ntfy       IN      CNAME   {{ ansible_facts['hostname'] }}.{{ local_domain_name }}.
 lyrion  IN  CNAME   {{ ansible_facts['hostname'] }}.{{ local_domain_name }}.
 vikunja IN CNAME  {{ ansible_facts['hostname'] }}.{{ local_domain_name }}.
+* IN CNAME {{ ansible_facts['hostname'] }}.{{ local_domain_name }}.
 
 {% if env == 'prod' %}
-; this says "when looking for ns1staging, go to this domain"
+; Delegate staging subdomain to staging BIND9
 ns1staging IN A {{ staging_bind9_ip }}
 
-; this says "when requesting something from staging.localdomain, ask ns1staging, as defined above"
-; then the client will rerequest to the staging bind server.
 $ORIGIN {{ local_domain_names['stg'] }}.
 $TTL 2d
 @ IN NS ns1staging.{{ local_domain_name }}.

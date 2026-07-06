@@ -1,0 +1,25 @@
+#!/bin/sh
+set -e
+
+CF_API_TOKEN=$(cat /run/secrets/{{ stack_prefix }}cf_api_token_{{ cf_api_token_hash }})
+export CF_Token="$CF_API_TOKEN"
+
+CERT_DIR="/certs"
+DOMAIN="*.{{ caddy_domain }}"
+
+mkdir -p "$CERT_DIR"
+
+acme.sh --issue \
+    --dns dns_cf \
+    -d "$DOMAIN" \
+    --keylength ec-256 \
+    --server {{ acme_server }}
+
+acme.sh --install-cert -d "$DOMAIN" \
+    --fullchain-file "$CERT_DIR/fullchain.pem" \
+    --key-file "$CERT_DIR/privkey.pem" \
+    --reloadcmd "caddy reload --config /etc/caddy/Caddyfile"
+
+crond
+
+exec caddy run --config /etc/caddy/Caddyfile
