@@ -2,7 +2,6 @@ version: '3'
 services:
   caddy:
     image: caddy-internal:{{ caddy_version }}
-    restart: 'no'
     ports:
       - 80:80
       - 443:443
@@ -18,9 +17,13 @@ services:
         parallelism: 1
         delay: 30s
         monitor: 60s
+      restart_policy:
+        condition: none
+        max_attempts: 3
     volumes:
       - {{ stack_prefix }}caddy_internal_data:/data
       - {{ stack_prefix }}caddy_internal_certs:/certs
+      - {{ stack_prefix }}caddy_internal_acme:/root/.acme.sh
       - /opt/stacks/{{ stack_prefix }}caddy_internal/Caddyfile:/etc/caddy/Caddyfile
       - /opt/stacks/{{ stack_prefix }}caddy_internal/entrypoint.sh:/entrypoint.sh
     networks:
@@ -32,6 +35,7 @@ services:
 volumes:
   {{ stack_prefix }}caddy_internal_data:
   {{ stack_prefix }}caddy_internal_certs:
+  {{ stack_prefix }}caddy_internal_acme:
 
 networks:
   {{ stack_prefix }}services_internal:

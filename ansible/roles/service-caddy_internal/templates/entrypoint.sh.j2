@@ -9,16 +9,23 @@ DOMAIN="*.{{ caddy_domain }}"
 
 mkdir -p "$CERT_DIR"
 
-acme.sh --issue \
-    --dns dns_cf \
-    -d "$DOMAIN" \
-    --keylength ec-256 \
-    --server {{ acme_server }}
+if [ -f "$CERT_DIR/fullchain.pem" ] && [ -f "$CERT_DIR/privkey.pem" ] \
+   && openssl x509 -checkend 86400 -in "$CERT_DIR/fullchain.pem" -noout 2>/dev/null; then
+    echo "Valid certificate found, skipping issuance"
+else
+    echo "No valid certificate found, issuing new cert"
 
-acme.sh --install-cert -d "$DOMAIN" \
-    --fullchain-file "$CERT_DIR/fullchain.pem" \
-    --key-file "$CERT_DIR/privkey.pem" \
-    --reloadcmd "caddy reload --config /etc/caddy/Caddyfile"
+    acme.sh --issue \
+        --dns dns_cf \
+        -d "$DOMAIN" \
+        --keylength ec-256 \
+        --server {{ acme_server }}
+
+    acme.sh --install-cert -d "$DOMAIN" \
+        --fullchain-file "$CERT_DIR/fullchain.pem" \
+        --key-file "$CERT_DIR/privkey.pem" \
+        --reloadcmd "caddy reload --config /etc/caddy/Caddyfile"
+fi
 
 crond
 
