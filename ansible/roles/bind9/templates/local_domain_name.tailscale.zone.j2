@@ -15,6 +15,7 @@ ns        IN      A       {{ bind9_ip_tailscale }}
 truenas   IN      A       {{ truenas_ip_tailscale }}
 {{ ansible_facts['hostname'] }} IN A {{ labprd1_ip_tailscale if env == 'prod' else labstg1_ip_tailscale }}
 jellyfin    IN      CNAME   {{ ansible_facts['hostname'] }}.{{ local_domain_name }}.
+navidrome IN     CNAME   {{ ansible_facts['hostname'] }}.{{ local_domain_name }}.
 ntfy       IN      CNAME   {{ ansible_facts['hostname'] }}.{{ local_domain_name }}.
 lyrion  IN  CNAME   {{ ansible_facts['hostname'] }}.{{ local_domain_name }}.
 vikunja  IN  CNAME   {{ ansible_facts['hostname'] }}.{{ local_domain_name }}.

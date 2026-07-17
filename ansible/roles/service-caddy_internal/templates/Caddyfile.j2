@@ -40,6 +40,21 @@ jellyfin.{{ caddy_domain }} {
     respond "Access denied" 403
 }
 
+navidrome.{{ caddy_domain }} {
+    import tls_cert
+    @allowed remote_ip private_ranges 100.64.0.0/10
+    handle @allowed {
+        reverse_proxy truenas.{{ caddy_domain }}:30043 {
+            header_up Host navidrome.{{ caddy_domain }}
+            header_up X-Forwarded-Host {host}
+            header_up X-Forwarded-Proto {scheme}
+            header_up X-Forwarded-For {remote}
+        }
+
+    }
+    respond "Access denied" 403
+}
+
 lyrion.{{ caddy_domain }} {
     import tls_cert
     @allowed remote_ip private_ranges 100.64.0.0/10
