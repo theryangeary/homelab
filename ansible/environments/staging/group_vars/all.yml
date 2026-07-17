@@ -6,6 +6,6 @@ local_domain_name: "staging.ryangeary.dev"
 caddy_domain: "staging.ryangeary.dev"
 cloudflare_tunnel_token: "{{ lookup('bitwarden.secrets.lookup', '55ff931c-7348-44a9-ba6d-b444013652da') }}"
 become_password: "{{ lookup('bitwarden.secrets.lookup', 'ca807c54-f1fe-4505-abae-b44401369022') }}"
-acme_server: letsencrypt_test
+acme_server: letsencrypt
 ssh_port: 22766
 cf_api_token: "{{ lookup('bitwarden.secrets.lookup', 'b1f16d96-b31c-45ee-98f1-b47900ebb59f') }}"
