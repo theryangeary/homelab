@@ -8,6 +8,20 @@
     tls /certs/fullchain.pem /certs/privkey.pem
 }
 
+truenas-ui.{{ caddy_domain }} {
+    import tls_cert
+    @allowed remote_ip private_ranges 100.64.0.0/10
+    handle @allowed {
+        reverse_proxy truenas.{{ caddy_domain }}:443 {
+            transport http {
+                tls_insecure_skip_verify
+            }
+            header_up Host truenas.{{ caddy_domain }}
+        }
+    }
+    respond "Access denied" 403
+}
+
 vikunja.{{ caddy_domain }} {
     import tls_cert
     @allowed remote_ip private_ranges 100.64.0.0/10

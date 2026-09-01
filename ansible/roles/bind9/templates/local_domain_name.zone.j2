@@ -14,6 +14,7 @@ $ORIGIN {{ local_domain_name }}.
 ns        IN      A       {{ bind9_ip }}
 truenas   IN      A       {{ truenas_ip }}
 {{ ansible_facts['hostname'] }} IN A {{ ansible_facts['default_ipv4']['address'] }}
+truenas-ui IN CNAME {{ ansible_facts['hostname'] }}.{{ local_domain_name }}.
 jellyfin    IN      CNAME   {{ ansible_facts['hostname'] }}.{{ local_domain_name }}.
 navidrome IN     CNAME   {{ ansible_facts['hostname'] }}.{{ local_domain_name }}.
 calibre IN     CNAME   {{ ansible_facts['hostname'] }}.{{ local_domain_name }}.
