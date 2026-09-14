@@ -1,0 +1,44 @@
+---
+- name: Create config directory
+  file:
+    path: "/opt/stacks/{{ stack_prefix }}loki"
+    state: directory
+  become: true
+
+- name: Template Loki config
+  ansible.builtin.template:
+    src: loki-config.yml.j2
+    dest: /opt/stacks/{{ stack_prefix }}loki/loki-config.yml
+  register: loki_config_changed
+  become: true
+
+- name: Template Grafana datasources config
+  ansible.builtin.template:
+    src: grafana-datasources.yml.j2
+    dest: /opt/stacks/{{ stack_prefix }}loki/grafana-datasources.yml
+  become: true
+
+- name: Template stack file
+  template:
+    src: stack.yml.j2
+    dest: "/opt/stacks/{{ stack_prefix }}loki/stack.yml"
+  register: stack_changed
+  become: true
+
+- name: Ensure Docker images are pulled
+  community.docker.docker_image:
+    name: "{{ item }}"
+    source: pull
+    force_source: true
+  loop:
+    - "grafana/loki:{{ loki_version }}"
+    - "grafana/grafana:{{ grafana_version }}"
+  become: true
+
+- name: Deploy stack
+  docker_stack:
+    name: "{{ stack_prefix }}loki"
+    compose:
+      - "/opt/stacks/{{ stack_prefix }}loki/stack.yml"
+    state: present
+  become: true

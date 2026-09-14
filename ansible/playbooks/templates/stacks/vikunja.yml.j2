@@ -1,6 +1,7 @@
 services:
   vikunja:
     image: "{{ swarm_service_images[0] }}"
+{{ docker_logging_block | indent(4, first=True) }}
     user: "{{ swarm_service_user.uid }}:{{ swarm_service_user.gid }}"
     deploy:
       replicas: 1

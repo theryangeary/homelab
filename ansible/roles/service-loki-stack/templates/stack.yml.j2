@@ -1,0 +1,74 @@
+version: '3'
+services:
+  loki:
+    image: grafana/loki:{{ loki_version }}
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 30s
+        failure_action: rollback
+        monitor: 30s
+        order: start-first
+      rollback_config:
+        parallelism: 1
+        delay: 30s
+        monitor: 60s
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --tries=1 http://localhost:{{ loki_port }}/ready -O - | grep -q 'Ready' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    init: true
+    ports:
+      - "{{ loki_port }}:{{ loki_port }}"
+    networks:
+      {{ stack_prefix }}services_internal:
+    volumes:
+      - {{ stack_prefix }}loki_data:/data
+      - /opt/stacks/{{ stack_prefix }}loki/loki-config.yml:/etc/loki/loki-config.yml:ro
+{{ docker_logging_block | indent(4, first=True) }}
+
+  grafana:
+    image: grafana/grafana:{{ grafana_version }}
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 30s
+        failure_action: rollback
+        monitor: 30s
+        order: start-first
+      rollback_config:
+        parallelism: 1
+        delay: 30s
+        monitor: 60s
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --tries=1 http://localhost:{{ grafana_port }}/api/health -O - | grep -q '\"database\":\"ok\"' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    init: true
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - GF_SERVER_HTTP_PORT={{ grafana_port }}
+      - GF_SERVER_ROOT_URL=https://logs.{{ caddy_domain }}
+    networks:
+      {{ stack_prefix }}services_internal:
+    volumes:
+      - {{ stack_prefix }}grafana_data:/var/lib/grafana
+      - /opt/stacks/{{ stack_prefix }}loki/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+{{ docker_logging_block | indent(4, first=True) }}
+
+volumes:
+  {{ stack_prefix }}loki_data:
+  {{ stack_prefix }}grafana_data:
+
+networks:
+  {{ stack_prefix }}services_internal:
+    external: true

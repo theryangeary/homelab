@@ -2,6 +2,7 @@ version: '3'
 services:
   caddy:
     image: caddy-internal:{{ caddy_version }}
+{{ docker_logging_block | indent(4, first=True) }}
     ports:
       - 80:80
       - 443:443

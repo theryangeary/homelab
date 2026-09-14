@@ -2,6 +2,7 @@ version: '3'
 services:
   ntfy:
     image: binwiederhier/ntfy:{{ ntfy_version }}
+{{ docker_logging_block | indent(4, first=True) }}
     deploy: 
       replicas: 1
       update_config:

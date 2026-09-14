@@ -111,6 +111,19 @@ lyrion.{{ caddy_domain }} {
     respond "Access denied" 403
 }
 
+logs.{{ caddy_domain }} {
+    import tls_cert
+    @allowed remote_ip private_ranges 100.64.0.0/10
+    handle @allowed {
+        forward_auth http://authelia:9091 {
+            uri /api/authz/forward-auth
+            copy_headers Remote-User Remote-Groups Remote-Email Remote-Name
+        }
+        reverse_proxy http://grafana:3000
+    }
+    respond "Access denied" 403
+}
+
 *.{{ caddy_domain }} {
     import tls_cert
     @allowed remote_ip private_ranges 100.64.0.0/10

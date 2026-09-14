@@ -2,6 +2,7 @@ version: '3'
 services:
   mta-display:
     image: ghcr.io/theryangeary/mta-display:{{ mtadisplay_version }}
+{{ docker_logging_block | indent(4, first=True) }}
     user: "{{ service_account.uid }}:{{ service_account.gid }}"
     deploy: 
       replicas: 1

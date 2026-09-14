@@ -80,6 +80,9 @@
       vars:
         service_account: "{{ service_accounts.mtadisplay }}"
 
+    - role: service-loki-stack
+      tags: [loki, logging, services]
+
     - role: service-ntfy
       tags: [ntfy, services]
 

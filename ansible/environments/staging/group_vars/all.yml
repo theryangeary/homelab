@@ -9,3 +9,15 @@ become_password: "{{ lookup('bitwarden.secrets.lookup', 'ca807c54-f1fe-4505-abae
 acme_server: letsencrypt
 ssh_port: 22766
 cf_api_token: "{{ lookup('bitwarden.secrets.lookup', 'b1f16d96-b31c-45ee-98f1-b47900ebb59f') }}"
+
+# Shared logging block for all Docker services (via Loki log driver)
+# Uses {% raw %} to prevent Jinja from interpreting Swarm Go template variables
+docker_logging_block: |
+  logging:
+    driver: loki
+    options:
+      loki-url: "http://localhost:{{ loki_port | default('3100') }}/loki/api/v1/push"
+      loki-external-labels: "container_name={% raw %}{{.Name}}{% endraw %},stack={{ stack_prefix }}"
+      loki-retries: "3"
+      loki-max-backoff: "1s"
+      loki-timeout: "5s"

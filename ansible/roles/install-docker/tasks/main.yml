@@ -99,3 +99,10 @@
     mode: '0644'
   notify: Restart Docker
   become: true
+
+- name: Install Docker Loki log driver plugin
+  community.docker.docker_plugin:
+    plugin_name: grafana/loki-docker-driver:latest
+    alias: loki
+    state: enable
+  become: true

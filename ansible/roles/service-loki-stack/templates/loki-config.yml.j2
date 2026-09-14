@@ -1,0 +1,41 @@
+auth_enabled: false
+
+server:
+  http_listen_port: {{ loki_port }}
+
+ingester:
+  lifecycler:
+    ring:
+      kvstore:
+        store: inmemory
+  chunk_idle_period: 15m
+  chunk_retain_period: 30s
+
+schema_config:
+  configs:
+    - from: 2020-01-01
+      store: boltdb-shipper
+      object_store: filesystem
+      schema: v11
+      index:
+        prefix: index_
+        period: 168h
+
+storage_config:
+  boltdb_shipper:
+    active_index_directory: /data/loki/index
+    cache_location: /data/loki/boltdb-cache
+    shared_store: filesystem
+  filesystem:
+    directory: /data/loki/chunks
+
+compactor:
+  working_directory: /data/loki/compactor
+
+limits_config:
+  retention_period: {{ loki_retention_period_hours }}h
+  max_query_length: {{ loki_retention_period_hours }}h
+
+table_manager:
+  retention_deletes_enabled: true
+  retention_period: {{ loki_retention_period_hours }}h
