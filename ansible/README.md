@@ -1,6 +1,6 @@
 # Things not handled by ansible:
 
-* Tailscale nameserver override for .internal Split DNS in tailscale admin console > DNS tab
+* Tailscale nameserver override for Split DNS in tailscale admin console > DNS tab (under "Nameservers", "Split DNS" should be set to {{ public_domain_name }} or {{ local_domain_name }} or {{ caddy_domain }}). This should be added to the playbooks.
 * Secrets kept in bitwarden
 * Creating VMs (or hosts) with debian, networking, a user with sudo and ssh
 * DHCP static IPs for hosts and truenas
