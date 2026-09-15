@@ -14,18 +14,16 @@ ingester:
 schema_config:
   configs:
     - from: 2020-01-01
-      store: boltdb-shipper
+      store: tsdb
       object_store: filesystem
-      schema: v11
+      schema: v13
       index:
         prefix: index_
         period: 168h
 
 storage_config:
-  boltdb_shipper:
-    active_index_directory: /data/loki/index
-    cache_location: /data/loki/boltdb-cache
-    shared_store: filesystem
+  tsdb:
+    dir: /data/loki/tsdb
   filesystem:
     directory: /data/loki/chunks
 
@@ -35,7 +33,3 @@ compactor:
 limits_config:
   retention_period: {{ loki_retention_period_hours }}h
   max_query_length: {{ loki_retention_period_hours }}h
-
-table_manager:
-  retention_deletes_enabled: true
-  retention_period: {{ loki_retention_period_hours }}h

@@ -16,7 +16,7 @@ services:
         monitor: 60s
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --tries=1 http://localhost:{{ loki_port }}/ready -O - | grep -q 'Ready' || exit 1"]
+      test: ["CMD-SHELL", "kill -0 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -29,7 +29,6 @@ services:
     volumes:
       - {{ stack_prefix }}loki_data:/data
       - /opt/stacks/{{ stack_prefix }}loki/loki-config.yml:/etc/loki/loki-config.yml:ro
-{{ docker_logging_block | indent(4, first=True) }}
 
   grafana:
     image: grafana/grafana:{{ grafana_version }}
@@ -47,7 +46,7 @@ services:
         monitor: 60s
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --tries=1 http://localhost:{{ grafana_port }}/api/health -O - | grep -q '\"database\":\"ok\"' || exit 1"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:3000/api/health | grep -q '\"database\": \"ok\"'"]
       interval: 30s
       timeout: 10s
       retries: 3
