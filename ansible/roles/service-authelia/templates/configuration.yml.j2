@@ -9,7 +9,12 @@ session:
   expiration: '3M'
   inactivity: '1M'
   remember_me: '3M'
-  name: authelia_session
+  # Must be unique per environment. The production cookie domain (ryangeary.dev)
+  # is a parent of the staging one (staging.ryangeary.dev), so a shared name means
+  # the browser sends both cookies to *.staging.ryangeary.dev. Authelia reads only
+  # the first match, which is the older production cookie, and the session is never
+  # found -> endless redirect back to the auth portal.
+  name: authelia_session_{{ env }}
   same_site: lax
   cookies:
     - domain: '{{ caddy_domain }}'
