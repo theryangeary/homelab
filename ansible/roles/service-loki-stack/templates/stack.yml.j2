@@ -53,8 +53,12 @@ services:
       start_period: 60s
     init: true
     environment:
-      - GF_AUTH_ANONYMOUS_ENABLED=true
-      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_AUTH_PROXY_ENABLED=true
+      - GF_AUTH_PROXY_HEADER_NAME=Remote-User
+      - GF_AUTH_PROXY_HEADER_PROPERTY=username
+      - GF_AUTH_PROXY_AUTO_SIGN_UP=true
+      - GF_AUTH_PROXY_SYNC_TTL=60
       - GF_SERVER_HTTP_PORT={{ grafana_port }}
       - GF_SERVER_ROOT_URL=https://logs.{{ caddy_domain }}
     networks:
