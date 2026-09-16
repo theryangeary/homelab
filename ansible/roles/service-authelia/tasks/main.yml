@@ -120,3 +120,9 @@
       - "/opt/stacks/{{ stack_prefix }}authelia/stack.yml"
     state: present
   become: true
+
+- name: Force service update to pick up new configs/secrets
+  ansible.builtin.shell:
+    cmd: "docker service update --force {{ stack_prefix }}authelia_authelia"
+  when: stack_changed.changed
+  become: true
