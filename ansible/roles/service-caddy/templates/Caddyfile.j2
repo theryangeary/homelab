@@ -4,6 +4,10 @@
     }
 
     auto_https off
+
+    log {
+        level DEBUG
+    }
 }
 
 http://auth.{{ caddy_domain }} {
