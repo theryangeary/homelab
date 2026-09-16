@@ -10,6 +10,7 @@ session:
   inactivity: '1M'
   remember_me: '3M'
   name: authelia_session
+  same_site: lax
   cookies:
     - domain: '{{ caddy_domain }}'
       authelia_url: 'https://auth.{{ caddy_domain }}'
