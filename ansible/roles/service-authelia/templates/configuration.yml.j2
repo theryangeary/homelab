@@ -37,7 +37,20 @@ authentication_backend:
     path: '/config/users_database.yml'
 
 access_control:
-  default_policy: 'one_factor'
+  default_policy: 'deny'
+  rules:
+    - domain: 'gl.{{ caddy_domain }}'
+      policy: 'one_factor'
+    - domain: 'mta-display.{{ caddy_domain }}'
+      policy: 'one_factor'
+    - domain: 'mtadisplay.{{ caddy_domain }}'
+      policy: 'one_factor'
+    - domain: 'logs.{{ caddy_domain }}'
+      policy: 'one_factor'
+      subject:
+        - ['group:admins']
+    - domain: 'logs.{{ caddy_domain }}'
+      policy: 'deny'
 
 notifier:
   disable_startup_check: true
