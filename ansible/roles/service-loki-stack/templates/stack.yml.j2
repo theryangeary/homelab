@@ -62,6 +62,7 @@ services:
       - GF_AUTH_PROXY_SYNC_TTL=60
       - GF_SERVER_HTTP_PORT={{ grafana_port }}
       - GF_SERVER_ROOT_URL=https://logs.{{ caddy_domain }}
+      - GF_USERS_AUTO_ASSIGN_ORG_ROLE=Editor
     networks:
       {{ stack_prefix }}services_internal:
     volumes:
