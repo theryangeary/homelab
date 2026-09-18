@@ -45,6 +45,10 @@ http://mta-display.{{ caddy_domain }} http://mtadisplay.{{ caddy_domain }} {
     }
 }
 
+http://kosync.{{ caddy_domain }} {
+    reverse_proxy http://kosync:17200
+}
+
 http://*.{{ caddy_domain }} {
     redir https://www.{{ caddy_domain }}{uri}
 }

@@ -102,3 +102,22 @@
             mode: '750'
           - name: "files"
             mode: '750'
+
+    - role: swarm-service
+      tags: [kosync, services]
+      vars:
+        swarm_service_name: "kosync"
+        swarm_service_images:
+          - "koreader/kosync:latest"
+        swarm_service_environment: "{{ env }}"
+        swarm_service_user: "{{ service_accounts.app }}"
+        swarm_service_stack_config_template: "stacks/kosync.yml.j2"
+        swarm_service_create_data_directory: true
+        swarm_service_data_directory_mode: '777'
+        swarm_service_data_subdirectories:
+          - name: "redis_data"
+            mode: '777'
+          - name: "redis_log"
+            mode: '777'
+          - name: "app"
+            mode: '777'

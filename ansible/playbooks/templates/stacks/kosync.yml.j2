@@ -1,0 +1,30 @@
+services:
+  kosync:
+    image: "{{ swarm_service_images[0] }}"
+{{ docker_logging_block | indent(4, first=True) }}
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 30s
+        failure_action: rollback
+        monitor: 30s
+        order: start-first
+      rollback_config:
+        parallelism: 1
+        delay: 30s
+        monitor: 60s
+    restart: unless-stopped
+    environment: 
+      - ENABLE_USER_REGISTRATION=false
+    volumes:
+      - /opt/stacks/{{ stack_prefix }}kosync/data/app:/app/koreader-sync-server/logs
+      - /opt/stacks/{{ stack_prefix }}kosync/data/redis_log:/var/log/redis
+      - /opt/stacks/{{ stack_prefix }}kosync/data/redis_data:/var/lib/redis
+    networks:
+      {{ stack_prefix }}services:
+
+
+networks:
+  {{ stack_prefix }}services:
+    external: true
