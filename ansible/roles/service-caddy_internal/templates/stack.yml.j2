@@ -18,9 +18,6 @@ services:
         parallelism: 1
         delay: 30s
         monitor: 60s
-      restart_policy:
-        condition: none
-        max_attempts: 3
     volumes:
       - {{ stack_prefix }}caddy_internal_data:/data
       - {{ stack_prefix }}caddy_internal_certs:/certs
